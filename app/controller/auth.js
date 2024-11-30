@@ -9,11 +9,9 @@ class AuthController extends Controller {
 
     // 检查用户是否已存在
     const existingUser = await ctx.model.User.findOne({ where: { email } });
-    console.log('enter-------');
     if (existingUser) {
       ctx.throw(400, 'User already exists');
     }
-    console.log('enter-------');
 
     // 哈希密码（如果需要，使用 bcrypt）
     const hashedPassword = await bcrypt.hash(password, 10);

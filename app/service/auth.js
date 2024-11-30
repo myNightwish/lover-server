@@ -12,7 +12,6 @@ class AuthService extends Service {
       decoded = jwt.verify(token, app.config.jwt.secret);
     } catch (err) {
       console.log('解析错误------', err);
-
     }
     // 根据解码信息查找用户
     let user;
@@ -20,7 +19,6 @@ class AuthService extends Service {
       user = await this.ctx.model.User.findByPk(decoded.id);
     } catch (err) {
       console.log('解码信息错误------', err);
-
     }
 
     // 返回简单的用户信息（避免返回整个 Sequelize 实例）
@@ -29,7 +27,6 @@ class AuthService extends Service {
       username: user.username,
       email: user.email,
     };
-    // return user; // 返回用户信息
   }
 }
 

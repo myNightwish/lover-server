@@ -3,7 +3,6 @@ module.exports = () => {
   return async function auth(ctx, next) {
     // 获取 Authorization 头部的 token
     const authorizationHeader = ctx.headers.authorization;
-    console.log('authorizationHeader', authorizationHeader);
 
     if (!authorizationHeader) {
       ctx.throw(401, 'Authorization header missing');

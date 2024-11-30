@@ -21,7 +21,6 @@ class FamilyController extends Controller {
     const { ctx } = this;
     const { familyId } = ctx.params;
     const { email } = ctx.request.body;
-    console.log('familyId', familyId);
     const invitedById = ctx.user.id;
     if (!invitedById) {
       ctx.throw(400, 'User is not authenticated');
@@ -55,7 +54,7 @@ class FamilyController extends Controller {
   async acceptInvitation() {
     const { ctx } = this;
     const { invitationId } = ctx.params;
-
+    const userId = ctx.user.id;
     // 查找邀请
     const invitation = await ctx.model.Invitation.findOne({
       where: { id: invitationId, status: 'pending' },
@@ -77,8 +76,27 @@ class FamilyController extends Controller {
     // 更新邀请状态为已接受
     invitation.status = 'accepted';
     await invitation.save();
+    // 添加用户到群组
+    await ctx.model.FamilyMember.create({
+      familyId: invitation.familyId,
+      userId,
+      role: 'member',
+    });
 
-    ctx.body = { success: true };
+    // 检查群组是否满足激活条件（至少一个成员接受邀请）
+    const memberCount = await ctx.model.FamilyMember.count({
+      where: { familyId: invitation.familyId },
+    });
+
+    if (memberCount > 1) {
+      // 更新群组状态为 active
+      await ctx.model.Family.update(
+        { status: 'active' },
+        { where: { id: invitation.familyId } }
+      );
+    }
+
+    ctx.body = { success: true, message: 'Invitation accepted and family activated if conditions met' };
   }
   // 拒绝邀请
   async rejectInvitation() {
@@ -112,7 +130,8 @@ class FamilyController extends Controller {
         where: { id: userId },
         attributes: [], // 不需要返回用户信息，只需要家庭信息
       }],
-      attributes: [ 'id', 'name', 'createdAt', 'updatedAt' ], // 返回需要的字段
+      through: { attributes: [ 'role' ] },
+      attributes: [ 'id', 'name', 'createdAt', 'updatedAt', 'status' ], // 返回需要的字段
     });
 
     ctx.body = families;

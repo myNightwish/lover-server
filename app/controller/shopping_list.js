@@ -112,14 +112,11 @@ class ShoppingListController extends Controller {
         where: { familyId: family.id },
         include: [{ model: ctx.model.ShoppingItem }],
       });
-
-      if (list) {
-        shoppingLists.push({
-          familyId: family.id,
-          familyName: family.name,
-          items: list.shopping_items, // 购物清单项
-        });
-      }
+      shoppingLists.push({
+        familyId: family.id,
+        familyName: family.name,
+        items: list?.shopping_items || [], // 购物清单项
+      });
     }
 
     ctx.body = shoppingLists;
