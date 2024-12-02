@@ -45,14 +45,14 @@ class AuthController extends Controller {
     // 根据邮箱查找用户
     const user = await ctx.model.User.findOne({ where: { email } });
     if (!user) {
-      ctx.throw(400, 'User not found');
+      ctx.throw(400, { msg: '用户未找到' });
     }
 
     // 验证密码（如果需要，使用 bcrypt）
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      ctx.throw(400, 'Invalid password');
+      ctx.throw(400, '密码错误');
     }
 
     // 生成 JWT token

@@ -39,6 +39,13 @@ module.exports = app => {
     timestamps: true, // 自动维护 `createdAt` 和 `updatedAt`
     underscored: false, // 如果需要字段使用下划线命名，请设为 true
   });
+  User.associate = function() {
+    app.model.User.belongsToMany(app.model.Family, {
+      through: app.model.FamilyMember,
+      foreignKey: 'userId',
+      otherKey: 'familyId',
+    });
+  };
 
   return User;
 };

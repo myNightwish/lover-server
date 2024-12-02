@@ -23,7 +23,7 @@ class FamilyController extends Controller {
     const { email } = ctx.request.body;
     const invitedById = ctx.user.id;
     if (!invitedById) {
-      ctx.throw(400, 'User is not authenticated');
+      ctx.throw(400, { msg: '用户未被授权' });
     }
 
     // 查找家庭
@@ -61,14 +61,14 @@ class FamilyController extends Controller {
     });
 
     if (!invitation) {
-      ctx.throw(400, 'Invalid invitation');
+      ctx.throw(400, { msg: '邀请已失效' });
     }
 
     // 将用户加入家庭
     const family = await ctx.model.Family.findOne({ where: { id: invitation.familyId } });
 
     if (!family) {
-      ctx.throw(404, 'Family not found');
+      ctx.throw(400, { msg: '找不到对应群组，邀请已失效' });
     }
 
     await family.addUser(ctx.user.id, { through: { role: 'member' } });
@@ -108,7 +108,7 @@ class FamilyController extends Controller {
 
     // 检查邀请是否存在，并且是当前用户被邀请
     if (!invitation || invitation.status !== 'pending' || invitation.email !== ctx.user.email) {
-      ctx.throw(400, 'Invalid or expired invitation');
+      ctx.throw(400, { msg: '邀请已过期' });
     }
 
     // 更新邀请状态为已拒绝
@@ -122,19 +122,38 @@ class FamilyController extends Controller {
 
     // 获取当前用户信息
     const userId = ctx.user.id;
-
-    // 查询用户关联的家庭群组
-    const families = await ctx.model.Family.findAll({
-      include: [{
-        model: ctx.model.User,
-        where: { id: userId },
-        attributes: [], // 不需要返回用户信息，只需要家庭信息
-      }],
-      through: { attributes: [ 'role' ] },
-      attributes: [ 'id', 'name', 'createdAt', 'updatedAt', 'status' ], // 返回需要的字段
+    const familyMembers = await ctx.model.FamilyMember.findAll({
+      where: { userId },
+      attributes: [ 'familyId', 'role' ],
     });
 
-    ctx.body = families;
+    // 从 familyMembers 获取所有 familyId 和 role
+    const familyIds = familyMembers.map(fm => fm.familyId);
+    const roleMap = familyMembers.reduce((map, fm) => {
+      map[fm.familyId] = fm.role;
+      return map;
+    }, {});
+      // 查询与用户相关的家庭信息
+    const families = await ctx.model.Family.findAll({
+      where: {
+        id: familyIds, // 只查询当前用户关联的家庭
+      },
+      attributes: [ 'id', 'name', 'status', 'createdAt', 'updatedAt' ], // 返回家庭信息
+    });
+
+    // 为每个家庭添加 role 信息
+    const result = families.map(family => {
+      const role = roleMap[family.id] || 'unknown'; // 从 roleMap 获取角色信息
+      return {
+        id: family.id,
+        name: family.name,
+        status: family.status,
+        createdAt: family.createdAt,
+        updatedAt: family.updatedAt,
+        role, // 添加 role 信息
+      };
+    });
+    ctx.body = result;
   }
 
   // 解散家庭群组

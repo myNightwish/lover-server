@@ -46,7 +46,7 @@ class ShoppingListController extends Controller {
     const { familyId, itemIds } = ctx.request.body;
 
     if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
-      ctx.throw(400, 'Invalid itemIds');
+      ctx.throw(400, { msg: '无效的商品' });
     }
 
     // 查找购物清单及相关物品
