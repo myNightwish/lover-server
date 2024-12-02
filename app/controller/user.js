@@ -7,7 +7,7 @@ class UserController extends Controller {
     const userId = ctx.user.id;
 
     if (!userId) {
-      ctx.throw(401, 'Unauthorized');
+      ctx.throw(401, { message: 'Token expired', isTokenExpired: true });
     }
 
     // 查询用户信息及其家庭群组
