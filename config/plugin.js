@@ -17,3 +17,8 @@ exports.io = {
 //   enable: true,
 //   package: 'egg-mysql',
 // };
+// config/plugin.js
+exports.cors = {
+  enable: true,
+  package: 'egg-cors',
+};

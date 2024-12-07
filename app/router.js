@@ -22,4 +22,7 @@ module.exports = app => {
   router.post('/api/lists/create', auth, controller.shoppingList.create); // 创建清单
   router.post('/api/lists/markpurchased', auth, controller.shoppingList.markItemsAsPurchased); // 标记购买
   router.get('/api/user/info', auth, controller.user.getUserInfo); // 获取用户身份信息
+
+  // 微信小程序登录
+  router.post('/api/loginAndAutoSignUp', controller.wxUser.loginAndAutoSignUp);
 };
