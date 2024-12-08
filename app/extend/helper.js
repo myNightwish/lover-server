@@ -21,5 +21,32 @@ module.exports = {
     } catch (err) {
       throw new Error(`获取微信用户信息失败：${err.message}`);
     }
-  }
+  },
+  success(data = null, message = 'success') {
+    return {
+      success: true,
+      data,
+      message,
+    };
+  },
+  
+  error(message = 'error', status = 400) {
+    return {
+      success: false,
+      error: message,
+      status,
+    };
+  },
+  
+  formatConversation(conversation) {
+    return {
+      id: conversation.id,
+      question: conversation.question,
+      answer: conversation.answer,
+      status: conversation.status,
+      tokenCount: conversation.tokenCount,
+      createdAt: conversation.createdAt,
+      updatedAt: conversation.updatedAt,
+    };
+  },
 };

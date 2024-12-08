@@ -15,6 +15,25 @@ module.exports = appInfo => {
   config.jwt = {
     secret: '1234', // 替换为实际的密钥
   };
+  config.rabbitmq = {
+    url: process.env.RABBITMQ_URL,
+    queues: {
+      chatGPT: 'chatgpt_queue',
+    },
+  };
+  config.redis = {
+    client: {
+      host: 'localhost', // Redis 服务器地址
+      port: '6379',      // Redis 端口号，默认是 6379
+      password: '',      // 如果 Redis 有密码，设置密码，否则可以为空
+      db: 0,             // 使用的数据库索引，默认是 0
+    },
+  };
+  config.openai = {
+    apiKey: process.env.OPENAI_API_KEY || "sk-Gdz6my6Hh52tLBfDE57b413046Dd4e4cAa3003E0Db73D43c",
+    maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS, 10) || 50,
+    baseURL: process.env.AI_BASE_URL || 'https://vip.apiyi.com/v1',
+  };
   // add your middleware config here
   config.middleware = [];
   config.cors = {

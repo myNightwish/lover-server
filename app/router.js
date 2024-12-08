@@ -25,4 +25,10 @@ module.exports = app => {
 
   // 微信小程序登录
   router.post('/api/loginAndAutoSignUp', controller.wxUser.loginAndAutoSignUp);
+
+  // Chat routes
+  router.post('/api/chat/start', controller.chat.start);
+  router.get('/api/chat/query/:id', controller.chat.query);
+  router.get('/api/chat/history', controller.chat.history);
+  router.get('/api/chat/test', controller.chat.test);
 };
