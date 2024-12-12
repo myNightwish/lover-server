@@ -31,4 +31,10 @@ module.exports = app => {
   router.get('/api/chat/query/:id', controller.chat.query);
   router.get('/api/chat/history', controller.chat.history);
   router.get('/api/chat/test', controller.chat.test);
+
+  // 问卷调查
+  router.get('/api/questionnaire/init', controller.questionnaire.init);
+  router.get('/api/questionnaire/list', controller.questionnaire.list);
+  router.post('/api/questionnaire/submit', controller.questionnaire.submit);
+  router.get('/api/questionnaire/detail', controller.questionnaire.detail);
 };
