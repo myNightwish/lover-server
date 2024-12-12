@@ -9,8 +9,16 @@ module.exports = app => {
     question_type: STRING(20), // 'single_choice', 'multiple_choice', 'text'
     options: TEXT, // JSON string for choices
     order: INTEGER,
-    created_at: DATE,
-    updated_at: DATE,
+    created_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW,
+    },
+    updated_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW,
+    },
   });
 
   QuestionTemplate.associate = function() {

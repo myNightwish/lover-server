@@ -7,8 +7,16 @@ module.exports = app => {
     user_id: INTEGER,
     template_id: INTEGER,
     status: INTEGER, // 0: 未完成, 1: 已完成
-    created_at: DATE,
-    updated_at: DATE,
+    created_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW,
+    },
+    updated_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW,
+    },
   });
 
   UserQuestionnaire.associate = function() {

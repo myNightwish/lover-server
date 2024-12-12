@@ -116,6 +116,7 @@ class QuestionnaireService extends Service {
           as: 'questions',
         }],
       }],
+      limit: 1, // 只取最新的一条
     });
   }
 
@@ -135,17 +136,9 @@ class QuestionnaireService extends Service {
     }
 
     // 保存答案
-    // for (const answer of answers) {
-    //   console.log('99999', answer);
-    //   await ctx.model.UserAnswer.create({
-    //     user_questionnaire_id: userQuestionnaire.id,
-    //     question_id: answer.questionId,
-    //     answer: answer.answer,
-    //   });
-    // }
     const bulkAnswers = answers.map(answer => ({
       user_questionnaire_id: userQuestionnaire.id,
-      question_id: answer.questionId,
+      question_id: answer.questionId + 1,
       answer: answer.answer,
     }));
 
@@ -153,10 +146,10 @@ class QuestionnaireService extends Service {
 
     // 更新问卷状态为已完成
     await userQuestionnaire.update({ status: 1 });
-    return 'hello';
-
-    // 生成分析报告
-    // return await this.generateAnalysis(userQuestionnaire.id);
+    return {
+      success: true,
+      message: '问卷提交成功',
+    };
   }
 
   // 生成分析报告

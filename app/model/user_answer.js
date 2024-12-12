@@ -7,8 +7,16 @@ module.exports = app => {
     user_questionnaire_id: INTEGER,
     question_id: INTEGER,
     answer: TEXT,
-    created_at: DATE,
-    updated_at: DATE,
+    created_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW,
+    },
+    updated_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW,
+    },
   });
 
   UserAnswer.associate = function() {

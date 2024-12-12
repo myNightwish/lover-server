@@ -19,10 +19,7 @@ class QuestionnaireController extends Controller {
     const { ctx } = this;
     // const userId = ctx.user.id;
     const userId = 1;
-
     const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
-    // console.log('111', res);
-    // const questionnaires = res.questionnaire_template || {};
 
     ctx.body = {
       success: true,
