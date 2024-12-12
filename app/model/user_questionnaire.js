@@ -32,9 +32,7 @@ module.exports = app => {
     });
   };
   UserQuestionnaire.sync({ force: false }) // force: false 确保不会删除表
-    .then(() => {
-      console.log('UserQuestionnaire 表已同步');
-    })
+    .then(() => {})
     .catch(err => {
       console.error('同步 UserQuestionnaire 表失败:', err);
     });

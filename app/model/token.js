@@ -18,9 +18,7 @@ module.exports = app => {
     },
   });
   Token.sync({ force: false }) // force: false 确保不会删除表
-    .then(() => {
-      console.log('Token 表已同步');
-    })
+    .then(() => {})
     .catch(err => {
       console.error('同步 Token 表失败:', err);
     });

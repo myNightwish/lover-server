@@ -36,9 +36,7 @@ module.exports = app => {
 
   // 可选：同步表格
   Conversation.sync({ force: false })
-    .then(() => {
-      console.log('Conversation 表已同步');
-    })
+    .then(() => {})
     .catch(err => {
       console.error('同步 Conversation 表失败:', err);
     });
@@ -47,7 +45,7 @@ module.exports = app => {
   Conversation.findByUserId = async function(userId, page, pageSize) {
     return await this.findAndCountAll({
       where: { userId },
-      order: [['created_at', 'DESC']],
+      order: [[ 'created_at', 'DESC' ]],
       limit: pageSize,
       offset: (page - 1) * pageSize,
     });
@@ -58,14 +56,14 @@ module.exports = app => {
     this.answer = answer;
     this.tokenCount = tokenCount;
     this.status = 'completed';
-    await this.save({ fields: ['answer', 'tokenCount', 'status'] });
+    await this.save({ fields: [ 'answer', 'tokenCount', 'status' ] });
   };
 
   // 定义实例方法（标记为失败）
   Conversation.prototype.markAsFailed = async function(error) {
     this.status = 'failed';
     this.error = error;
-    await this.save({ fields: ['status', 'error'] });
+    await this.save({ fields: [ 'status', 'error' ] });
   };
 
   return Conversation;

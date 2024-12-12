@@ -31,9 +31,7 @@ module.exports = app => {
     });
   };
   UserAnswer.sync({ force: false }) // force: false 确保不会删除表
-    .then(() => {
-      console.log('UserAnswer 表已同步');
-    })
+    .then(() => {})
     .catch(err => {
       console.error('同步 UserAnswer 表失败:', err);
     });

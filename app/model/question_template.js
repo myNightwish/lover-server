@@ -33,9 +33,7 @@ module.exports = app => {
     });
   };
   QuestionTemplate.sync({ force: false }) // force: false 确保不会删除表
-    .then(() => {
-      console.log('QuestionTemplate 表已同步');
-    })
+    .then(() => {})
     .catch(err => {
       console.error('同步 QuestionTemplate 表失败:', err);
     });

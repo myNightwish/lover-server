@@ -24,9 +24,7 @@ module.exports = app => {
     });
   };
   QuestionnaireTemplate.sync({ force: false }) // force: false 确保不会删除表
-    .then(() => {
-      console.log('QuestionnaireTemplate 表已同步');
-    })
+    .then(() => {})
     .catch(err => {
       console.error('同步 QuestionnaireTemplate 表失败:', err);
     });

@@ -8,7 +8,8 @@ class ChatController extends Controller {
     try {
       // 验证请求参数
       const { error } = Joi.object({
-        question: Joi.string().required().min(1).max(1000),
+        question: Joi.string().required().min(1)
+          .max(1000),
       }).validate({ question });
       // 如果验证失败，抛出一个错误
       if (error) {
@@ -36,19 +37,18 @@ class ChatController extends Controller {
         'EX',
         3600
       );
-      const callback = async (data) => {
+      const callback = async data => {
         // 假设这里有个service方法来处理消息数据，比如保存到数据库
         await this.service.base.processGPTRequest(data.conversationId, data.question);
-    };
+      };
       // 启动消费者进程开始监听队列消息并处理
       await ctx.service.queue.startConsumer(callback);
-     
+
       ctx.body = ctx.helper.success({
         conversationId: conversation.id,
         status: 'pending',
       });
     } catch (error) {
-      console.log('err0000')
       ctx.body = ctx.helper.error(error.message);
     }
   }

@@ -1,11 +1,10 @@
 const Controller = require('egg').Controller;
-
+const userId = 1;
 class QuestionnaireController extends Controller {
   // 初始化用户问卷
   async init() {
     const { ctx } = this;
     // const userId = ctx.user.id; // 假设通过中间件获取已登录用户ID
-    const userId = 1;
     const questionnaires = await ctx.service.questionnaire.initUserQuestionnaires(userId);
 
     ctx.body = {
@@ -18,7 +17,6 @@ class QuestionnaireController extends Controller {
   async list() {
     const { ctx } = this;
     // const userId = ctx.user.id;
-    const userId = 1;
     const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
 
     ctx.body = {
@@ -31,8 +29,6 @@ class QuestionnaireController extends Controller {
   async submit() {
     const { ctx } = this;
     // const userId = ctx.user.id;
-    const userId = 1;
-
     const { questionnaireId, answers } = ctx.request.body;
 
     const analysis = await ctx.service.questionnaire.submitQuestionnaire(
