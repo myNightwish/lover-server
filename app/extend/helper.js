@@ -29,7 +29,7 @@ module.exports = {
       message,
     };
   },
-  
+
   error(message = 'error', status = 400) {
     return {
       success: false,
@@ -37,7 +37,7 @@ module.exports = {
       status,
     };
   },
-  
+
   formatConversation(conversation) {
     return {
       id: conversation.id,

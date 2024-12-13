@@ -2,7 +2,6 @@ const Service = require('egg').Service;
 
 class QuestionnaireService extends Service {
   // 初始化用户问卷
-  // 初始化用户问卷
   async initUserQuestionnaires(userId) {
     const { ctx } = this;
 
@@ -239,6 +238,64 @@ class QuestionnaireService extends Service {
         };
       }),
     };
+  }
+
+  // 提交问卷并处理好友关系
+  async submitWithShare(userId, answers, shareId, questionnaireId) {
+    const { ctx } = this;
+
+    // 开启事务
+    const transaction = await ctx.model.transaction();
+
+    try {
+      // 1. 提交问卷答案
+      const submitResult = await this.submitQuestionnaire(userId, questionnaireId, answers);
+
+      // 2. 如果有分享者ID，建立好友关系
+      if (shareId && shareId !== userId) {
+        await this.createFriendRelationship(userId, shareId, transaction);
+      }
+
+      // 提交事务
+      await transaction.commit();
+
+      return submitResult;
+    } catch (error) {
+      // 回滚事务
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  // 创建双向好友关系
+  async createFriendRelationship(userId, friendId, transaction) {
+    const { ctx } = this;
+
+    // 检查是否已经是好友
+    const existingFriend = await ctx.model.UserFriend.findOne({
+      where: {
+        user_id: userId,
+        friend_id: friendId,
+      },
+    });
+
+    if (!existingFriend) {
+      // 创建双向好友关系
+      await ctx.model.UserFriend.bulkCreate([
+        {
+          user_id: userId,
+          friend_id: friendId,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          user_id: friendId,
+          friend_id: userId,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ], { transaction });
+    }
   }
 }
 

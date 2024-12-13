@@ -1,6 +1,6 @@
 // app/model/user.js
 module.exports = app => {
-  const { STRING, DATE } = app.Sequelize;
+  const { STRING, DATE, INTEGER } = app.Sequelize;
 
   // 定义模型
   const User = app.model.define('user', {
@@ -12,6 +12,10 @@ module.exports = app => {
     },
     // 密码字段
     password: {
+      type: STRING,
+      allowNull: false,
+    },
+    avatar: {
       type: STRING,
       allowNull: false,
     },
@@ -45,6 +49,11 @@ module.exports = app => {
       foreignKey: 'userId',
       otherKey: 'familyId',
     });
+  };
+  // 定义关联
+  User.associate = function() {
+    app.model.User.hasMany(app.model.UserFriend, { foreignKey: 'user_id', as: 'friends' });
+    app.model.User.hasMany(app.model.UserFriend, { foreignKey: 'friend_id', as: 'friendOf' });
   };
 
   return User;

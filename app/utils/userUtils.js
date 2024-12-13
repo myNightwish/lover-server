@@ -7,10 +7,10 @@ async function getUserByOpenId(openid) {
 }
 
 // 创建微信用户
-async function createUser(openid, nickname, avatarUrl) {
+async function createUser(openid, nickName, avatarUrl) {
   const wxUser = await WxUser.create({
     openid,
-    nickname,
+    nickName,
     avatarUrl,
   });
   return wxUser;

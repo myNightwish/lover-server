@@ -2,13 +2,13 @@ const Controller = require('egg').Controller;
 const jwt = require('jsonwebtoken');
 
 class WxUserController extends Controller {
-   // 登录/注册接口
+  // 登录/注册接口
   async loginAndAutoSignUp() {
     const { ctx } = this;
-    const { code } = ctx.request.body;
+    const { code, userInfo } = ctx.request.body;
     try {
       // 调用 service 层方法处理
-      const result = await ctx.service.wxUser.loginAndAutoSignUp(code);
+      const result = await ctx.service.wxUser.loginAndAutoSignUp(code, userInfo);
 
       // 返回结果给前端
       ctx.body = {
@@ -33,20 +33,20 @@ class WxUserController extends Controller {
 
     // 根据refreshToken获取用户信息
     const decoded = await jwt.verify(refreshToken, app.config.jwt.secret, { ignoreExpiration: true });
-    
+
     if (!decoded) {
       ctx.throw(401, 'Invalid refresh token');
     }
 
     // 根据解码得到的用户信息重新生成新的accessToken和refreshToken
-    const user = await ctx.service.wxUser.findById(decoded.userId); // 获取用户信息
+    const user = await ctx.service.wxUser.findByOpenId(decoded.userId); // 获取用户信息
     if (!user) {
       ctx.throw(404, 'User not found');
     }
 
     // 生成新的token
-    const newAccessToken = app.jwt.sign({ userId: user.id }, app.config.jwt.secret, { expiresIn: '1h' });
-    const newRefreshToken = app.jwt.sign({ userId: user.id }, app.config.jwt.secret, { expiresIn: '7d' });
+    const newAccessToken = app.jwt.sign({ id: user.id, openid: user.openid }, app.config.jwt.secret, { expiresIn: '1h' });
+    const newRefreshToken = app.jwt.sign({ id: user.id, openid: user.openid }, app.config.jwt.secret, { expiresIn: '7d' });
 
     // 返回新的tokens
     ctx.body = {
