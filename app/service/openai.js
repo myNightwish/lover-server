@@ -1,5 +1,5 @@
 const OpenAI = require('openai');
-const  {AppError} = require('../utils/errors');
+const { AppError } = require('../utils/errors');
 
 class OpenAIService {
   constructor(ctx) {
@@ -13,12 +13,12 @@ class OpenAIService {
   async generateResponse(question) {
     try {
       const completion = await this.openai.chat.completions.create({
-        model: "gpt-4-turbo",
+        model: 'gpt-4-turbo',
         stream: false,
         messages: [
-            { role: "system", content: "请用奖励小狐狸萌宠的徽章图片的方式鼓励我做到更棒的事" },
-            { role: "user", content: question }
-        ]
+          { role: 'system', content: '请用奖励小狐狸萌宠的徽章图片的方式鼓励我做到更棒的事' },
+          { role: 'user', content: question },
+        ],
       });
 
       return {

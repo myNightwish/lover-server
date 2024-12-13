@@ -1,6 +1,6 @@
 // app/model/wx_user.js
 module.exports = app => {
-  const { STRING, DATE, INTEGER } = app.Sequelize;
+  const { STRING, DATE } = app.Sequelize;
 
   const WxUser = app.model.define('wx_user', {
     openid: {

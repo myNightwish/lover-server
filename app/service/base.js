@@ -1,5 +1,3 @@
-const Service = require('egg').Service;
-
 class BaseService {
   constructor(ctx) {
     this.ctx = ctx;

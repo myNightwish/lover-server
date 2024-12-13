@@ -57,9 +57,9 @@ class QuestionnaireController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     // 获取查询参数
-    const { questionnaireId, ownerId, shareId } = ctx.query;
+    const { questionnaireId } = ctx.query;
 
-    const detail = await ctx.service.questionnaire.getQuestionnaireDetail(ownerId, questionnaireId);
+    const detail = await ctx.service.questionnaire.getQuestionnaireDetail(userId, questionnaireId);
 
     ctx.body = {
       success: true,

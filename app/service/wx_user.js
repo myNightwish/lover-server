@@ -23,10 +23,13 @@ class WxUserService extends Service {
         avatarUrl,
       });
     }
+    console.log('user.id--', user.id);
+
     // 生成JWT Token
     const accessToken = jwt.sign({ id: user.id, openid: user.openid }, app.config.jwt.secret, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: user.id, openid: user.openid }, app.config.jwt.secret, { expiresIn: '7d' });
     // 返回数据
+
     return {
       accessToken,
       refreshToken,

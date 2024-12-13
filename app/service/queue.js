@@ -1,8 +1,7 @@
 const amqp = require('amqplib');
 const AppError = require('../utils/errors.js').AppError;
-const Service = require('egg').Service;
 
-class QueueService{
+class QueueService {
   constructor(ctx) {
     this.ctx = ctx;
     this.config = ctx.app.config.rabbitmq;
@@ -41,8 +40,8 @@ class QueueService{
     try {
       const channel = await this.getChannel();
       await channel.prefetch(this.ctx.app.config.openai.maxConcurrentRequests);
-      
-      channel.consume(this.config.queues.chatGPT, async (msg) => {
+
+      channel.consume(this.config.queues.chatGPT, async msg => {
         if (msg) {
           try {
             const data = JSON.parse(msg.content.toString());

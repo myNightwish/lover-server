@@ -1,6 +1,6 @@
 // 用户答案表
 module.exports = app => {
-  const { STRING, INTEGER, TEXT, DATE } = app.Sequelize;
+  const { INTEGER, TEXT, DATE } = app.Sequelize;
 
   const UserAnswer = app.model.define('user_answer', {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },

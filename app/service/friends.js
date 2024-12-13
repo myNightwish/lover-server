@@ -72,26 +72,27 @@ class FriendService extends Service {
   async getFriendList(userId) {
     const { ctx } = this;
 
+    // 查询好友列表
     const friends = await ctx.model.UserFriend.findAll({
       where: { user_id: userId },
       include: [{
         model: ctx.model.WxUser,
-        as: 'friend',
-        attributes: [ 'id', 'nickName', 'avatarUrl' ],
+        as: 'friend', // 必须和关联别名一致
+        attributes: [ 'id', 'nickName', 'avatarUrl' ], // 只获取需要的字段
       }],
-      order: [[ 'created_at', 'DESC' ]],
+      order: [[ 'created_at', 'DESC' ]], // 根据添加时间倒序
     });
     console.log('friends000', friends);
 
-    const res = friends.map(f => ({
-      userId: f.user_id,
-      nickName: f.nickName,
-      avatarUrl: f.avatarUrl,
+    // 格式化返回结果
+    return friends.map(f => ({
+      friendId: f.friend?.id || 0, // 从关联的 friend 对象获取 ID
+      nickName: f.friend?.nickName || '未设置昵称', // 从关联的 friend 对象获取昵称
+      avatarUrl: f.friend?.avatarUrl || 'https://m.duitang.com/blogs/tag/?name=%E5%88%98%E4%BA%A6%E8%8F%B2%E5%B0%8F%E9%BE%99%E5%A5%B3', // 从关联的 friend 对象获取头像
       createdAt: f.created_at,
     }));
-    console.log('res000', res);
-    return res;
   }
+
 }
 
 module.exports = FriendService;
