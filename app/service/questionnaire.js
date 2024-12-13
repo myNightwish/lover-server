@@ -1,7 +1,10 @@
 const Service = require('egg').Service;
 
 class QuestionnaireService extends Service {
-  // 初始化用户问卷
+  /**
+   * 初始化用户问卷
+   * @param userId
+   */
   async initUserQuestionnaires(userId) {
     const { ctx } = this;
 
@@ -11,6 +14,7 @@ class QuestionnaireService extends Service {
       include: [{
         model: ctx.model.QuestionTemplate,
         as: 'questions',
+        order: [[ 'order', 'ASC' ]],
       }],
     });
 
@@ -20,127 +24,145 @@ class QuestionnaireService extends Service {
       return this.initUserQuestionnaires(userId); // 递归调用
     }
 
-    // 检查用户是否已有问卷
-    const existingQuestionnaires = await ctx.model.UserQuestionnaire.findAll({
-      where: { user_id: userId },
-    });
+    // 使用事务确保数据一致性
+    const result = await ctx.model.transaction(async transaction => {
+      // 检查用户是否已有问卷
+      const existingQuestionnaires = await ctx.model.UserQuestionnaire.findAll({
+        where: { user_id: userId },
+        attributes: [ 'template_id' ],
+        transaction,
+      });
 
-    // 为用户创建尚未拥有的问卷
-    for (const template of templates) {
-      const exists = existingQuestionnaires.some(q => q.template_id === template.id);
-      if (!exists) {
-        await ctx.model.UserQuestionnaire.create({
+      const existingTemplateIds = new Set(existingQuestionnaires.map(q => q.template_id));
+
+      // 批量创建用户问卷
+      const newQuestionnaires = templates
+        .filter(template => !existingTemplateIds.has(template.id))
+        .map(template => ({
           user_id: userId,
           template_id: template.id,
           status: 0,
-        });
-      }
-    }
+          created_at: new Date(),
+          updated_at: new Date(),
+        }));
 
-    // 返回完整的用户问卷列表
-    return await this.getUserQuestionnaires(userId);
+      if (newQuestionnaires.length > 0) {
+        await ctx.model.UserQuestionnaire.bulkCreate(newQuestionnaires, { transaction });
+      }
+
+      // 返回完整的用户问卷列表
+      return this.getUserQuestionnaires(userId, transaction);
+    });
+
+    return result;
   }
 
-  // 创建默认模板
+  /**
+     * 创建默认模板
+     */
   async createDefaultTemplates() {
     const { ctx } = this;
 
-    // 创建问卷模板
-    const templates = [
-      {
-        title: '对我们的了解',
-        description: '了解我们共同创建的世界',
-        status: 0,
-        questions: [
-          {
-            question_text: '你们的结婚记念日',
-            question_type: 'single_choice',
-            options: JSON.stringify([ '1-3月', '4-6月', '7-9月', '10-12月' ]),
-            order: 1,
-          },
-          {
-            question_text: '你们最美好的一次回忆',
-            question_type: 'single_choice',
-            options: '',
-            order: 2,
-          },
-        ],
-      },
-      {
-        title: '他(她)的世界',
-        description: '你是否曾尝试过走进伴侣的世界，了解有关于他(她)的一切',
-        status: 0,
-        questions: [
-          {
-            question_text: '他(她)的生日',
-            question_type: 'single_choice',
-            options: '',
-            order: 1,
-          },
-          {
-            question_text: '他(她)最喜欢的花',
-            question_type: 'single_choice',
-            options: '',
-            order: 2,
-          },
-          {
-            question_text: '他(她)最喜欢的食物',
-            question_type: 'single_choice',
-            options: '',
-            order: 3,
-          },
-          {
-            question_text: '他(她)的身份证号码',
-            question_type: 'single_choice',
-            options: '',
-            order: 4,
-          },
-          {
-            question_text: '他(她)最喜欢的颜色',
-            question_type: 'single_choice',
-            options: '',
-            order: 5,
-          },
-          {
-            question_text: '他(她)最讨厌吃的食物',
-            question_type: 'multiple_choice',
-            options: '',
-            order: 6,
-          },
-        ],
-      },
-      // ... 其他模板
-    ];
+    // 使用事务确保数据一致性
+    await ctx.model.transaction(async transaction => {
+      const templates = [
+        {
+          title: '对我们的了解',
+          description: '了解我们共同创建的世界',
+          status: 1, // 修改为启用状态
+          questions: [
+            {
+              question_text: '你们的结婚记念日',
+              question_type: 'single_choice',
+              options: JSON.stringify([ '1-3月', '4-6月', '7-9月', '10-12月' ]),
+              order: 1,
+            },
+            {
+              question_text: '你们最美好的一次回忆',
+              question_type: 'text',
+              options: null,
+              order: 2,
+            },
+          ],
+        },
+        {
+          title: '他(她)的世界',
+          description: '你是否曾尝试过走进伴侣的世界，了解有关于他(她)的一切',
+          status: 1, // 修改为启用状态
+          questions: [
+            {
+              question_text: '他(她)的生日',
+              question_type: 'single_choice',
+              options: JSON.stringify([ '春天', '夏天', '秋天', '冬天' ]),
+              order: 1,
+            },
+            {
+              question_text: '他(她)最喜欢的食物',
+              question_type: 'text',
+              options: null,
+              order: 2,
+            },
+          ],
+        },
+      ];
 
-    for (const template of templates) {
-      const questions = template.questions;
-      delete template.questions;
+      // 批量创建问卷模板和问题
+      for (const template of templates) {
+        const questions = template.questions;
+        delete template.questions;
 
-      const createdTemplate = await ctx.model.QuestionnaireTemplate.create(template);
+        const createdTemplate = await ctx.model.QuestionnaireTemplate.create(template, { transaction });
 
-      for (const question of questions) {
-        await ctx.model.QuestionTemplate.create({
+        const questionRecords = questions.map(question => ({
           ...question,
           questionnaire_id: createdTemplate.id,
-        });
+          created_at: new Date(),
+          updated_at: new Date(),
+        }));
+
+        await ctx.model.QuestionTemplate.bulkCreate(questionRecords, { transaction });
       }
-    }
+    });
   }
 
-  // 获取用户问卷列表
-  async getUserQuestionnaires(userId) {
+  /**
+     * 获取用户问卷列表
+     * @param userId
+     * @param transaction
+     */
+  async getUserQuestionnaires(userId, transaction) {
     const { ctx } = this;
-    return await ctx.model.UserQuestionnaire.findAll({
+    const questionnaires = await ctx.model.UserQuestionnaire.findAll({
       where: { user_id: userId },
       include: [{
         model: ctx.model.QuestionnaireTemplate,
         include: [{
           model: ctx.model.QuestionTemplate,
           as: 'questions',
+          order: [[ 'order', 'ASC' ]],
         }],
       }],
-      limit: 1, // 只取最新的一条
+      order: [[ 'created_at', 'DESC' ]],
+      transaction,
     });
+
+    // 格式化返回数据
+    return questionnaires.map(questionnaire => ({
+      id: questionnaire.id,
+      status: questionnaire.status,
+      template: {
+        id: questionnaire.questionnaire_template.id,
+        title: questionnaire.questionnaire_template.title,
+        description: questionnaire.questionnaire_template.description,
+        questions: questionnaire.questionnaire_template.questions.map(question => ({
+          id: question.id,
+          text: question.question_text,
+          type: question.question_type,
+          options: question.options ? JSON.parse(question.options) : null,
+          order: question.order,
+        })),
+      },
+    }));
   }
 
   // 提交问卷答案

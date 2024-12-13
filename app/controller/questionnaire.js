@@ -16,7 +16,9 @@ class QuestionnaireController extends Controller {
   async list() {
     const { ctx } = this;
     const userId = ctx.user.id;
-    const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
+    // 用来初始化：
+    // const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
+    const questionnaires = await ctx.service.questionnaire.initUserQuestionnaires(userId);
 
     ctx.body = {
       success: true,

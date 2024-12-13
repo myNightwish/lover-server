@@ -1,8 +1,13 @@
 // app/model/wx_user.js
 module.exports = app => {
-  const { STRING, DATE } = app.Sequelize;
+  const { STRING, DATE, INTEGER } = app.Sequelize;
 
   const WxUser = app.model.define('wx_user', {
+    id: {
+      type: INTEGER, // 数据类型为整型
+      primaryKey: true, // 设置为主键
+      autoIncrement: true, // 设置自动递增
+    },
     openid: {
       type: STRING,
       allowNull: false,
