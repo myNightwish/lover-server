@@ -45,7 +45,7 @@ class QuestionnaireController extends Controller {
       ctx.body = {
         success: true,
         data: result,
-        message: shareId ? '问卷提交成功并建立好友关系' : '问卷提交成功',
+        message: shareId !== userId ? '问卷提交成功并建立好友关系' : '问卷提交成功',
       };
     } catch (error) {
       ctx.status = 500;
@@ -89,6 +89,27 @@ class QuestionnaireController extends Controller {
         message: error.message,
       };
     }
+  }
+  async analyze() {
+    const { ctx } = this;
+    const userId = ctx.user.id;
+    const { questionnaireId } = ctx.request.body;
+    const userQuestionnaire = await ctx.model.UserQuestionnaire.findOne({
+      where: {
+        user_id: userId,
+        template_id: questionnaireId,
+      },
+    });
+
+    if (!userQuestionnaire) {
+      throw new Error('问卷不存在');
+    }
+    const result = await ctx.service.questionnaire.scoreAndAnalyze(userId, userQuestionnaire.id, questionnaireId);
+    ctx.body = {
+      success: true,
+      data: result,
+      message: '已完成分析结果',
+    };
   }
 }
 

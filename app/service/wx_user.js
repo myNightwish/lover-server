@@ -6,7 +6,6 @@ class WxUserService extends Service {
     const { ctx, app } = this;
     // 假设你通过微信的 code 获取到 openid 或 unionid
     const { openid } = await ctx.helper.getWeChatUserInfo(code);
-    console.log('userInfo--', userInfo);
 
     if (!userInfo) {
       throw new Error('获取用户信息失败');
@@ -23,7 +22,6 @@ class WxUserService extends Service {
         avatarUrl,
       });
     }
-    console.log('user.id--', user.id);
 
     // 生成JWT Token
     const accessToken = jwt.sign({ id: user.id, openid: user.openid }, app.config.jwt.secret, { expiresIn: '1h' });

@@ -12,7 +12,6 @@ module.exports = app => {
   router.post('/api/chat/start', controller.chat.start);
   router.get('/api/chat/query/:id', controller.chat.query);
   router.get('/api/chat/history', controller.chat.history);
-  router.get('/api/chat/test', controller.chat.test);
 
   // 问卷调查
   router.get('/api/questionnaire/init', authWx, controller.questionnaire.init);
@@ -20,4 +19,5 @@ module.exports = app => {
   router.post('/api/questionnaire/submit', authWx, controller.questionnaire.submit);
   router.get('/api/questionnaire/detail', authWx, controller.questionnaire.detail);
   router.get('/api/questionnaire/friends', authWx, controller.questionnaire.friends);
+  router.post('/api/questionnaire/analyze', authWx, controller.questionnaire.analyze);
 };

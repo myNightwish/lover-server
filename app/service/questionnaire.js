@@ -222,36 +222,6 @@ class QuestionnaireService extends Service {
     };
   }
 
-  // 生成分析报告
-  async generateAnalysis(userQuestionnaireId) {
-    const { ctx } = this;
-    const userQuestionnaire = await ctx.model.UserQuestionnaire.findByPk(
-      userQuestionnaireId,
-      {
-        include: [{
-          model: ctx.model.UserAnswer,
-          include: [{
-            model: ctx.model.QuestionTemplate,
-          }],
-        }],
-      }
-    );
-
-    // 收集答案数据
-    const answers = userQuestionnaire.answers.map(a => ({
-      question: a.question.question_text,
-      answer: a.answer,
-    }));
-
-    // 调用GPT API进行分析
-    const analysis = await ctx.service.gpt.analyze({
-      type: 'questionnaire_analysis',
-      data: answers,
-    });
-
-    return analysis;
-  }
-
   // 获取问卷详情
   async getQuestionnaireDetail(userId, questionnaireId) {
     const { ctx } = this;
@@ -366,6 +336,25 @@ class QuestionnaireService extends Service {
         },
       ], { transaction });
     }
+  }
+
+  async scoreAndAnalyze(userId, userQuestionnaireId, questionnaireId) {
+    const { ctx } = this;
+    // 计算得分
+    const scores = await ctx.service.scoring.calculateQuestionnaireScores(userQuestionnaireId);
+    // 生成分析报告
+    const analysis = await ctx.service.analysis.analyzeQuestionnaire(userId, questionnaireId);
+    // 调用GPT生成专业建议
+    // const gptAnalysis = await ctx.service.openai.analyze({
+    //   scores,
+    //   analysis,
+    //   userId,
+    // });
+    return {
+      scores,
+      analysis,
+      // gptAnalysis,
+    };
   }
 }
 

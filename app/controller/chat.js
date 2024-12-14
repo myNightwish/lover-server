@@ -105,17 +105,5 @@ class ChatController extends Controller {
       ctx.body = ctx.helper.error(error.message);
     }
   }
-
-  async test() {
-    const { ctx } = this;
-    console.log('test');
-    ctx.body = {
-      code: 0,
-      message: 'ok',
-      data: {
-        a: 1,
-      },
-    };
-  }
 }
 module.exports = ChatController;
