@@ -67,45 +67,72 @@ class QuestionnaireService extends Service {
     await ctx.model.transaction(async transaction => {
       const templates = [
         {
-          title: '对我们的了解',
-          description: '了解我们共同创建的世界',
-          status: 1, // 修改为启用状态
+          title: '亲密关系评估问卷',
+          description: '基于心理学理论的专业关系评估工具',
+          status: 1,
           questions: [
+          // 情感连接维度
             {
-              question_text: '你们的结婚记念日',
-              question_type: 'single_choice',
-              options: JSON.stringify([ '1-3月', '4-6月', '7-9月', '10-12月' ]),
+              dimension_id: 1,
+              question_text: '我能够轻松地向伴侣表达我的感受',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
               order: 1,
             },
             {
-              question_text: '你们最美好的一次回忆',
-              question_type: 'text',
-              options: null,
+              dimension_id: 1,
+              question_text: '当伴侣遇到困难时，我能感受到他/她的情绪',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
               order: 2,
             },
-          ],
-        },
-        {
-          title: '他(她)的世界',
-          description: '你是否曾尝试过走进伴侣的世界，了解有关于他(她)的一切',
-          status: 1, // 修改为启用状态
-          questions: [
+            // 沟通质量维度
             {
-              question_text: '他(她)的生日',
-              question_type: 'single_choice',
-              options: JSON.stringify([ '春天', '夏天', '秋天', '冬天' ]),
-              order: 1,
+              dimension_id: 2,
+              question_text: '我们能够进行有效的沟通，互相理解对方的观点',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
+              order: 3,
             },
             {
-              question_text: '他(她)最喜欢的食物',
-              question_type: 'text',
-              options: null,
-              order: 2,
+              dimension_id: 2,
+              question_text: '在日常交流中，我们会认真倾听对方的想法',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
+              order: 4,
+            },
+            // 冲突处理维度
+            {
+              dimension_id: 3,
+              question_text: '当出现分歧时，我们能够平和地讨论解决方案',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
+              order: 5,
+            },
+            {
+              dimension_id: 3,
+              question_text: '我们能够在争执后达成有效的和解',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
+              order: 6,
+            },
+            // 共同成长维度
+            {
+              dimension_id: 4,
+              question_text: '我们会互相支持对方的个人发展和目标',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
+              order: 7,
+            },
+            {
+              dimension_id: 4,
+              question_text: '我们有共同的未来规划和期望',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
+              order: 8,
             },
           ],
-        },
-      ];
-
+        }];
       // 批量创建问卷模板和问题
       for (const template of templates) {
         const questions = template.questions;
@@ -168,7 +195,6 @@ class QuestionnaireService extends Service {
   // 提交问卷答案
   async submitQuestionnaire(userId, questionnaireId, answers) {
     const { ctx } = this;
-    console.log(userId, questionnaireId);
     const userQuestionnaire = await ctx.model.UserQuestionnaire.findOne({
       where: {
         user_id: userId,
@@ -183,12 +209,11 @@ class QuestionnaireService extends Service {
     // 保存答案
     const bulkAnswers = answers.map(answer => ({
       user_questionnaire_id: userQuestionnaire.id,
-      question_id: answer.questionId + 1,
+      question_id: answer.questionId,
       answer: answer.answer,
     }));
 
     await ctx.model.UserAnswer.bulkCreate(bulkAnswers);
-
     // 更新问卷状态为已完成
     await userQuestionnaire.update({ status: 1 });
     return {
@@ -230,10 +255,9 @@ class QuestionnaireService extends Service {
   // 获取问卷详情
   async getQuestionnaireDetail(userId, questionnaireId) {
     const { ctx } = this;
-
     const userQuestionnaire = await ctx.model.UserQuestionnaire.findOne({
       where: {
-        id: questionnaireId,
+        template_id: questionnaireId,
         user_id: userId,
       },
       include: [

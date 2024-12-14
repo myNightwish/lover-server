@@ -17,8 +17,9 @@ class QuestionnaireController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     // 用来初始化：
-    // const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
-    const questionnaires = await ctx.service.questionnaire.initUserQuestionnaires(userId);
+    // const questionnaires = await ctx.service.questionnaire.initUserQuestionnaires(userId);
+
+    const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
 
     ctx.body = {
       success: true,

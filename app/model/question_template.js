@@ -5,8 +5,9 @@ module.exports = app => {
   const QuestionTemplate = app.model.define('question_template', {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },
     questionnaire_id: INTEGER,
+    dimension_id: INTEGER,
     question_text: TEXT,
-    question_type: STRING(20), // 'single_choice', 'multiple_choice', 'text'
+    question_type: STRING(20), // 'single_choice', 'multiple_choice', 'text', 'scale'
     options: TEXT, // JSON string for choices
     order: INTEGER,
     created_at: {
@@ -27,6 +28,12 @@ module.exports = app => {
       foreignKey: 'questionnaire_id',
     });
 
+    // 与维度的多对一关系
+    app.model.QuestionTemplate.belongsTo(app.model.QuestionnaireDimension, {
+      foreignKey: 'dimension_id',
+      as: 'dimension',
+    });
+
     // 与用户答案的一对多关系
     app.model.QuestionTemplate.hasMany(app.model.UserAnswer, {
       foreignKey: 'question_id',
@@ -37,7 +44,6 @@ module.exports = app => {
     .catch(err => {
       console.error('同步 QuestionTemplate 表失败:', err);
     });
-
 
   return QuestionTemplate;
 };
