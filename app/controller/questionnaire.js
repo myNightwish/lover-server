@@ -27,7 +27,7 @@ class QuestionnaireController extends Controller {
     };
   }
 
-  // 提交问卷（支持分享）
+  // 提交问卷
   async submit() {
     const { ctx } = this;
     const userId = ctx.user.id;
@@ -45,7 +45,7 @@ class QuestionnaireController extends Controller {
       ctx.body = {
         success: true,
         data: result,
-        message: shareId !== userId ? '问卷提交成功并建立好友关系' : '问卷提交成功',
+        message: '问卷提交成功',
       };
     } catch (error) {
       ctx.status = 500;
@@ -110,6 +110,39 @@ class QuestionnaireController extends Controller {
       data: result,
       message: '已完成分析结果',
     };
+  }
+  // 提交问卷
+  async addFriends() {
+    const { ctx } = this;
+    const userId = ctx.user.id;
+    const { shareId } = ctx.request.body;
+    console.log('addFriends--', userId, shareId);
+
+    if (userId === shareId) {
+      ctx.body = {
+        success: true,
+        message: '不能添加自己为好友奥～',
+      };
+    }
+
+    try {
+      await ctx.service.friends.addFriends(
+        userId,
+        shareId
+      );
+      console.log('result--');
+
+      ctx.body = {
+        success: true,
+        message: '建立好友关系成功',
+      };
+    } catch (error) {
+      ctx.status = 500;
+      ctx.body = {
+        success: false,
+        message: '建立好友关系失败',
+      };
+    }
   }
 }
 

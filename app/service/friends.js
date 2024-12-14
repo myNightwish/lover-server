@@ -92,7 +92,20 @@ class FriendService extends Service {
       createdAt: f.created_at,
     }));
   }
-
+  async addFriends(userId, shareId) {
+    const { ctx } = this;
+    if (shareId && shareId !== userId) {
+      try {
+        // 开启事务
+        const transaction = await ctx.model.transaction();
+        await this.createFriendRelationship(userId, shareId, transaction);
+        // 提交事务
+        await transaction.commit();
+      } catch (err) {
+        console.log('create error');
+      }
+    }
+  }
 }
 
 module.exports = FriendService;

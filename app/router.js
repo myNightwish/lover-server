@@ -20,4 +20,5 @@ module.exports = app => {
   router.get('/api/questionnaire/detail', authWx, controller.questionnaire.detail);
   router.get('/api/questionnaire/friends', authWx, controller.questionnaire.friends);
   router.post('/api/questionnaire/analyze', authWx, controller.questionnaire.analyze);
+  router.post('/api/questionnaire/addfriends', authWx, controller.questionnaire.addFriends);
 };

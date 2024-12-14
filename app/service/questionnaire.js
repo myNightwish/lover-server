@@ -291,10 +291,6 @@ class QuestionnaireService extends Service {
       // 1. 提交问卷答案
       const submitResult = await this.submitQuestionnaire(userId, questionnaireId, answers);
 
-      // 2. 如果有分享者ID，建立好友关系
-      if (shareId && shareId !== userId) {
-        await this.createFriendRelationship(userId, shareId, transaction);
-      }
 
       // 提交事务
       await transaction.commit();
