@@ -30,7 +30,7 @@ module.exports = appInfo => {
     },
   };
   config.openai = {
-    apiKey: process.env.OPENAI_API_KEY || 'sk-Gdz6my6Hh52tLBfDE57b413046Dd4e4cAa3003E0Db73D43c',
+    apiKey: process.env.OPENAI_API_KEY || 'sk-yfCMPlLOiYI6uveo456949C822D840D6932c6f063b0d4f44',
     maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS, 10) || 50,
     baseURL: process.env.AI_BASE_URL || 'https://vip.apiyi.com/v1',
   };
