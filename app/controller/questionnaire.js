@@ -108,7 +108,7 @@ class QuestionnaireController extends Controller {
     ctx.body = {
       success: true,
       data: result,
-      message: '已完成分析结果',
+      message: '分析已开始，初步得分已生成，GPT建议将异步生成,',
     };
   }
   // 提交问卷
@@ -119,28 +119,51 @@ class QuestionnaireController extends Controller {
     console.log('addFriends--', userId, shareId);
 
     if (userId === shareId) {
+      ctx.status = 500;
       ctx.body = {
-        success: true,
+        success: false,
         message: '不能添加自己为好友奥～',
       };
     }
 
     try {
-      await ctx.service.friends.addFriends(
+      const res = await ctx.service.friends.addFriends(
         userId,
         shareId
       );
-      console.log('result--');
 
       ctx.body = {
         success: true,
-        message: '建立好友关系成功',
+        message: res.message,
       };
     } catch (error) {
       ctx.status = 500;
       ctx.body = {
         success: false,
         message: '建立好友关系失败',
+      };
+    }
+  }
+  /**
+   * 获取GPT分析结果
+   */
+  async getGptAnalysis() {
+    const { ctx } = this;
+    const userId = ctx.user.id;
+    const { questionnaireId, analyzeId } = ctx.query;
+
+    try {
+      const result = await ctx.service.questionnaire.getGptAnalysis(userId, questionnaireId, analyzeId);
+
+      ctx.body = {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      ctx.status = 500;
+      ctx.body = {
+        success: false,
+        message: error.message,
       };
     }
   }

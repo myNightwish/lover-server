@@ -340,17 +340,51 @@ class QuestionnaireService extends Service {
     const scores = await ctx.service.scoring.calculateQuestionnaireScores(userQuestionnaireId);
     // 生成分析报告
     const analysis = await ctx.service.analysis.analyzeQuestionnaire(userId, questionnaireId);
-    // 调用GPT生成专业建议
-    // const gptAnalysis = await ctx.service.openai.analyze({
-    //   scores,
-    //   analysis,
-    //   userId,
-    // });
+    // 开启调用GPT生成专业建议
+    const gptAnalysisId = await ctx.service.openai.createAnalysisTask(
+      userId,
+      questionnaireId,
+      scores
+    );
     return {
       scores,
       analysis,
-      // gptAnalysis,
+      gptAnalysisId,
     };
+  }
+  /**
+   * 获取GPT分析结果
+   * @param userId
+   * @param questionnaireId
+   * @param getGptAnalysis
+   * @param analyzeId
+   */
+  async getGptAnalysis(userId, questionnaireId, analyzeId) {
+    const { ctx } = this;
+
+    const analysis = await ctx.service.openai.getAnalysisGptResult(userId, questionnaireId, analyzeId);
+    if (!analysis) {
+      return {
+        status: 'not_found',
+        message: '未找到分析结果',
+      };
+    }
+
+    return {
+      status: analysis.status,
+      // content: analysis.status === 'completed' ? JSON.parse(analysis.content) : null,
+      content: JSON.parse(analysis.content),
+      message: this.getAnalysisStatusMessage(analysis.status),
+    };
+  }
+
+  getAnalysisStatusMessage(status) {
+    const messages = {
+      pending: '正在生成分析结果，请稍后查询',
+      completed: '分析已完成',
+      failed: '分析生成失败，请重试',
+    };
+    return messages[status] || '未知状态';
   }
 }
 

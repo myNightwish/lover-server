@@ -52,7 +52,7 @@ class FriendService extends Service {
   async validateUsers(userId, friendId) {
     const { ctx } = this;
     const [ user, friend ] = await Promise.all([
-      ctx.model.UsWxUserer.findByPk(userId),
+      ctx.model.WxUser.findByPk(userId),
       ctx.model.WxUser.findByPk(friendId),
     ]);
 
@@ -98,11 +98,13 @@ class FriendService extends Service {
       try {
         // 开启事务
         const transaction = await ctx.model.transaction();
-        await this.createFriendRelationship(userId, shareId, transaction);
+        const res = await this.createFriendRelationship(userId, shareId, transaction);
         // 提交事务
         await transaction.commit();
+        return res;
       } catch (err) {
         console.log('create error');
+        throw new Error('建立好友失败');
       }
     }
   }

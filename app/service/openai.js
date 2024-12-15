@@ -36,11 +36,13 @@ class OpenAIService {
    * @param root0.scores
    * @param root0.analysis
    * @param root0.userId
+   * @param root0.questionnaireId
+   * @param root0.analysisId
    */
-  async analyze({ scores, analysis, userId }) {
+  async analyze({ scores, userId, questionnaireId, analysisId }) {
     const { ctx } = this;
     // 构建GPT提示
-    const prompt = this.buildAnalysisPrompt(scores, analysis);
+    const prompt = this.buildAnalysisPrompt(scores);
 
     try {
       // 调用GPT API
@@ -56,8 +58,9 @@ class OpenAIService {
       // 解析GPT响应
       // const analysis = this.parseGptResponse(completion.choices[0].message.content);
       const analysis = completion.choices[0].message.content;
+      console.log('有结果了---：', analysis);
       // 保存分析结果
-      await this.saveAnalysisResult(userId, analysis);
+      await this.saveAnalysisResult(userId, analysis, questionnaireId, analysisId);
 
       return analysis;
     } catch (error) {
@@ -71,7 +74,7 @@ class OpenAIService {
      * @param scores
      * @param analysis
      */
-  buildAnalysisPrompt(scores, analysis) {
+  buildAnalysisPrompt(scores) {
     const scoreText = scores.map(s =>
       `${s.name}: ${s.score}分 (权重: ${s.weight}%)`
     ).join('\n');
@@ -111,15 +114,20 @@ class OpenAIService {
      * 保存分析结果
      * @param userId
      * @param analysis
+     * @param questionnaireId
+     * @param analysisId
      */
-  async saveAnalysisResult(userId, analysis) {
+  async saveAnalysisResult(userId, analysis, questionnaireId, analysisId) {
     const { ctx } = this;
+    console.log('analysisId-', analysisId);
 
-    await ctx.model.AnalysisResult.create({
+    await ctx.model.GptAnalysis.create({
       user_id: userId,
+      questionnaire_id: questionnaireId,
       content: JSON.stringify(analysis),
       created_at: new Date(),
       updated_at: new Date(),
+      status: 'completed',
     });
   }
 
@@ -137,6 +145,132 @@ class OpenAIService {
       suggestions: [ '保持开放和诚实的沟通', '共同制定改进计划', '定期进行感情交流' ],
       potential: '关系具有良好的发展潜力，通过共同努力可以达到更好的状态。',
     };
+  }
+  /**
+   * 创建GPT分析任务
+   * @param userId
+   * @param questionnaireId
+   * @param scores
+   */
+  async createAnalysisTask(userId, questionnaireId, scores) {
+    const { ctx } = this;
+
+    try {
+      // 检查是否已存在待处理的分析任务
+      const existingAnalysis = await ctx.model.GptAnalysis.findOne({
+        where: {
+          user_id: userId,
+          questionnaire_id: questionnaireId,
+          status: 'pending',
+        },
+      });
+
+      if (existingAnalysis) {
+        return existingAnalysis.id;
+      }
+
+      // 创建新的分析任务
+      const gptAnalysis = await ctx.model.GptAnalysis.create({
+        user_id: userId,
+        questionnaire_id: questionnaireId,
+        status: 'pending',
+      });
+
+      // 异步处理GPT分析
+      this.handleGptAnalysis(gptAnalysis.id, scores, questionnaireId).catch(error => {
+        ctx.logger.error('[AnalysisQueue] GPT analysis failed:', error);
+      });
+
+      return gptAnalysis.id;
+    } catch (error) {
+      ctx.logger.error('[AnalysisQueue] Create analysis task failed:', error);
+      throw new Error('创建分析任务失败');
+    }
+  }
+
+  /**
+     * 异步处理GPT分析
+     * @param analysisId
+     * @param scores
+     * @param questionnaireId
+     * @param retryCount
+     */
+  async handleGptAnalysis(analysisId, scores, questionnaireId, retryCount = 0) {
+    const { ctx } = this;
+    const MAX_RETRIES = 3;
+
+    try {
+      const gptAnalysis = await ctx.model.GptAnalysis.findByPk(analysisId);
+      if (!gptAnalysis) {
+        throw new Error('Analysis task not found');
+      }
+
+      // 调用GPT服务生成分析
+      await ctx.service.openai.analyze({
+        scores,
+        userId: gptAnalysis.user_id,
+        questionnaireId,
+        analysisId,
+      });
+
+      // 更新分析结果
+      // await gptAnalysis.update({
+      //   content: JSON.stringify(analysis),
+      //   status: 'completed',
+      // });
+    } catch (error) {
+      ctx.logger.error(`[AnalysisQueue] GPT analysis attempt ${retryCount + 1} failed:`, error);
+
+      if (retryCount < MAX_RETRIES) {
+        // 重试
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+        return this.handleGptAnalysis(analysisId, scores, questionnaireId, retryCount + 1);
+      }
+
+      // 更新失败状态
+      await ctx.model.GptAnalysis.update({
+        status: 'failed',
+      }, {
+        where: { id: analysisId },
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * 获取分析结果
+   * @param userId
+   * @param questionnaireId
+   * @param analyzeId
+   */
+  async getAnalysisGptResult(userId, questionnaireId, analyzeId) {
+    const { ctx } = this;
+
+    try {
+      const analysis = await ctx.model.GptAnalysis.findOne({
+        where: {
+          user_id: userId,
+          questionnaire_id: questionnaireId,
+          id: analyzeId,
+        },
+        order: [[ 'created_at', 'DESC' ]],
+        include: [{
+          model: ctx.model.WxUser,
+          as: 'user',
+          // attributes: [ 'id', 'nickName', 'openid' ],
+        }, {
+          model: ctx.model.QuestionnaireTemplate,
+          as: 'questionnaire',
+          attributes: [ 'id', 'title' ],
+        }],
+      });
+
+      return analysis;
+    } catch (error) {
+      ctx.logger.error('[AnalysisQueue] Get analysis result failed:', error);
+      throw new Error('获取分析结果失败');
+    }
   }
 }
 module.exports = OpenAIService;

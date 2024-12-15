@@ -21,4 +21,6 @@ module.exports = app => {
   router.get('/api/questionnaire/friends', authWx, controller.questionnaire.friends);
   router.post('/api/questionnaire/analyze', authWx, controller.questionnaire.analyze);
   router.post('/api/questionnaire/addfriends', authWx, controller.questionnaire.addFriends);
+  // 获取GPT分析结果
+  router.get('/api/questionnaire/gptanalysis', authWx, controller.questionnaire.getGptAnalysis);
 };
