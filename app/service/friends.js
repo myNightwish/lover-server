@@ -94,7 +94,6 @@ class FriendService extends Service {
       }],
       order: [[ 'created_at', 'DESC' ]], // 根据添加时间倒序
     });
-    console.log('friends000', friends);
 
     // 格式化返回结果
     return friends.map(f => ({
