@@ -337,7 +337,7 @@ class QuestionnaireService extends Service {
   async scoreAndAnalyze(userId, userQuestionnaireId, questionnaireId) {
     const { ctx } = this;
     // 计算得分
-    const scores = await ctx.service.scoring.calculateQuestionnaireScores(userQuestionnaireId);
+    const scores = await ctx.service.scoring.calculateQuestionnaireScores(userId, questionnaireId, userQuestionnaireId);
     // 生成分析报告
     const analysis = await ctx.service.analysis.analyzeQuestionnaire(userId, questionnaireId);
     // 开启调用GPT生成专业建议

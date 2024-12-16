@@ -79,6 +79,18 @@ class FriendService extends Service {
         model: ctx.model.WxUser,
         as: 'friend', // 必须和关联别名一致
         attributes: [ 'id', 'nickName', 'avatarUrl' ], // 只获取需要的字段
+      }, {
+        model: ctx.model.QuestionnaireScore, // 加入 QuestionnaireScore 关联
+        as: 'questionnaireScores', // 关联别名
+        required: false, // 不强制匹配，允许没有得分数据
+        attributes: [ 'questionnaire_id', 'scores' ], // 获取问卷 ID 和得分数据
+        include: [
+          {
+            model: ctx.model.QuestionnaireTemplate, // 加入问卷模板的关联
+            as: 'questionnaire_template', // 关联别名
+            attributes: [ 'id', 'title' ], // 获取问卷的标题
+          },
+        ],
       }],
       order: [[ 'created_at', 'DESC' ]], // 根据添加时间倒序
     });
@@ -90,6 +102,11 @@ class FriendService extends Service {
       nickName: f.friend?.nickName || '未设置昵称', // 从关联的 friend 对象获取昵称
       avatarUrl: f.friend?.avatarUrl || 'https://m.duitang.com/blogs/tag/?name=%E5%88%98%E4%BA%A6%E8%8F%B2%E5%B0%8F%E9%BE%99%E5%A5%B3', // 从关联的 friend 对象获取头像
       createdAt: f.created_at,
+      questionnaireScores: f.questionnaireScores && f.questionnaireScores.map(score => ({
+        questionnaireId: score.questionnaire_id, // 获取问卷 ID
+        scores: score.scores, // 获取得分数据
+        questionnaireTitle: score.questionnaire_template?.title || '未找到问卷', // 获取问卷标题
+      })) || [], // 如果没有得分数据，返回空数组
     }));
   }
   async addFriends(userId, shareId) {

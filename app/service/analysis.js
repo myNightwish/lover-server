@@ -7,14 +7,13 @@ class AnalysisService extends Service {
    * @param questionnaireId
    */
   async analyzeQuestionnaire(userId, questionnaireId) {
+    const { ctx } = this;
     // 获取问卷答案和维度信息
     const userQuestionnaire = await this.getUserQuestionnaireWithAnswers(userId, questionnaireId);
     const dimensions = await this.getQuestionnaireDimensions(userQuestionnaire.template_id);
 
     // 计算各维度得分
     const dimensionScores = this.calculateDimensionScores(userQuestionnaire.answers, dimensions);
-    // 生成分析报告
-    // const report = await this.generateReport(dimensionScores, userId);
 
     // 生成可视化数据
     return {
@@ -58,29 +57,6 @@ class AnalysisService extends Service {
           x: score[dim.id].emotionalScore,
           y: score[dim.id].communicationScore,
         })),
-      })),
-    };
-  }
-
-  /**
-   * 生成分析报告
-   * @param dimensionScores
-   * @param userId
-   */
-  async generateReport(dimensionScores, userId) {
-    // 调用GPT API生成报告
-    const analysis = await this.ctx.service.openai.analyze({
-      scores: dimensionScores,
-      userId,
-    });
-
-    return {
-      summary: analysis.summary,
-      suggestions: analysis.suggestions,
-      details: dimensionScores.map(dim => ({
-        dimension: dim.name,
-        score: dim.score,
-        interpretation: analysis.interpretations[dim.name],
       })),
     };
   }

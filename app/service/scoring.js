@@ -3,9 +3,11 @@ const Service = require('egg').Service;
 class ScoringService extends Service {
   /**
    * 计算问卷得分
+   * @param userId
+   * @param questionnaireId
    * @param userQuestionnaireId
    */
-  async calculateQuestionnaireScores(userQuestionnaireId) {
+  async calculateQuestionnaireScores(userId, questionnaireId, userQuestionnaireId) {
     const { ctx } = this;
 
     // 获取问卷答案和维度信息
@@ -58,6 +60,13 @@ class ScoringService extends Service {
       score: (dim.totalScore / dim.count).toFixed(2),
       weight: dim.weight,
     }));
+    await ctx.model.QuestionnaireScore.create({
+      user_id: userId,
+      questionnaire_id: questionnaireId,
+      scores, // 这里传入 JSON 格式的得分
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
 
     return scores;
   }

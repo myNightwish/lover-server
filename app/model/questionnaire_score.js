@@ -17,6 +17,7 @@ module.exports = app => {
     });
     app.model.QuestionnaireScore.belongsTo(app.model.QuestionnaireTemplate, {
       foreignKey: 'questionnaire_id',
+      as: 'questionnaire_template', // 使用一致的别名
     });
   };
   QuestionnaireScore.sync({ force: false }) // force: false 确保不会删除表
