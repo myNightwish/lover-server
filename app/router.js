@@ -7,6 +7,8 @@ module.exports = app => {
 
   // 微信小程序登录
   router.post('/api/loginAndAutoSignUp', controller.wxUser.loginAndAutoSignUp);
+  router.post('/api/refresh-token', authWx, controller.wxUser.refreshToken);
+  router.get('/api/user/info', authWx, controller.wxUser.getUserInfo);
 
   // Chat routes
   router.post('/api/chat/start', authWx, controller.chat.start);

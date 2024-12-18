@@ -5,10 +5,10 @@ class WxUserController extends Controller {
   // 登录/注册接口
   async loginAndAutoSignUp() {
     const { ctx } = this;
-    const { code, userInfo } = ctx.request.body;
+    const { code } = ctx.request.body;
     try {
       // 调用 service 层方法处理
-      const result = await ctx.service.wxUser.loginAndAutoSignUp(code, userInfo);
+      const result = await ctx.service.wxUser.loginAndAutoSignUp(code);
 
       // 返回结果给前端
       ctx.body = {
@@ -32,7 +32,7 @@ class WxUserController extends Controller {
     }
 
     // 根据refreshToken获取用户信息
-    const decoded = await jwt.verify(refreshToken, app.config.jwt.secret, { ignoreExpiration: true });
+    const decoded = jwt.verify(refreshToken, app.config.jwt.secret, { ignoreExpiration: true });
 
     if (!decoded) {
       ctx.throw(401, 'Invalid refresh token');
@@ -73,6 +73,16 @@ class WxUserController extends Controller {
         message: '更新失败，用户不存在或数据无效',
       };
     }
+  }
+  async getUserInfo() {
+    const { ctx } = this;
+    const userId = ctx.user.id;
+    // 获取用户信息
+    const userInfo = await ctx.service.wxUser.findByUserId(userId);
+    ctx.body = {
+      success: true,
+      data: userInfo,
+    };
   }
 }
 

@@ -2,24 +2,20 @@ const Service = require('egg').Service;
 const jwt = require('jsonwebtoken');
 
 class WxUserService extends Service {
-  async loginAndAutoSignUp(code, userInfo) {
+  async loginAndAutoSignUp(code) {
     const { ctx, app } = this;
     // 假设你通过微信的 code 获取到 openid 或 unionid
     const { openid } = await ctx.helper.getWeChatUserInfo(code);
 
-    if (!userInfo) {
-      throw new Error('获取用户信息失败');
-    }
     const user = await ctx.model.WxUser.findOne({ where: { openid } }); // 使用 wxUser 模型查找
 
     // 查找是否已有用户
     if (!user) {
-      const { nickName, avatarUrl } = userInfo;
       // 如果是新用户，进行注册
       await ctx.model.WxUser.create({
         openid,
-        nickName,
-        avatarUrl,
+        nickName: '设置好听的昵称吧',
+        avatarUrl: "https://mynightwish.oss-cn-beijing.aliyuncs.com/user-avatars/mini-cat.jpg",
       });
     }
 
