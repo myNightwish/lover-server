@@ -3,6 +3,8 @@
 /**
  * @param {Egg.EggAppInfo} appInfo app info
  */
+const path = require('path');
+require('dotenv').config();
 module.exports = appInfo => {
   /**
    * built-in config
@@ -30,9 +32,9 @@ module.exports = appInfo => {
     },
   };
   config.openai = {
-    apiKey: process.env.OPENAI_API_KEY || 'sk-yfCMPlLOiYI6uveo456949C822D840D6932c6f063b0d4f44',
-    maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS, 10) || 50,
-    baseURL: process.env.AI_BASE_URL || 'https://vip.apiyi.com/v1',
+    apiKey: process.env.OPENAI_API_KEY,
+    maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS, 10),
+    baseURL: process.env.AI_BASE_URL,
   };
   // add your middleware config here
   config.middleware = [];
@@ -65,6 +67,13 @@ module.exports = appInfo => {
       freezeTableName: true, // 是否冻结表名
       timestamps: false, // 是否自动添加 `createdAt` 和 `updatedAt`
     },
+  };
+  config.oss = {
+    accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID,
+    accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET,
+    bucketHost: process.env.OSS_BUCKET_HOST,
+    timeout: 1, // Policy有效时间（小时）
+    maxSize: 10, // 最大上传文件大小（MB）
   };
   return {
     ...config,
