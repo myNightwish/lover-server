@@ -39,6 +39,27 @@ class WxUserService extends Service {
     const user = await this.app.model.WxUser.findOne({ where: { id: userId } });
     return user;
   }
+  async updateUser(userId, updateData) {
+    // 查找用户
+    const user = await this.findById(userId);
+
+    if (!user) {
+      return null; // 如果用户不存在，返回 null
+    }
+    // 限制只允许更新 avatarUrl 和 nickName
+    const { avatarUrl, nickName } = updateData;
+
+    // 构造只包含允许更新字段的数据
+    const fieldsToUpdate = {
+      ...(avatarUrl ? { avatarUrl } : {}),
+      ...(nickName ? { nickName } : {}),
+      updatedAt: new Date(), // 自动更新 updatedAt 字段
+    };
+    // 更新用户信息
+    const result = await user.update(fieldsToUpdate);
+    return result; // 返回更新后的用户信息
+  }
+
 }
 
 module.exports = WxUserService;

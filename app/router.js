@@ -9,9 +9,9 @@ module.exports = app => {
   router.post('/api/loginAndAutoSignUp', controller.wxUser.loginAndAutoSignUp);
 
   // Chat routes
-  router.post('/api/chat/start', controller.chat.start);
-  router.get('/api/chat/query/:id', controller.chat.query);
-  router.get('/api/chat/history', controller.chat.history);
+  router.post('/api/chat/start', authWx, controller.chat.start);
+  router.get('/api/chat/query/:id', authWx, controller.chat.query);
+  router.get('/api/chat/history', authWx, controller.chat.history);
 
   // 问卷调查
   router.get('/api/questionnaire/init', authWx, controller.questionnaire.init);
@@ -25,5 +25,6 @@ module.exports = app => {
   router.get('/api/questionnaire/gptanalysis', authWx, controller.questionnaire.getGptAnalysis);
 
   // oos存储
-  router.get('/api/oss/upload-params', controller.oss.getUploadParams);
+  router.get('/api/oss/upload-params', authWx, controller.oss.getUploadParams);
+  router.post('/api/wxUser/update', authWx, controller.wxUser.updateWxUser);
 };

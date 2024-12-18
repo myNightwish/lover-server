@@ -40,7 +40,6 @@ class QuestionnaireController extends Controller {
         shareId,
         questionnaireId
       );
-      console.log('99999--', result, questionnaireId, answers, shareId);
 
       ctx.body = {
         success: true,
@@ -116,7 +115,6 @@ class QuestionnaireController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     const { shareId } = ctx.request.body;
-    console.log('addFriends--', userId, shareId);
 
     if (userId === shareId) {
       ctx.status = 500;

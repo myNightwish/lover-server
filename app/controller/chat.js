@@ -15,9 +15,7 @@ class ChatController extends Controller {
       if (error) {
         throw new Error('Invalid question parameter');
       }
-      // todo: 用户ID可以从ctx.state.user.id获取
-      // const userId = ctx.state.user.id || 1;
-      const userId = 1;
+      const userId = ctx.user.id;
       // 创建会话记录
       const conversation = await ctx.model.Conversation.create({
         userId,
@@ -89,10 +87,10 @@ class ChatController extends Controller {
   async history() {
     const { ctx } = this;
     const { page = 1, pageSize = 10 } = ctx.query;
-
+    const userId = ctx.user.id;
     try {
       const result = await ctx.model.Conversation.findByUserId(
-        ctx.state.user.id,
+        userId,
         parseInt(page),
         parseInt(pageSize)
       );

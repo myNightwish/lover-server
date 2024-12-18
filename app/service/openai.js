@@ -16,16 +16,16 @@ class OpenAIService {
         model: 'gpt-4-turbo',
         stream: false,
         messages: [
-          { role: 'system', content: '请用奖励小狐狸萌宠的徽章图片的方式鼓励我做到更棒的事' },
+          { role: 'system', content: '请用颁发小狐狸萌宠徽章的方式对我的行为做出肯定与奖励' },
           { role: 'user', content: question },
         ],
       });
-
       return {
         answer: completion.choices[0].message.content,
         tokenCount: completion.usage.total_tokens,
       };
     } catch (error) {
+      // todo: 增加错误处理
       throw new AppError(`OpenAI API error: ${error.message}`);
     }
   }
@@ -58,7 +58,6 @@ class OpenAIService {
       // 解析GPT响应
       // const analysis = this.parseGptResponse(completion.choices[0].message.content);
       const analysis = completion.choices[0].message.content;
-      console.log('有结果了---：', analysis);
       // 保存分析结果
       await this.saveAnalysisResult(userId, analysis, questionnaireId, analysisId);
 
@@ -119,7 +118,6 @@ class OpenAIService {
      */
   async saveAnalysisResult(userId, analysis, questionnaireId, analysisId) {
     const { ctx } = this;
-    console.log('analysisId-', analysisId);
 
     await ctx.model.GptAnalysis.create({
       user_id: userId,

@@ -54,6 +54,26 @@ class WxUserController extends Controller {
       refreshToken: newRefreshToken,
     };
   }
+  async updateWxUser() {
+    const { ctx, service } = this;
+    const userId = ctx.user.id;
+
+    const { ...updateData } = ctx.request.body;
+    // 更新数据库中的用户信息
+    const updatedUser = await service.wxUser.updateUser(userId, updateData);
+
+    if (updatedUser) {
+      ctx.body = {
+        success: true,
+        data: updatedUser,
+      };
+    } else {
+      ctx.body = {
+        success: false,
+        message: '更新失败，用户不存在或数据无效',
+      };
+    }
+  }
 }
 
 module.exports = WxUserController;
