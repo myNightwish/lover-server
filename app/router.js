@@ -29,4 +29,25 @@ module.exports = app => {
   // oos存储
   router.get('/api/oss/upload-params', authWx, controller.oss.getUploadParams);
   router.post('/api/wxUser/update', authWx, controller.wxUser.updateWxUser);
+
+   // 情绪记录相关路由
+   router.post('/api/emotion/record', authWx, controller.emotion.recordEmotion);
+   router.get('/api/emotion/trend', authWx, controller.emotion.getEmotionTrend);
+ 
+   // 记忆拼图相关路由
+   router.post('/api/memory-puzzle/create', authWx, controller.memoryPuzzle.createPuzzle);
+   router.get('/api/memory-puzzle/:puzzleId', authWx, controller.memoryPuzzle.getPuzzleResult);
+ 
+   // 冲突记录相关路由
+   router.post('/api/conflict/record', authWx, controller.conflict.recordConflict);
+   router.get('/api/conflict/analysis', authWx, controller.conflict.getConflictAnalysis);
+ 
+   // 共情游戏相关路由
+   router.get('/api/empathy/tasks', authWx, controller.empathy.getTasks);
+   router.post('/api/empathy/complete-task', authWx, controller.empathy.completeTask);
+   router.get('/api/empathy/progress', authWx, controller.empathy.getProgress);
+ 
+   // 成长档案相关路由
+   router.get('/api/growth/archive', authWx, controller.growth.getArchive);
+   router.get('/api/growth/milestones', authWx, controller.growth.getMilestones);
 };

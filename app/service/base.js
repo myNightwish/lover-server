@@ -8,7 +8,6 @@ class BaseService {
     try {
       // 更新会话状态为处理中
       await this.updateConversationStatus(conversationId, 'processing');
-      console.log('processing');
       // 调用OpenAI API
       const { answer, tokenCount } = await this.ctx.service.openai.generateResponse(question);
       console.log('dffff', answer, tokenCount);

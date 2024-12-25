@@ -78,7 +78,7 @@ class WxUserController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     // 获取用户信息
-    const userInfo = await ctx.service.wxUser.findByUserId(userId);
+    const userInfo = await this.app.model.WxUser.findOne({ where: { id: userId } });
     ctx.body = {
       success: true,
       data: userInfo,

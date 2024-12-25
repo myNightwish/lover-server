@@ -16,7 +16,7 @@ class OpenAIService {
         model: 'gpt-4-turbo',
         stream: false,
         messages: [
-          { role: 'system', content: '请用颁发小狐狸萌宠徽章的方式对我的行为做出肯定与奖励' },
+          { role: 'system', content: '你是一位专业资深心理专家，专注于关系咨询和亲密成长' },
           { role: 'user', content: question },
         ],
       });
@@ -26,10 +26,12 @@ class OpenAIService {
       };
     } catch (error) {
       // todo: 增加错误处理
-      throw new AppError(`OpenAI API error: ${error.message}`);
+      return {
+        answer: 'token已经用尽...',
+        tokenCount: completion.usage.total_tokens,
+      };
     }
   }
-
   /**
    * 分析问卷结果并生成专业建议
    * @param root0
@@ -56,8 +58,8 @@ class OpenAIService {
       });
 
       // 解析GPT响应
-      // const analysis = this.parseGptResponse(completion.choices[0].message.content);
-      const analysis = completion.choices[0].message.content;
+      const res = await this.generateResponse(prompt);
+      const analysis = res.answer || '';
       // 保存分析结果
       await this.saveAnalysisResult(userId, analysis, questionnaireId, analysisId);
 
@@ -91,22 +93,6 @@ class OpenAIService {
 预测模型：通过分析以往数据，预测关系的发展趋势。
 关系调节工具：基于问卷结果生成定制化建议，如推荐更有效的沟通技巧或冲突解决策略。
 `;
-  }
-
-  /**
-     * 解析GPT响应
-     * @param content
-     */
-  parseGptResponse(content) {
-    // 简单的响应解析示例
-    const sections = content.split('\n\n');
-
-    return {
-      summary: sections[0],
-      interpretations: this.extractInterpretations(sections[1]),
-      suggestions: this.extractSuggestions(sections[2]),
-      potential: sections[3],
-    };
   }
 
   /**
@@ -268,6 +254,38 @@ class OpenAIService {
     } catch (error) {
       ctx.logger.error('[AnalysisQueue] Get analysis result failed:', error);
       throw new Error('获取分析结果失败');
+    }
+  }
+
+  async analyzeSimilarity(text1, text2) {
+    // 调用OpenAI API分析文本相似度
+    try {
+      const prompt = `比较以下两段文本的相似度(返回0-1之间的数值):\n文本1: ${text1}\n文本2: ${text2}`;
+      const response = await this.generateResponse(prompt);
+      return parseFloat(response) || 0.5;
+    } catch (error) {
+      this.ctx.logger.error('[OpenAI] Similarity analysis failed:', error);
+      return 0.5; // 默认返回中等相似度
+    }
+  }
+
+  async generateEmotionSuggestion(trend) {
+    try {
+      const prompt = `基于以下情绪数据生成建议:\n${JSON.stringify(trend)}`;
+      return await this.generateResponse(prompt);
+    } catch (error) {
+      this.ctx.logger.error('[OpenAI] Emotion suggestion failed:', error);
+      return '继续保持积极的心态，多关注伴侣的情绪变化。';
+    }
+  }
+
+  async generateConflictSuggestion(analysis) {
+    try {
+      const prompt = `基于以下冲突分析生成建议:\n${JSON.stringify(analysis)}`;
+      return await this.generateResponse(prompt);
+    } catch (error) {
+      this.ctx.logger.error('[OpenAI] Conflict suggestion failed:', error);
+      return '建议保持开放和理性的沟通态度，共同寻找解决方案。';
     }
   }
 }
