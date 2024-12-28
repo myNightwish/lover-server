@@ -5,8 +5,8 @@ class ConflictController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     const conflictData = ctx.request.body;
-
-conflictData.partnerId = 2;
+    // todo；
+    conflictData.partnerId = 2;
     try {
       const result = await ctx.service.conflict.recordConflict(userId, conflictData);
       ctx.body = {

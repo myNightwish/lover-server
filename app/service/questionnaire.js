@@ -132,11 +132,86 @@ class QuestionnaireService extends Service {
               order: 8,
             },
           ],
-        }];
+        },
+        {
+          title: '双方关心度评估问卷',
+          description: '基于心理学理论的专业关系评估工具',
+          status: 1,
+          questions: [
+          // 情感连接维度
+            {
+              dimension_id: 1,
+              question_text: '他(她)最喜欢的食物',
+              question_type: 'text',
+              options: '',
+              order: 1,
+            },
+            {
+              dimension_id: 1,
+              question_text: '他(她)最喜欢的颜色',
+              question_type: 'text',
+              options: '',
+              order: 2,
+            },
+            // 沟通质量维度
+            {
+              dimension_id: 2,
+              question_text: '他(她)最喜欢的花',
+              question_type: 'text',
+              options: '',
+              order: 3,
+            },
+            {
+              dimension_id: 2,
+              question_text: '他(她)最喜欢的动物',
+              question_type: 'text',
+              options: '',
+              order: 4,
+            },
+            // 冲突处理维度
+            {
+              dimension_id: 3,
+              question_text: '他(她)最害怕失去的',
+              question_type: 'text',
+              options: '',
+              order: 5,
+            },
+            {
+              dimension_id: 3,
+              question_text: '他(她)最喜欢的运动',
+              question_type: 'text',
+              options: '',
+              order: 6,
+            },
+            // 共同成长维度
+            {
+              dimension_id: 4,
+              question_text: '他(她)渴望但未曾实现的梦想',
+              question_type: 'text',
+              options: '',
+              order: 7,
+            },
+            {
+              dimension_id: 4,
+              question_text: '我们有共同的未来规划和期望',
+              question_type: 'scale',
+              options: JSON.stringify([ 1, 2, 3, 4, 5 ]),
+              order: 8,
+            },
+          ],
+        },
+      ];
       // 批量创建问卷模板和问题
       for (const template of templates) {
         const questions = template.questions;
         delete template.questions;
+        // 检查模板是否已经存在（避免重复创建）
+        const existingTemplate = await ctx.model.QuestionnaireTemplate.findOne({
+          where: { title: template.title },
+          transaction,
+        });
+        console.log('existingTemplate00', existingTemplate);
+        if (existingTemplate) return;
 
         const createdTemplate = await ctx.model.QuestionnaireTemplate.create(template, { transaction });
 

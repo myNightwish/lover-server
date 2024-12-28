@@ -4,14 +4,11 @@ class EmotionController extends Controller {
   async recordEmotion() {
     const { ctx } = this;
     const userId = ctx.user.id;
-    const { type, intensity, trigger } = ctx.request.body;
+    const { question } = ctx.request.body;
+    console.log('111---->', question, userId);
 
     try {
-      const result = await ctx.service.emotion.recordEmotion(userId, {
-        type,
-        intensity,
-        trigger,
-      });
+      const result = await ctx.service.emotion.recordEmotion(userId, question);
 
       ctx.body = {
         success: true,

@@ -9,13 +9,13 @@ class EmpathyController extends Controller {
       const tasks = await ctx.service.empathy.getAvailableTasks(userId);
       ctx.body = {
         success: true,
-        data: tasks
+        data: tasks,
       };
     } catch (error) {
       ctx.status = 500;
       ctx.body = {
         success: false,
-        message: error.message
+        message: error.message,
       };
     }
   }
@@ -29,13 +29,13 @@ class EmpathyController extends Controller {
       const result = await ctx.service.empathy.completeTask(userId, taskId, response);
       ctx.body = {
         success: true,
-        data: result
+        data: result,
       };
     } catch (error) {
       ctx.status = 500;
       ctx.body = {
         success: false,
-        message: error.message
+        message: error.message,
       };
     }
   }
@@ -48,13 +48,51 @@ class EmpathyController extends Controller {
       const progress = await ctx.service.empathy.getUserProgress(userId);
       ctx.body = {
         success: true,
-        data: progress
+        data: progress,
       };
     } catch (error) {
       ctx.status = 500;
       ctx.body = {
         success: false,
-        message: error.message
+        message: error.message,
+      };
+    }
+  }
+
+  async getTaskHistory() {
+    const { ctx } = this;
+    const userId = ctx.user.id;
+
+    try {
+      const history = await ctx.service.empathy.getTaskHistory(userId);
+      ctx.body = {
+        success: true,
+        data: history,
+      };
+    } catch (error) {
+      ctx.status = 500;
+      ctx.body = {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  async getCurrentTask() {
+    const { ctx } = this;
+    const userId = ctx.user.id;
+
+    try {
+      const task = await ctx.service.empathy.getCurrentTask(userId);
+      ctx.body = {
+        success: true,
+        data: task,
+      };
+    } catch (error) {
+      ctx.status = 500;
+      ctx.body = {
+        success: false,
+        message: error.message,
       };
     }
   }

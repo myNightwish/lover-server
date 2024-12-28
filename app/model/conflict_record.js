@@ -35,6 +35,11 @@ module.exports = app => {
       as: 'partner'
     });
   };
+  ConflictRecord.sync({ force: false }) // force: false 确保不会删除表
+  .then(() => {})
+  .catch(err => {
+    console.error('同步 ConflictRecord 表失败:', err);
+  });
 
   return ConflictRecord;
 };
