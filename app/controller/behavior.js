@@ -4,9 +4,16 @@ class BehaviorController extends Controller {
   async recordBehavior() {
     const { ctx } = this;
     const userId = ctx.user.id;
-    // const partnerId = ctx.user.partner_id;
     const behaviorData = ctx.request.body;
-    const partnerId = 2;
+    const partnerId = ctx.user.partner_id;
+    // 如果未绑定伴侣，返回错误信息
+    if (!partnerId) {
+      ctx.body = {
+        success: false,
+        message: '未找到绑定关系，无法记录行为',
+      };
+      return;
+    }
 
     try {
       const result = await ctx.service.behavior.recordBehavior(
@@ -31,6 +38,14 @@ class BehaviorController extends Controller {
   async getBehaviorAnalysis() {
     const { ctx } = this;
     const partnerId = ctx.user.partner_id;
+    // 如果未绑定伴侣，返回错误信息
+    if (!partnerId) {
+      ctx.body = {
+        success: false,
+        message: '未找到绑定关系，无法记录行为',
+      };
+      return;
+    }
 
     try {
       const analysis = await ctx.service.behavior.getBehaviorAnalysis(partnerId);

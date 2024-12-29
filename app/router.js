@@ -58,4 +58,6 @@ module.exports = app => {
   router.post('/api/behavior/record', authWx, controller.behavior.recordBehavior);
   router.get('/api/behavior/analysis', authWx, controller.behavior.getBehaviorAnalysis);
   router.get('/api/behavior/categories', authWx, controller.behavior.getBehaviorCategories);
+  // 伴侣绑定
+  router.post('/api/relationship/bind', authWx, controller.relationship.bind);
 };

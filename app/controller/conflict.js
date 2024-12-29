@@ -5,8 +5,15 @@ class ConflictController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     const conflictData = ctx.request.body;
-    // todo；
-    conflictData.partnerId = 2;
+    const partnerId = ctx.user.partner_id;
+    // 如果未绑定伴侣，返回错误信息
+    if (!partnerId) {
+      ctx.body = {
+        success: false,
+        message: '未找到绑定关系，无法记录行为',
+      };
+      return;
+    }
     try {
       const result = await ctx.service.conflict.recordConflict(userId, conflictData);
       ctx.body = {
@@ -25,7 +32,15 @@ class ConflictController extends Controller {
   async getConflictAnalysis() {
     const { ctx } = this;
     const userId = ctx.user.id;
-    const { partnerId } = ctx.query;
+    const partnerId = ctx.user.partner_id;
+    // 如果未绑定伴侣，返回错误信息
+    if (!partnerId) {
+      ctx.body = {
+        success: false,
+        message: '未找到绑定关系，无法记录行为',
+      };
+      return;
+    }
 
     try {
       const analysis = await ctx.service.conflict.getConflictAnalysis(userId, partnerId);

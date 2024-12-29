@@ -133,6 +133,89 @@ class EmpathyService extends Service {
 
     return currentTask;
   }
+  async assignNewTask(userId) {
+    const { ctx } = this;
+
+    try {
+      // 获取用户已完成的任务ID列表
+      const completedTaskIds = await ctx.model.UserTask.findAll({
+        where: {
+          user_id: userId,
+          completed: true,
+        },
+        attributes: [ 'task_id' ],
+      }).then(tasks => tasks.map(t => t.task_id));
+
+      // 先检查是否还有可用任务
+      const availableTasks = await ctx.model.EmpathyTask.findAll({
+        where: {
+          status: 'active',
+          id: {
+            [ctx.model.Sequelize.Op.notIn]: completedTaskIds.length ? completedTaskIds : [ 0 ],
+          },
+        },
+      });
+      console.log('availableTasks---->', availableTasks);
+
+      if (!availableTasks.length) {
+        // 如果没有可用任务，重置所有任务为未完成
+        await ctx.model.UserTask.destroy({
+          where: {
+            user_id: userId,
+          },
+        });
+
+        // 重新获取所有活跃任务
+        const allTasks = await ctx.model.EmpathyTask.findAll({
+          where: {
+            status: 'active',
+          },
+        });
+
+
+        // 随机选择一个任务
+        const randomIndex = Math.floor(Math.random() * allTasks.length);
+        const selectedTask = allTasks[randomIndex];
+        console.log('selectedTask--->', selectedTask, allTasks);
+
+        // 创建新的用户任务记录
+        const userTask = await ctx.model.UserTask.create({
+          user_id: userId,
+          task_id: selectedTask.id,
+          completed: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        });
+
+        return {
+          ...userTask.toJSON(),
+          task: selectedTask,
+        };
+      }
+
+      // 随机选择一个未完成的任务
+      const randomIndex = Math.floor(Math.random() * availableTasks.length);
+      const selectedTask = availableTasks[randomIndex];
+
+      // 创建用户任务记录
+      const userTask = await ctx.model.UserTask.create({
+        user_id: userId,
+        task_id: selectedTask.id,
+        completed: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      return {
+        ...userTask.toJSON(),
+        task: selectedTask,
+      };
+    } catch (error) {
+      ctx.logger.error('[EmpathyService] assignNewTask failed:', error);
+      throw new Error('分配新任务失败');
+    }
+  }
+
 }
 
 module.exports = EmpathyService;

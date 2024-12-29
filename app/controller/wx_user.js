@@ -77,11 +77,35 @@ class WxUserController extends Controller {
   async getUserInfo() {
     const { ctx } = this;
     const userId = ctx.user.id;
-    // 获取用户信息
-    const userInfo = await this.app.model.WxUser.findOne({ where: { id: userId } });
+
+    // 获取用户信息，同时携带绑定的伴侣信息
+    const userInfo = await this.app.model.WxUser.findOne({
+      where: { id: userId },
+      attributes: [ 'openid', 'nickName', 'avatarUrl' ], // 只查询需要的字段
+      include: [
+        {
+          model: this.app.model.Relationship,
+          as: 'UserRelationships', // 用户发起的绑定关系
+          attributes: [ 'partnerOpenid' ], // 只获取 partnerOpenid
+          include: [
+            {
+              model: this.app.model.WxUser,
+              as: 'PartnerOpenId', // 被绑定的伴侣
+              attributes: [ 'openid', 'nickName', 'avatarUrl' ], // 伴侣字段
+            },
+          ],
+        },
+      ],
+    });
+
     ctx.body = {
       success: true,
-      data: userInfo,
+      data: {
+        openid: userInfo?.openid || null,
+        nickName: userInfo?.nickName || null,
+        avatarUrl: userInfo?.avatarUrl || null,
+        partnerInfo: userInfo?.UserRelationships?.[0]?.PartnerOpenId || null, // 如果有绑定关系，返回伴侣信息
+      },
     };
   }
 }

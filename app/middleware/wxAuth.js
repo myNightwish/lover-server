@@ -15,6 +15,14 @@ module.exports = async (ctx, next) => {
     id: decoded.id,
     openid: decoded.openid,
   };
+  // 查询绑定关系，获取 partner_id
+  const relationship = await ctx.service.relationship.getPartnerByUserId(decoded.id);
+
+  if (relationship) {
+    ctx.user.partner_id = relationship.id; // 如果存在伴侣绑定关系，挂载 partner_id
+  } else {
+    ctx.user.partner_id = null; // 没有伴侣时设置为 null
+  }
 
   await next(); // 继续执行后续中间件
 };
