@@ -1,0 +1,213 @@
+const Service = require('egg').Service;
+
+class GardenService extends Service {
+  /**
+   * 获取花园整体数据
+   */
+  async getGardenData(userId) {
+    const { ctx } = this;
+    
+    const [emotionTree, empathyGarden, memoryPond, behaviorPath] = await Promise.all([
+      this.getEmotionTreeData(userId),
+      this.getEmpathyGardenData(userId),
+      this.getMemoryPondData(userId),
+      this.getBehaviorPathData(userId)
+    ]);
+
+    return {
+      emotionTree,
+      empathyGarden,
+      memoryPond,
+      behaviorPath,
+      weather: await this.calculateWeatherState(userId)
+    };
+  }
+
+  /**
+   * 获取情感之树数据
+   */
+  async getEmotionTreeData(userId) {
+    const { ctx } = this;
+    
+    // 获取最近情绪记录
+    const recentEmotions = await ctx.model.EmotionRecord.findAll({
+      where: { user_id: userId },
+      order: [['created_at', 'DESC']],
+      limit: 7
+    });
+
+    // 计算树的健康度
+    const health = await this.calculateTreeHealth(recentEmotions);
+
+    return {
+      health,
+      recentEmotions: recentEmotions.map(e => ({
+        type: e.emotion_type,
+        intensity: e.intensity,
+        date: e.created_at
+      }))
+    };
+  }
+
+  /**
+   * 获取共情花园数据
+   */
+  async getEmpathyGardenData(userId) {
+    const { ctx } = this;
+    
+    // 获取已完成的任务
+    const completedTasks = await ctx.model.UserTask.findAll({
+      where: { 
+        user_id: userId,
+        completed: true
+      },
+      include: [{
+        model: ctx.model.EmpathyTask,
+        as: 'task'
+      }],
+      order: [['completed_at', 'DESC']]
+    });
+
+    // 生成花朵数据
+    const flowers = completedTasks.map((task, index) => ({
+      x: 30 + (index % 3) * 50,
+      y: 20 + Math.floor(index / 3) * 50,
+      state: this.calculateFlowerState(task)
+    }));
+
+    return {
+      flowers,
+      tasks: completedTasks.map(t => ({
+        id: t.id,
+        title: t.task.title,
+        completedAt: t.completed_at
+      }))
+    };
+  }
+
+  /**
+   * 获取记忆池塘数据
+   */
+  async getMemoryPondData(userId) {
+    const { ctx } = this;
+    
+    const memories = await ctx.model.MemoryPuzzle.findAll({
+      where: { 
+        [ctx.model.Sequelize.Op.or]: [
+          { user_id: userId },
+          { partner_id: userId }
+        ]
+      },
+      order: [['created_at', 'DESC']],
+      limit: 5
+    });
+
+    return {
+      memories: memories.map((memory, index) => ({
+        id: memory.id,
+        x: 20 + index * 40,
+        y: 30 + (index % 2) * 30,
+        matchLevel: this.getMatchLevel(memory.match_score)
+      }))
+    };
+  }
+
+  /**
+   * 获取行为之路数据
+   */
+  async getBehaviorPathData(userId) {
+    const { ctx } = this;
+    
+    const records = await ctx.model.BehaviorRecord.findAll({
+      where: { user_id: userId },
+      order: [['created_at', 'DESC']],
+      limit: 10
+    });
+
+    const milestones = records.map((record, index) => ({
+      id: record.id,
+      x: 20 + index * 30,
+      y: 20 + (index % 3) * 25,
+      type: record.type,
+      category: record.category,
+      points: record.points
+    }));
+
+    return { milestones };
+  }
+
+  /**
+   * 计算天气状态
+   */
+  async calculateWeatherState(userId) {
+    const { ctx } = this;
+    
+    // 获取最近的互动数据
+    const [emotions, tasks, memories, behaviors] = await Promise.all([
+      ctx.model.EmotionRecord.count({
+        where: { 
+          user_id: userId,
+          created_at: {
+            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
+        }
+      }),
+      ctx.model.UserTask.count({
+        where: { 
+          user_id: userId,
+          completed: true,
+          completed_at: {
+            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
+        }
+      }),
+      ctx.model.MemoryPuzzle.count({
+        where: { 
+          [ctx.model.Sequelize.Op.or]: [
+            { user_id: userId },
+            { partner_id: userId }
+          ],
+          created_at: {
+            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
+        }
+      }),
+      ctx.model.BehaviorRecord.count({
+        where: { 
+          user_id: userId,
+          created_at: {
+            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
+        }
+      })
+    ]);
+
+    const totalInteractions = emotions + tasks + memories + behaviors;
+    
+    if (totalInteractions >= 15) return 'SUNNY';
+    if (totalInteractions >= 7) return 'CLOUDY';
+    return 'RAINY';
+  }
+
+  // 辅助方法
+  calculateTreeHealth(emotions) {
+    if (!emotions.length) return 50;
+    
+    const positiveTypes = ['happy', 'neutral'];
+    const positiveCount = emotions.filter(e => positiveTypes.includes(e.emotion_type)).length;
+    return (positiveCount / emotions.length) * 100;
+  }
+
+  calculateFlowerState(task) {
+    const daysSinceCompletion = Math.floor((Date.now() - new Date(task.completed_at)) / (24 * 60 * 60 * 1000));
+    return daysSinceCompletion <= 3 ? 'bloom' : 'bud';
+  }
+
+  getMatchLevel(score) {
+    if (score >= 90) return 'high';
+    if (score >= 70) return 'medium';
+    return 'low';
+  }
+}
+
+module.exports = GardenService;

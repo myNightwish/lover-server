@@ -15,7 +15,7 @@ class ConflictController extends Controller {
       return;
     }
     try {
-      const result = await ctx.service.conflict.recordConflict(userId, conflictData);
+      const result = await ctx.service.conflict.recordConflict(userId, partnerId, conflictData);
       ctx.body = {
         success: true,
         data: result,

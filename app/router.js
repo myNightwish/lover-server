@@ -60,4 +60,6 @@ module.exports = app => {
   router.get('/api/behavior/categories', authWx, controller.behavior.getBehaviorCategories);
   // 伴侣绑定
   router.post('/api/relationship/bind', authWx, controller.relationship.bind);
+  // 花园数据
+  router.get('/api/growth/garden-data', authWx, controller.garden.getGardenData);
 };

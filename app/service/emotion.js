@@ -16,6 +16,8 @@ class EmotionService extends Service {
         emotion_type: emotionData.type,
         intensity: emotionData.intensity,
         trigger: emotionData.trigger,
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
       // 分析情绪趋势
