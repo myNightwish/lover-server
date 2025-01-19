@@ -40,6 +40,13 @@ module.exports = app => {
       foreignKey: 'partner_id',
       as: 'partner',
     });
+    // 添加自关联
+    MemoryPuzzle.hasOne(MemoryPuzzle, {
+      foreignKey: 'user_id',
+      sourceKey: 'partner_id',
+      as: 'partnerPuzzle',
+      constraints: false,
+    });
   };
   MemoryPuzzle.sync({ force: false }) // force: false 确保不会删除表
     .then(() => {})

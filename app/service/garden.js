@@ -59,7 +59,6 @@ class GardenService extends Service {
     const completedTasks = await ctx.model.UserTask.findAll({
       where: { 
         user_id: userId,
-        completed: true
       },
       include: [{
         model: ctx.model.EmpathyTask,
@@ -68,25 +67,20 @@ class GardenService extends Service {
       order: [['completed_at', 'DESC']]
     });
 
-    // 生成花朵数据
-    const flowers = completedTasks.map((task, index) => ({
-      x: 30 + (index % 3) * 50,
-      y: 20 + Math.floor(index / 3) * 50,
-      state: this.calculateFlowerState(task)
-    }));
-
     return {
-      flowers,
-      tasks: completedTasks.map(t => ({
-        id: t.id,
+      tasks: completedTasks.map((t) => ({
+        id: t.task_id,
         title: t.task.title,
-        completedAt: t.completed_at
-      }))
+        completed: t.completed,
+        description: t.task.description,
+        exp_reward: t.task.exp_reward,
+        completedAt: t.completed_at,
+      })),
     };
   }
 
   /**
-   * 获取记忆池塘数据
+   * 获取记忆数据
    */
   async getMemoryPondData(userId) {
     const { ctx } = this;
@@ -101,12 +95,12 @@ class GardenService extends Service {
       order: [['created_at', 'DESC']],
       limit: 5
     });
+    console.log('memories--->', memories);
 
     return {
       memories: memories.map((memory, index) => ({
         id: memory.id,
-        x: 20 + index * 40,
-        y: 30 + (index % 2) * 30,
+        desc: memory.event_description,
         matchLevel: this.getMatchLevel(memory.match_score)
       }))
     };
@@ -125,12 +119,10 @@ class GardenService extends Service {
     });
 
     const milestones = records.map((record, index) => ({
-      id: record.id,
-      x: 20 + index * 30,
-      y: 20 + (index % 3) * 25,
       type: record.type,
       category: record.category,
-      points: record.points
+      description: record.description,
+      points: record.points,
     }));
 
     return { milestones };
@@ -190,7 +182,7 @@ class GardenService extends Service {
   }
 
   // 辅助方法
-  calculateTreeHealth(emotions) {
+  async calculateTreeHealth(emotions) {
     if (!emotions.length) return 50;
     
     const positiveTypes = ['happy', 'neutral'];

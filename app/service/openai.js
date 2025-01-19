@@ -21,14 +21,12 @@ class OpenAIService {
         ],
       });
       return {
-        answer: completion.choices[0].message.content,
-        tokenCount: completion.usage.total_tokens,
+        answer: completion?.choices?.[0]?.message?.content || '🤔 哇偶，出现了什么问题',
+        tokenCount: completion?.usage.total_tokens,
       };
     } catch (error) {
-      // todo: 增加错误处理
       return {
-        answer: 'token已经用尽...',
-        tokenCount: completion.usage.total_tokens,
+        answer: '😭  token已经用尽...',
       };
     }
   }

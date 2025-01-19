@@ -40,10 +40,17 @@ class MemoryPuzzleController extends Controller {
 
     try {
       const result = await ctx.service.memoryPuzzle.getPuzzleResult(puzzleId);
-      ctx.body = {
-        success: true,
-        data: result,
-      };
+      if (result.partner_description) {
+        ctx.body = {
+          success: true,
+          data: result,
+        };
+      } else {
+        ctx.body = {
+          success: false,
+          data: result,
+        };
+      }
     } catch (error) {
       ctx.status = 500;
       ctx.body = {

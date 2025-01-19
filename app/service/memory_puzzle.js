@@ -1,5 +1,5 @@
 const Service = require('egg').Service;
-
+const Sequelize = require('sequelize');
 class MemoryPuzzleService extends Service {
   /**
    * 创建记忆拼图
@@ -15,17 +15,18 @@ class MemoryPuzzleService extends Service {
         user_id: userId,
         partner_id: partnerId,
         event_description: description,
+        created_at: new Date(),
+        updated_at: new Date(),
       });
-
-      // 等待伴侣的描述后计算匹配度:todo
-      // const partnerPuzzle = await this.waitForPartnerDescription(puzzle.id, partnerId);
-      const partnerPuzzle = '跟你吃好吃的';
-
+      const partnerPuzzle = await this.waitForPartnerDescription(puzzle.id, partnerId);
       if (partnerPuzzle) {
         const matchScore = await this.calculateMatchScore(puzzle, partnerPuzzle);
-        await puzzle.update({ match_score: matchScore });
+        await puzzle.update({
+          match_score: matchScore,
+          partner_description: partnerPuzzle,
+          updated_at: new Date(),
+        });
       }
-
       return puzzle;
     } catch (error) {
       ctx.logger.error('[MemoryPuzzleService] Create puzzle failed:', error);
@@ -84,19 +85,25 @@ class MemoryPuzzleService extends Service {
     try {
       const puzzle = await ctx.model.MemoryPuzzle.findOne({
         where: { id: puzzleId },
-        include: [{
-          model: ctx.model.WxUser,
-          as: 'partner',
-        }],
+        include: [
+          {
+            model: ctx.model.MemoryPuzzle,
+            as: 'partnerPuzzle',
+            required: false,
+            where: {
+              user_id: Sequelize.col('memory_puzzle.partner_id'),
+              partner_id: Sequelize.col('memory_puzzle.user_id'),
+            },
+          },
+        ],
       });
-
       if (!puzzle) {
         throw new Error('拼图不存在');
       }
 
       return {
         match_score: puzzle.match_score,
-        partner_description: puzzle.partner?.event_description,
+        partner_description: puzzle.partner?.event_description || '',
         // todo
         // analysis: await this.generatePuzzleAnalysis(puzzle),
       };
