@@ -41,11 +41,12 @@ class GardenService extends Service {
 
     return {
       health,
-      recentEmotions: recentEmotions.map(e => ({
+      recentEmotions: recentEmotions.map((e) => ({
         type: e.emotion_type,
         intensity: e.intensity,
-        date: e.created_at
-      }))
+        trigger: e.trigger,
+        date: e.created_at,
+      })),
     };
   }
 
@@ -95,7 +96,6 @@ class GardenService extends Service {
       order: [['created_at', 'DESC']],
       limit: 5
     });
-    console.log('memories--->', memories);
 
     return {
       memories: memories.map((memory, index) => ({

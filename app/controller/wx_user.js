@@ -75,8 +75,9 @@ class WxUserController extends Controller {
     }
   }
   async getUserInfo() {
-    const { ctx } = this;
+    const { ctx, service } = this;
     const userId = ctx.user.id;
+    const openid = ctx.user.openid;
 
     // 获取用户信息，同时携带绑定的伴侣信息
     const userInfo = await this.app.model.WxUser.findOne({
@@ -97,14 +98,14 @@ class WxUserController extends Controller {
         },
       ],
     });
-
+    const partnerInfo = await service.relationship.getPartnerInfo(openid);
     ctx.body = {
       success: true,
       data: {
         openid: userInfo?.openid || null,
         nickName: userInfo?.nickName || null,
         avatarUrl: userInfo?.avatarUrl || null,
-        partnerInfo: userInfo?.UserRelationships?.[0]?.PartnerOpenId || null, // 如果有绑定关系，返回伴侣信息
+        partnerInfo: partnerInfo || '', // 如果有绑定关系，返回伴侣信息
       },
     };
   }

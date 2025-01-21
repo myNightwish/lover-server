@@ -64,16 +64,17 @@ class EmotionService extends Service {
     records.forEach(record => {
       // 统计情绪类型分布
       emotionCounts[record.emotion_type] = (emotionCounts[record.emotion_type] || 0) + 1;
-
       // 记录情绪强度变化
       intensityTrend.push({
         date: record.created_at,
         intensity: record.intensity,
+        trigger: record.trigger,
+        emotion_type: record.emotion_type,
       });
     });
 
     return {
-      distribution: emotionCounts,
+      // distribution: emotionCounts,
       trend: intensityTrend,
     };
   }

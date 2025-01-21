@@ -18,6 +18,8 @@ class RelationshipService extends Service {
     await Relationship.create({
       userOpenid: userId,
       partnerOpenid: partnerId,
+      created_at: new Date(),
+      updated_at: new Date(),
     });
     return { success: true, message: '绑定成功' };
   }
@@ -37,7 +39,7 @@ class RelationshipService extends Service {
         {
           model: app.model.WxUser,
           as: 'PartnerOpenId',
-          attributes: [ 'openid', 'nickName', 'avatarUrl' ], // 需要返回的伴侣字段
+          attributes: ['openid', 'nickName', 'avatarUrl', 'id'], // 需要返回的伴侣字段
         },
       ],
     });
@@ -53,52 +55,12 @@ class RelationshipService extends Service {
         {
           model: app.model.WxUser,
           as: 'UserOpenId',
-          attributes: [ 'openid', 'nickName', 'avatarUrl' ], // 需要返回的绑定者字段
+          attributes: ['openid', 'nickName', 'avatarUrl', 'id'], // 需要返回的绑定者字段
         },
       ],
     });
 
     return inverseRelationship ? inverseRelationship.UserOpenId : null;
-  }
-
-  /**
-   * 获取当前用户的绑定关系（通过用户 ID）
-   * @param {number} userId - 当前用户的 ID
-   * @return {object|null} 返回伴侣信息，或者 null 表示没有绑定关系
-   */
-  async getPartnerByUserId(userId) {
-    // 查找用户对应的 openid
-    const user = await this.app.model.WxUser.findOne({
-      where: { id: userId },
-      attributes: [ 'openid' ],
-    });
-
-    if (!user) {
-      return null; // 用户不存在
-    }
-
-    const relationship = await this.app.model.Relationship.findOne({
-      where: { userOpenid: user.openid },
-      include: [
-        {
-          model: this.app.model.WxUser,
-          as: 'PartnerOpenId', // 与 Relationship 模型中定义的 alias 一致
-          attributes: [ 'id', 'openid', 'nickName' ], // 获取需要的伴侣信息
-        },
-      ],
-    });
-
-    // 如果没有绑定关系，直接返回 null
-    if (!relationship || !relationship.PartnerOpenId) {
-      return null;
-    }
-
-    // 返回伴侣信息
-    return {
-      id: relationship.PartnerOpenId.id, // 数据库 ID
-      openid: relationship.PartnerOpenId.openid, // 微信 openid
-      nickName: relationship.PartnerOpenId.nickName, // 昵称
-    };
   }
 }
 
