@@ -37,6 +37,7 @@ module.exports = app => {
     // 与用户答案的一对多关系
     app.model.QuestionTemplate.hasMany(app.model.UserAnswer, {
       foreignKey: 'question_id',
+      as: 'userAnswers', // 确保别名与查询中一致
     });
   };
   QuestionTemplate.sync({ force: false }) // force: false 确保不会删除表

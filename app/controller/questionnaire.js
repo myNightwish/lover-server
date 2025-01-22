@@ -15,11 +15,10 @@ class QuestionnaireController extends Controller {
   // 获取用户问卷列表
   async list() {
     const { ctx } = this;
-    const userId = ctx.user.id;
-    // 用来初始化：
-    // const questionnaires = await ctx.service.questionnaire.initUserQuestionnaires(userId);
-
-    const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
+    const user = ctx.user;
+    console.log('user--->', user);
+    const questionnaires =
+      await ctx.service.questionnaire.getUserQuestionnaires(user);
 
     ctx.body = {
       success: true,
@@ -34,11 +33,10 @@ class QuestionnaireController extends Controller {
     const { questionnaireId, answers, shareId } = ctx.request.body;
 
     try {
-      const result = await ctx.service.questionnaire.submitWithShare(
+      const result = await ctx.service.questionnaire.submitQuestionnaire(
         userId,
-        answers,
-        shareId,
-        questionnaireId
+        questionnaireId,
+        answers
       );
 
       ctx.body = {
@@ -57,11 +55,10 @@ class QuestionnaireController extends Controller {
   // 获取问卷详情
   async detail() {
     const { ctx } = this;
-    const userId = ctx.user.id;
     // 获取查询参数
     const { questionnaireId } = ctx.query;
 
-    const detail = await ctx.service.questionnaire.getQuestionnaireDetail(userId, questionnaireId);
+    const detail = await ctx.service.questionnaire.getQuestionnaireDetail(questionnaireId);
 
     ctx.body = {
       success: true,

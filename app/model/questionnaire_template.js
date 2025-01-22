@@ -22,6 +22,11 @@ module.exports = app => {
     app.model.QuestionnaireTemplate.hasMany(app.model.UserQuestionnaire, {
       foreignKey: 'template_id',
     });
+    // 定义属于问卷类型
+    app.model.QuestionnaireTemplate.belongsTo(app.model.QuestionnaireType, {
+      foreignKey: 'type_id',
+      as: 'type', // 别名
+    });
   };
   QuestionnaireTemplate.sync({ force: false }) // force: false 确保不会删除表
     .then(() => {})

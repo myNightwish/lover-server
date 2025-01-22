@@ -32,10 +32,6 @@ module.exports = app => {
     },
     created_at: DATE,
     updated_at: DATE,
-  }, {
-    tableName: 'gpt_analyses',
-    timestamps: true,
-    underscored: true,
   });
 
   GptAnalysis.associate = function() {

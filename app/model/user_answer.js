@@ -4,6 +4,7 @@ module.exports = app => {
 
   const UserAnswer = app.model.define('user_answer', {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },
+    user_id: INTEGER,
     user_questionnaire_id: INTEGER,
     question_id: INTEGER,
     answer: TEXT,
@@ -19,7 +20,11 @@ module.exports = app => {
     },
   });
 
-  UserAnswer.associate = function() {
+  UserAnswer.associate = function () {
+    app.model.UserAnswer.belongsTo(app.model.WxUser, {
+      foreignKey: 'user_id',
+      as: 'user',
+    });
     // 与用户问卷的多对一关系
     app.model.UserAnswer.belongsTo(app.model.UserQuestionnaire, {
       foreignKey: 'user_questionnaire_id',

@@ -3,7 +3,6 @@ const Service = require('egg').Service;
 class RelationshipService extends Service {
   async bindRelationship(userId, partnerId) {
     const { Relationship } = this.ctx.model;
-    console.log('relationship', Relationship);
 
     // 检查是否已有绑定关系
     const existing = await Relationship.findOne({
