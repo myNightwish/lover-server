@@ -4,30 +4,43 @@ const jwt = require('jsonwebtoken');
 class WxUserService extends Service {
   async loginAndAutoSignUp(code) {
     const { ctx, app } = this;
-    // 假设你通过微信的 code 获取到 openid 或 unionid
     const { openid } = await ctx.helper.getWeChatUserInfo(code);
-
-    const user = await ctx.model.WxUser.findOne({ where: { openid } }); // 使用 wxUser 模型查找
+    const user = await ctx.model.WxUser.findOne({
+      where: { openid },
+      raw: true,
+    });
 
     // 查找是否已有用户
     if (!user) {
       // 如果是新用户，进行注册
       await ctx.model.WxUser.create({
         openid,
-        nickName: '设置好听的昵称吧',
-        avatarUrl: "https://mynightwish.oss-cn-beijing.aliyuncs.com/user-avatars/mini-cat.jpg",
+        nickName: '取个好听的昵称吧～',
+        avatarUrl:
+          'https://mynightwish.oss-cn-beijing.aliyuncs.com/user-avatars/mini-cat.jpg',
       });
     }
+    // 查询绑定关系，获取 partner_id
+    const relationship = await ctx.service.relationship.getPartnerInfo(openid);
 
     // 生成JWT Token
-    const accessToken = jwt.sign({ id: user.id, openid: user.openid }, app.config.jwt.secret, { expiresIn: '1h' });
-    const refreshToken = jwt.sign({ id: user.id, openid: user.openid }, app.config.jwt.secret, { expiresIn: '7d' });
+    const accessToken = jwt.sign(
+      { id: user.id, openid: user.openid },
+      app.config.jwt.secret,
+      { expiresIn: '1h' }
+    );
+    const refreshToken = jwt.sign(
+      { id: user.id, openid: user.openid },
+      app.config.jwt.secret,
+      { expiresIn: '7d' }
+    );
     // 返回数据
 
     return {
       accessToken,
       refreshToken,
-      user,
+      user: user,
+      partnerInfo: relationship ? relationship.toJSON() : null
     };
   }
 

@@ -7,14 +7,16 @@ class WxUserController extends Controller {
     const { ctx } = this;
     const { code } = ctx.request.body;
     try {
-      // 调用 service 层方法处理
       const result = await ctx.service.wxUser.loginAndAutoSignUp(code);
 
       // 返回结果给前端
       ctx.body = {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-        user: result.user,
+        user: {
+          ...result.user,
+          partnerInfo: result.partnerInfo,
+        },
       };
     } catch (error) {
       ctx.status = 400;

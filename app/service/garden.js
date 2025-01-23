@@ -184,10 +184,13 @@ class GardenService extends Service {
   // 辅助方法
   async calculateTreeHealth(emotions) {
     if (!emotions.length) return 50;
-    
+
     const positiveTypes = ['happy', 'neutral'];
-    const positiveCount = emotions.filter(e => positiveTypes.includes(e.emotion_type)).length;
-    return (positiveCount / emotions.length) * 100;
+    const positiveCount = emotions.filter((e) =>
+      positiveTypes.includes(e.emotion_type)
+    ).length;
+    const healthPercentage = (positiveCount / emotions.length) * 100;
+    return parseFloat(healthPercentage.toFixed(2)); // 保留两位小数
   }
 
   calculateFlowerState(task) {
