@@ -5,13 +5,20 @@ class GardenService extends Service {
    * 获取花园整体数据
    */
   async getGardenData(userId) {
-    const { ctx } = this;
-    
-    const [emotionTree, empathyGarden, memoryPond, behaviorPath] = await Promise.all([
+    const [
+      emotionTree,
+      empathyGarden,
+      memoryPond,
+      behaviorPath,
+      recentConflictRecord,
+      expProcessData,
+    ] = await Promise.all([
       this.getEmotionTreeData(userId),
       this.getEmpathyGardenData(userId),
       this.getMemoryPondData(userId),
-      this.getBehaviorPathData(userId)
+      this.getBehaviorPathData(userId),
+      this.getConflictData(userId),
+      this.getUserProgress(userId),
     ]);
 
     return {
@@ -19,21 +26,39 @@ class GardenService extends Service {
       empathyGarden,
       memoryPond,
       behaviorPath,
-      weather: await this.calculateWeatherState(userId)
+      weather: await this.calculateWeatherState(userId),
+      recentConflictRecord,
+      expProcessData,
     };
   }
+  getUserProgress(userId) {
+    const { ctx } = this;
 
+    const expProcessData = ctx.service.empathy.getUserProgress(userId);
+    return expProcessData;
+  }
+  async getConflictData(userId) {
+    const { ctx } = this;
+
+    // 获取最近冲突记录
+    const recentConflictRecord = await ctx.model.ConflictRecord.findAll({
+      where: { user_id: userId },
+      order: [['created_at', 'DESC']],
+      limit: 7,
+    });
+    return recentConflictRecord;
+  }
   /**
    * 获取情感之树数据
    */
   async getEmotionTreeData(userId) {
     const { ctx } = this;
-    
+
     // 获取最近情绪记录
     const recentEmotions = await ctx.model.EmotionRecord.findAll({
       where: { user_id: userId },
       order: [['created_at', 'DESC']],
-      limit: 7
+      limit: 7,
     });
 
     // 计算树的健康度
@@ -55,17 +80,19 @@ class GardenService extends Service {
    */
   async getEmpathyGardenData(userId) {
     const { ctx } = this;
-    
+
     // 获取已完成的任务
     const completedTasks = await ctx.model.UserTask.findAll({
-      where: { 
+      where: {
         user_id: userId,
       },
-      include: [{
-        model: ctx.model.EmpathyTask,
-        as: 'task'
-      }],
-      order: [['completed_at', 'DESC']]
+      include: [
+        {
+          model: ctx.model.EmpathyTask,
+          as: 'task',
+        },
+      ],
+      order: [['completed_at', 'DESC']],
     });
 
     return {
@@ -85,24 +112,24 @@ class GardenService extends Service {
    */
   async getMemoryPondData(userId) {
     const { ctx } = this;
-    
+
     const memories = await ctx.model.MemoryPuzzle.findAll({
-      where: { 
+      where: {
         [ctx.model.Sequelize.Op.or]: [
           { user_id: userId },
-          { partner_id: userId }
-        ]
+          { partner_id: userId },
+        ],
       },
       order: [['created_at', 'DESC']],
-      limit: 5
+      limit: 5,
     });
 
     return {
       memories: memories.map((memory, index) => ({
         id: memory.id,
         desc: memory.event_description,
-        matchLevel: this.getMatchLevel(memory.match_score)
-      }))
+        matchLevel: this.getMatchLevel(memory.match_score),
+      })),
     };
   }
 
@@ -111,11 +138,11 @@ class GardenService extends Service {
    */
   async getBehaviorPathData(userId) {
     const { ctx } = this;
-    
+
     const records = await ctx.model.BehaviorRecord.findAll({
       where: { user_id: userId },
       order: [['created_at', 'DESC']],
-      limit: 10
+      limit: 10,
     });
 
     const milestones = records.map((record, index) => ({
@@ -133,49 +160,57 @@ class GardenService extends Service {
    */
   async calculateWeatherState(userId) {
     const { ctx } = this;
-    
+
     // 获取最近的互动数据
     const [emotions, tasks, memories, behaviors] = await Promise.all([
       ctx.model.EmotionRecord.count({
-        where: { 
+        where: {
           user_id: userId,
           created_at: {
-            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          }
-        }
+            [ctx.model.Sequelize.Op.gte]: new Date(
+              Date.now() - 7 * 24 * 60 * 60 * 1000
+            ),
+          },
+        },
       }),
       ctx.model.UserTask.count({
-        where: { 
+        where: {
           user_id: userId,
           completed: true,
           completed_at: {
-            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          }
-        }
+            [ctx.model.Sequelize.Op.gte]: new Date(
+              Date.now() - 7 * 24 * 60 * 60 * 1000
+            ),
+          },
+        },
       }),
       ctx.model.MemoryPuzzle.count({
-        where: { 
+        where: {
           [ctx.model.Sequelize.Op.or]: [
             { user_id: userId },
-            { partner_id: userId }
+            { partner_id: userId },
           ],
           created_at: {
-            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          }
-        }
+            [ctx.model.Sequelize.Op.gte]: new Date(
+              Date.now() - 7 * 24 * 60 * 60 * 1000
+            ),
+          },
+        },
       }),
       ctx.model.BehaviorRecord.count({
-        where: { 
+        where: {
           user_id: userId,
           created_at: {
-            [ctx.model.Sequelize.Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          }
-        }
-      })
+            [ctx.model.Sequelize.Op.gte]: new Date(
+              Date.now() - 7 * 24 * 60 * 60 * 1000
+            ),
+          },
+        },
+      }),
     ]);
 
     const totalInteractions = emotions + tasks + memories + behaviors;
-    
+
     if (totalInteractions >= 15) return 'SUNNY';
     if (totalInteractions >= 7) return 'CLOUDY';
     return 'RAINY';
@@ -194,7 +229,9 @@ class GardenService extends Service {
   }
 
   calculateFlowerState(task) {
-    const daysSinceCompletion = Math.floor((Date.now() - new Date(task.completed_at)) / (24 * 60 * 60 * 1000));
+    const daysSinceCompletion = Math.floor(
+      (Date.now() - new Date(task.completed_at)) / (24 * 60 * 60 * 1000)
+    );
     return daysSinceCompletion <= 3 ? 'bloom' : 'bud';
   }
 
