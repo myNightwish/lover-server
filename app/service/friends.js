@@ -11,7 +11,10 @@ class FriendService extends Service {
     const { ctx } = this;
 
     // 验证用户是否存在
-    await this.validateUsers(userId, friendId);
+    const isvalidateUsers = await this.validateUsers(userId, friendId);
+    if (!isvalidateUsers.success) {
+      return isvalidateUsers.msg;
+    }
 
     // 检查是否已经是好友
     const existingFriendship = await ctx.model.UserFriend.findOne({
@@ -22,7 +25,7 @@ class FriendService extends Service {
     });
 
     if (existingFriendship) {
-      return { message: '已经是好友关系' };
+      return { message: '已是好友关系' };
     }
 
     // 创建双向好友关系
@@ -41,7 +44,7 @@ class FriendService extends Service {
       }, { transaction }),
     ]);
 
-    return { message: '好友关系建立成功' };
+    return { message: '伴侣绑定成功' };
   }
 
   /**
@@ -56,12 +59,24 @@ class FriendService extends Service {
       ctx.model.WxUser.findByPk(friendId),
     ]);
 
-    if (!user || !friend) {
-      throw new Error('用户不存在');
+    if (!user) {
+      return {
+        success: false,
+        msg: '用户不存在'
+      }
+    }
+    if (!friend) {
+      return {
+        success: false,
+        msg: '伴侣记录未找到',
+      };
     }
 
     if (userId === friendId) {
-      throw new Error('不能添加自己为好友');
+       return {
+         success: false,
+         msg: '不能添加自己为好友',
+       };
     }
   }
 

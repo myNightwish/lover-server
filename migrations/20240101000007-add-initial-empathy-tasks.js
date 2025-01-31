@@ -2,7 +2,46 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    console.log('开始插入数据 -- >数据迁移');
+    // 创建共情任务表
+    await queryInterface.createTable('empathy_task', {
+      id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+      title: Sequelize.STRING(100),
+      description: Sequelize.TEXT,
+      exp_reward: Sequelize.INTEGER,
+      status: {
+        type: Sequelize.STRING(20),
+        defaultValue: 'active',
+      },
+      created_at: Sequelize.DATE,
+      updated_at: Sequelize.DATE,
+    });
+
+    // 创建用户任务表
+    await queryInterface.createTable('user_task', {
+      id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+      user_id: Sequelize.INTEGER,
+      task_id: Sequelize.INTEGER,
+      response: Sequelize.TEXT,
+      completed: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      completed_at: Sequelize.DATE,
+      created_at: Sequelize.DATE,
+      updated_at: Sequelize.DATE,
+    });
+
+    // 创建用户进度表
+    await queryInterface.createTable('user_progress', {
+      id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+      user_id: Sequelize.INTEGER,
+      experience: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
+      created_at: Sequelize.DATE,
+      updated_at: Sequelize.DATE,
+    });
     // 添加初始共情任务数据
     await queryInterface.bulkInsert('empathy_task', [
       {
@@ -46,10 +85,11 @@ module.exports = {
         updated_at: new Date(),
       },
     ]);
-    console.log('数据插入完成 -- > 数据迁移');
   },
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.bulkDelete('empathy_task', null, {});
+    await queryInterface.dropTable('user_progress');
+    await queryInterface.dropTable('user_task');
   },
 };

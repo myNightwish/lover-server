@@ -149,50 +149,12 @@ class PointsController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     const { page = 1, pageSize = 20 } = ctx.query;
+    const data = ctx.service.points.getHistory(userId, page, pageSize);
 
     try {
-      const records = await ctx.model.PointsRecord.findAndCountAll({
-        where: {
-          [ctx.model.Sequelize.Op.or]: [
-            { user_id: userId },
-            { target_id: userId },
-          ],
-        },
-        order: [['created_at', 'DESC']],
-        limit: parseInt(pageSize),
-        offset: (page - 1) * pageSize,
-        include: [
-          {
-            model: ctx.model.WxUser,
-            as: 'user',
-            attributes: ['id', 'nickName', 'avatarUrl'],
-          },
-          {
-            model: ctx.model.WxUser,
-            as: 'target',
-            attributes: ['id', 'nickName', 'avatarUrl'],
-          },
-        ],
-      });
-
       ctx.body = {
         success: true,
-        data: {
-          records: records.rows.map((record) => ({
-            id: record.id,
-            type: record.type,
-            points: record.points,
-            description: record.description,
-            category: record.category,
-            isIncome: record.target_id === userId,
-            createdAt: record.created_at,
-            user: record.user,
-            target: record.target,
-          })),
-          total: records.count,
-          page: parseInt(page),
-          pageSize: parseInt(pageSize),
-        },
+        data
       };
     } catch (error) {
       ctx.status = 500;

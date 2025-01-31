@@ -14,8 +14,11 @@ class PointsService extends Service {
         ctx.model.WxUser.findByPk(targetId),
       ]);
 
-      if (!user || !target) {
+      if (!user) {
         throw new Error('用户不存在');
+      }
+      if (!target) {
+        throw new Error('伴侣记录未找到');
       }
 
       // 开启事务
@@ -86,58 +89,6 @@ class PointsService extends Service {
       throw error;
     }
   }
-
-  // /**
-  //  * 兑换奖励
-  //  */
-  // async exchange(userId, itemId) {
-  //   const { ctx } = this;
-
-  //   try {
-  //     const result = await ctx.model.transaction(async (transaction) => {
-  //       // 获取兑换项目
-  //       const item = await ctx.model.ExchangeItem.findByPk(itemId);
-  //       if (!item) {
-  //         throw new Error('兑换项目不存在');
-  //       }
-
-  //       // 检查积分余额
-  //       const balance = await this.getOrCreateBalance(userId, transaction);
-  //       if (balance.balance < item.points_cost) {
-  //         throw new Error('积分不足');
-  //       }
-
-  //       // 扣减积分
-  //       await balance.decrement('balance', {
-  //         by: item.points_cost,
-  //         transaction,
-  //       });
-
-  //       // 记录兑换
-  //       const record = await ctx.model.PointsRecord.create(
-  //         {
-  //           user_id: userId,
-  //           target_id: userId,
-  //           type: 'exchange',
-  //           points: -item.points_cost,
-  //           description: `兑换: ${item.title}`,
-  //         },
-  //         { transaction }
-  //       );
-
-  //       return {
-  //         record,
-  //         balance: await balance.reload(),
-  //       };
-  //     });
-
-  //     return result;
-  //   } catch (error) {
-  //     ctx.logger.error('[PointsService] Exchange failed:', error);
-  //     throw error;
-  //   }
-  // }
-
   /**
    * 发起兑换请求
    */
@@ -176,7 +127,6 @@ class PointsService extends Service {
         title: '新的兑换请求',
         content: `【${userInfo.nickName}】想要兑换「${item.title}」，需要消耗 ${item.points_cost} 积分，是否同意？`,
         relatedId: exchangeRecord.id,
-
       });
 
       return exchangeRecord;
@@ -385,6 +335,53 @@ class PointsService extends Service {
       ctx.logger.error('[PointsService] Complete exchange failed:', error);
       throw error;
     }
+  }
+
+  async getHistory(userId, page, pageSize) {
+    const { ctx } = this;
+
+    try {
+      const records = await ctx.model.PointsRecord.findAndCountAll({
+        where: {
+          [ctx.model.Sequelize.Op.or]: [
+            { user_id: userId },
+            { target_id: userId },
+          ],
+        },
+        order: [['created_at', 'DESC']],
+        limit: parseInt(pageSize),
+        offset: (page - 1) * pageSize,
+        include: [
+          {
+            model: ctx.model.WxUser,
+            as: 'user',
+            attributes: ['id', 'nickName', 'avatarUrl'],
+          },
+          {
+            model: ctx.model.WxUser,
+            as: 'target',
+            attributes: ['id', 'nickName', 'avatarUrl'],
+          },
+        ],
+      });
+
+      return {
+        records: records.rows.map((record) => ({
+          id: record.id,
+          type: record.type,
+          points: record.points,
+          description: record.description,
+          category: record.category,
+          isIncome: record.target_id === userId,
+          createdAt: record.created_at,
+          user: record.user,
+          target: record.target,
+        })),
+        total: records.count,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+      };
+    } catch (error) {}
   }
 }
 

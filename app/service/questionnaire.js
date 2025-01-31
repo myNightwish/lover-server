@@ -81,7 +81,6 @@ class QuestionnaireService extends Service {
   async getQuestionnaireDetail(templateId) {
     const { ctx } = this;
     const userId = ctx.user.id;
-    console.log('ctx.user.id--->', ctx.user.id);
 
     try {
       const template = await ctx.model.QuestionnaireTemplate.findOne({
@@ -124,6 +123,7 @@ class QuestionnaireService extends Service {
 
       if (!userQuestionnaire) {
         // 如果用户未完成此问卷，返回问卷模板数据
+        console.log('template--', template);
         return template;
       }
 

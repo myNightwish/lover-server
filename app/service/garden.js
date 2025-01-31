@@ -138,14 +138,8 @@ class GardenService extends Service {
    */
   async getBehaviorPathData(userId) {
     const { ctx } = this;
-
-    const records = await ctx.model.BehaviorRecord.findAll({
-      where: { user_id: userId },
-      order: [['created_at', 'DESC']],
-      limit: 10,
-    });
-
-    const milestones = records.map((record, index) => ({
+    const data = await ctx.service.points.getHistory(userId, 1, 4);
+    const milestones = data.records.map((record, index) => ({
       type: record.type,
       category: record.category,
       description: record.description,

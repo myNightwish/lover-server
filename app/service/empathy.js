@@ -198,7 +198,6 @@ class EmpathyService extends Service {
         // 随机选择一个任务
         const randomIndex = Math.floor(Math.random() * allTasks.length);
         const selectedTask = allTasks[randomIndex];
-        console.log('selectedTask--->', selectedTask, allTasks);
 
         // 创建新的用户任务记录
         const userTask = await ctx.model.UserTask.create({

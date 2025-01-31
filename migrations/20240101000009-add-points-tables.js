@@ -45,7 +45,7 @@ module.exports = {
 
     // 为现有用户初始化积分余额
     const users = await queryInterface.sequelize.query(
-      'SELECT id FROM wx_users',
+      'SELECT id FROM wx_users;', // 确保 SQL 语句以分号结尾
       { type: Sequelize.QueryTypes.SELECT }
     );
 

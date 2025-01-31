@@ -56,13 +56,16 @@ module.exports = appInfo => {
   };
 
   config.sequelize = {
-    dialect: 'mysql', // 数据库类型
+    dialect: 'sqlite', // 修改为 sqlite
+    storage: 'database.sqlite', // SQLite 文件路径
+    // old类型：
+    // dialect: 'mysql', // 数据库类型
     host: 'localhost', // 数据库地址
     port: 3306, // 数据库端口
     database: 'relationGrowth', // 数据库名
     username: 'root', // 用户名
     password: '', // 密码
-    timezone: '+08:00', // 设置时区
+    // timezone: '+08:00', // 设置时区
     define: {
       freezeTableName: true, // 是否冻结表名
       timestamps: false, // 是否自动添加 `createdAt` 和 `updatedAt`

@@ -1,10 +1,12 @@
 'use strict';
+const { options } = require('joi');
+const { DIMENSIONS, QUESTIONS } = require('../config/questionaire.js');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     // 获取问卷类型ID
     const types = await queryInterface.sequelize.query(
-      'SELECT id, code FROM questionnaire_type',
+      'SELECT id, code FROM questionnaire_type;', // 确保 SQL 语句以分号结尾
       { type: Sequelize.QueryTypes.SELECT }
     );
 
@@ -24,7 +26,7 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        title: '了解伴侣',
+        title: '了解Ta',
         description: '深入了解你的另一半',
         type_id: typeMap.partner_awareness,
         status: 1,
@@ -43,7 +45,7 @@ module.exports = {
 
     // 查询创建的模板
     const templates = await queryInterface.sequelize.query(
-      'SELECT * FROM questionnaire_template',
+      'SELECT * FROM questionnaire_template;', // 确保 SQL 语句以分号结尾
       { type: Sequelize.QueryTypes.SELECT }
     );
 
@@ -60,30 +62,40 @@ module.exports = {
     // 先创建维度
     await queryInterface.bulkInsert('questionnaire_dimension', [
       {
-        name: '性格特征',
-        description: '个性、行为方式等特征',
+        name: DIMENSIONS.confilct,
+        description:
+          '沟通是关系的基础，冲突解决能力直接决定矛盾是否升级（戈特曼研究所核心指标）',
         weight: 30,
         created_at: new Date(),
         updated_at: new Date(),
       },
       {
-        name: '生活习惯',
-        description: '日常生活中的习惯和偏好',
+        name: DIMENSIONS.targetValue,
+        description:
+          '价值观差异是离婚主因之一（参考《中国离婚纠纷大数据报告》）',
         weight: 25,
         created_at: new Date(),
         updated_at: new Date(),
       },
       {
-        name: '价值观',
-        description: '人生观、价值取向等',
-        weight: 25,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-      {
-        name: '兴趣爱好',
-        description: '个人兴趣和娱乐偏好',
+        name: DIMENSIONS.trustConnect,
+        description:
+          '信任缺失易导致猜忌，情感连接弱化预示关系疏离（依恋理论核心）',
         weight: 20,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: DIMENSIONS.neigoWorkBalance,
+        description: '权力失衡易引发怨恨（社会交换理论），协作能力反映关系韧性',
+        weight: 15,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: DIMENSIONS.closeNeed,
+        description: '肢体亲密度、性生活满意度、情感表达方式匹配度',
+        weight: 10,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -91,44 +103,12 @@ module.exports = {
 
     // 查询创建的维度
     const dimensions = await queryInterface.sequelize.query(
-      'SELECT * FROM questionnaire_dimension',
+      'SELECT * FROM questionnaire_dimension;', // 确保 SQL 语句以分号结尾
       { type: Sequelize.QueryTypes.SELECT }
     );
 
-    // 问题模板数据
-    const questions = [
-      {
-        dimension: '性格特征',
-        self: '你认为自己是一个什么样性格的人？',
-        partner: '你认为伴侣是一个什么样性格的人？',
-        match: '用一个词形容对方的性格特点',
-        type: 'text',
-      },
-      {
-        dimension: '生活习惯',
-        self: '你最喜欢的食物是什么？',
-        partner: '伴侣最喜欢的食物是什么？',
-        match: '说出对方最喜欢的一道菜',
-        type: 'text',
-      },
-      {
-        dimension: '价值观',
-        self: '你对未来生活的规划是什么？',
-        partner: '你了解伴侣对未来的规划吗？',
-        match: '说出对方最想实现的一个目标',
-        type: 'text',
-      },
-      {
-        dimension: '兴趣爱好',
-        self: '你平时最喜欢的休闲活动是什么？',
-        partner: '伴侣平时最喜欢的休闲活动是什么？',
-        match: '说出对方最喜欢的一项运动',
-        type: 'text',
-      },
-    ];
-
     // 为每个问卷类型创建问题
-    for (const question of questions) {
+    for (const question of QUESTIONS) {
       const dimension = dimensions.find((d) => d.name === question.dimension);
       if (!dimension) continue;
 
@@ -139,13 +119,14 @@ module.exports = {
           dimension_id: dimension.id,
           question_text: question.self,
           question_type: question.type,
+          options: question.options,
           order: 1,
           created_at: new Date(),
           updated_at: new Date(),
         },
       ]);
 
-      // 了解伴侣的问题
+      // 了解Ta的问题
       await queryInterface.bulkInsert('question_template', [
         {
           questionnaire_id: partnerAwarenessTemplate.id,
