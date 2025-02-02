@@ -104,12 +104,16 @@ class QuestionnaireService extends Service {
       });
 
       if (!template) {
-        throw new Error('问卷不存在');
+         return {
+           msg: '问卷不存在',
+         };
       }
 
       // 检查权限
       if (template.type?.need_partner && !ctx.user.partner_id) {
-        throw new Error('需要先绑定伴侣才能查看此问卷');
+        return {
+          msg: '需要先绑定伴侣才能查看此问卷',
+        };
       }
 
       // 获取用户问卷
@@ -119,11 +123,9 @@ class QuestionnaireService extends Service {
           template_id: templateId,
         },
       });
-      console.log('userQuestionnaire--', userQuestionnaire);
 
       if (!userQuestionnaire) {
         // 如果用户未完成此问卷，返回问卷模板数据
-        console.log('template--', template);
         return template;
       }
 

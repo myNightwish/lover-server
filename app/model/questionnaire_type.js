@@ -26,6 +26,15 @@ module.exports = (app) => {
       type: BOOLEAN,
       defaultValue: false,
     },
+    analysis_type: {
+      type: STRING(20),
+      defaultValue: 'self',
+    },
+    status: {
+      type: INTEGER,
+      defaultValue: 1,
+      comment: '状态: 0-禁用, 1-启用',
+    },
     created_at: DATE,
     updated_at: DATE,
   });
@@ -36,7 +45,7 @@ module.exports = (app) => {
       as: 'templates',
     });
   };
-  QuestionnaireType.sync({ force: false }) // force: false 确保不会删除表
+  QuestionnaireType.sync({ force: true }) // force: false 确保不会删除表
     .then(() => {})
     .catch((err) => {
       console.error('同步 QuestionnaireType 表失败:', err);

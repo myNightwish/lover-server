@@ -1,7 +1,7 @@
 // 问卷匹配结果表
 module.exports = app => {
   const { INTEGER, FLOAT, JSON, DATE } = app.Sequelize;
-  
+  // 暂时不涉及，不需要
   const QuestionnaireMatch = app.model.define('questionnaire_match', {
     id: { 
       type: INTEGER, 

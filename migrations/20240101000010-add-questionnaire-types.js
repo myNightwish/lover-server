@@ -1,4 +1,5 @@
 'use strict';
+const { QUESTIONNAIRE_TYPES } = require('../config/questionaire.js');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -7,13 +8,12 @@ module.exports = {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
       },
       code: {
         type: Sequelize.STRING(50),
         allowNull: false,
         unique: true,
-        comment: '问卷类型代码: self_awareness/partner_awareness/couple_match',
+        comment: '问卷类型代码',
       },
       name: {
         type: Sequelize.STRING(100),
@@ -31,55 +31,39 @@ module.exports = {
         defaultValue: false,
         comment: '是否需要同步在线',
       },
+      analysis_type: {
+        type: Sequelize.STRING(20),
+        allowNull: false,
+        defaultValue: 'self',
+        comment: '分析类型: self/partner/match/relationship',
+      },
+      status: {
+        type: Sequelize.INTEGER,
+        defaultValue: 1,
+        comment: '状态: 0-禁用, 1-启用',
+      },
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE,
     });
 
-    // 添加类型字段到问卷模板表
-    await queryInterface.addColumn('questionnaire_template', 'type_id', {
-      type: Sequelize.INTEGER,
-      references: {
-        model: 'questionnaire_type',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-    });
-
     // 添加默认问卷类型
-    await queryInterface.bulkInsert('questionnaire_type', [
-      {
-        code: 'self_awareness',
-        name: '了解自己',
-        description: '深入了解自己的性格、习惯和偏好',
-        need_partner: false,
-        need_sync: false,
+    await queryInterface.bulkInsert(
+      'questionnaire_type',
+      Object.values(QUESTIONNAIRE_TYPES).map((type) => ({
+        code: type.code,
+        name: type.name,
+        description: type.description,
+        need_partner: type.needPartner,
+        need_sync: type.needSync,
+        analysis_type: type.analysisType,
+        status: type.status,
         created_at: new Date(),
         updated_at: new Date(),
-      },
-      {
-        code: 'partner_awareness',
-        name: '了解伴侣',
-        description: '探索伴侣的性格、习惯和偏好',
-        need_partner: true,
-        need_sync: false,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-      {
-        code: 'couple_match',
-        name: '默契PK题',
-        description: '考验你们的默契程度',
-        need_partner: true,
-        need_sync: true,
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    ]);
+      }))
+    );
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('questionnaire_template', 'type_id');
     await queryInterface.dropTable('questionnaire_type');
   },
 };

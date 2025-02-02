@@ -6,7 +6,8 @@ module.exports = app => {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },
     title: STRING(100),
     description: TEXT,
-    status: INTEGER, // 0: 禁用, 1: 启用
+    status: INTEGER, // 0: 禁用, 1: 启用,
+    type_id: STRING,
     created_at: DATE,
     updated_at: DATE,
   });
@@ -28,7 +29,7 @@ module.exports = app => {
       as: 'type', // 别名
     });
   };
-  QuestionnaireTemplate.sync({ force: false }) // force: false 确保不会删除表
+  QuestionnaireTemplate.sync({ force: true }) // force: false 确保不会删除表
     .then(() => {})
     .catch(err => {
       console.error('同步 QuestionnaireTemplate 表失败:', err);
