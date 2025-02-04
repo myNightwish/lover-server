@@ -48,6 +48,11 @@ module.exports = app => {
       as: 'PartnerRelationships', // 用户作为伴侣的绑定关系
     });
   };
+   WxUser.sync({ force: false }) // force: false 确保不会删除表
+     .then(() => {})
+     .catch((err) => {
+       console.error('同步 WxUser 表失败:', err);
+     });
 
   return WxUser;
 };

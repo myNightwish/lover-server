@@ -5,7 +5,7 @@ class WxUserService extends Service {
   async loginAndAutoSignUp(code) {
     const { ctx, app } = this;
     const { openid } = await ctx.helper.getWeChatUserInfo(code);
-    const user = await ctx.model.WxUser.findOne({
+    let user = await ctx.model.WxUser.findOne({
       where: { openid },
       raw: true,
     });
@@ -13,12 +13,13 @@ class WxUserService extends Service {
     // 查找是否已有用户
     if (!user) {
       // 如果是新用户，进行注册
-      await ctx.model.WxUser.create({
+      user = await ctx.model.WxUser.create({
         openid,
         nickName: '取个好听的昵称吧～',
         avatarUrl:
           'https://mynightwish.oss-cn-beijing.aliyuncs.com/user-avatars/mini-cat.jpg',
       });
+      await ctx.service.initUserProgress.initializeUserData(user.id);
     }
     // 查询绑定关系，获取 partner_id
     const relationship = await ctx.service.relationship.getPartnerInfo(openid);
@@ -68,7 +69,6 @@ class WxUserService extends Service {
     const result = await user.update(fieldsToUpdate);
     return result; // 返回更新后的用户信息
   }
-
 }
 
 module.exports = WxUserService;

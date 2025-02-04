@@ -8,7 +8,6 @@ class EmotionService extends Service {
    */
   async recordEmotion(userId, emotionData) {
     const { ctx } = this;
-    console.log('entrer--->', emotionData);
 
     try {
       const record = await ctx.model.EmotionRecord.create({

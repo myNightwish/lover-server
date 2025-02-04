@@ -16,7 +16,6 @@ class QuestionnaireController extends Controller {
   async list() {
     const { ctx } = this;
     const user = ctx.user;
-    console.log('user--->', user);
     const questionnaires =
       await ctx.service.questionnaire.getUserQuestionnaires(user);
 

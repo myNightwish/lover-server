@@ -119,7 +119,6 @@ class PointsController extends Controller {
     const userId = ctx.user.id;
     const partnerInfo = ctx.user.partnerInfo;
     const { itemId } = ctx.request.body;
-    console.log('partnerInfo--->', partnerInfo);
 
     try {
       const result = await ctx.service.points.exchange(

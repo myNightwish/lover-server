@@ -5,7 +5,6 @@ class EmotionController extends Controller {
     const { ctx } = this;
     const userId = ctx.user.id;
     const { question } = ctx.request.body;
-    console.log('111---->', question, userId);
 
     try {
       const result = await ctx.service.emotion.recordEmotion(userId, question);

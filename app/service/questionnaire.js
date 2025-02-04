@@ -37,9 +37,8 @@ class QuestionnaireService extends Service {
           },
         },
       });
-      console.log('userAnswers--->', userAnswers);
       // 处理每个问卷的状态
-      return templates.map((template) => {
+      const res = templates.map((template) => {
         const completed = completedQuestionnaires.find(
           (q) => q.template_id === template.id
         );
@@ -63,9 +62,11 @@ class QuestionnaireService extends Service {
           type: template.type,
           status: completed ? 'completed' : locked ? 'locked' : 'available',
           completedAt: completed?.created_at,
-          answers, // 添加答案到返回数据
+          // answers, // 添加答案到返回数据
         };
       });
+
+      return res;
     } catch (error) {
       ctx.logger.error(
         '[QuestionnaireService] Get user questionnaires failed:',
@@ -151,7 +152,6 @@ class QuestionnaireService extends Service {
           answer: matchedAnswer ? matchedAnswer.answer : null, // 添加答案字段
         };
       });
-      console.log('questionsWithAnswers--->', questionsWithAnswers);
 
       // 更新模板对象中的 questions
       return{
@@ -218,7 +218,6 @@ class QuestionnaireService extends Service {
         question_id: answer.questionId,
         answer: answer.answer,
       }));
-      console.log('bulkAnswers---->:', bulkAnswers);
 
       await ctx.model.UserAnswer.bulkCreate(bulkAnswers);
       // 更新问卷状态为已完成

@@ -46,7 +46,6 @@ class ConflictService extends Service {
   async generateConflictAnalysis(record) {
     const { ctx } = this;
 
-    console.log('record.partner_id', record.partner_id);
     // 获取历史冲突记录
     const historicalRecords = await ctx.model.ConflictRecord.findAll({
       where: {

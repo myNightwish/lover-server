@@ -29,7 +29,7 @@ module.exports = app => {
       as: 'type', // 别名
     });
   };
-  QuestionnaireTemplate.sync({ force: true }) // force: false 确保不会删除表
+  QuestionnaireTemplate.sync({ force: false }) // force: false 确保不会删除表
     .then(() => {})
     .catch(err => {
       console.error('同步 QuestionnaireTemplate 表失败:', err);

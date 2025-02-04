@@ -45,7 +45,7 @@ module.exports = (app) => {
       as: 'templates',
     });
   };
-  QuestionnaireType.sync({ force: true }) // force: false 确保不会删除表
+  QuestionnaireType.sync({ force: false }) // force: false 确保不会删除表
     .then(() => {})
     .catch((err) => {
       console.error('同步 QuestionnaireType 表失败:', err);
