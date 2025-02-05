@@ -2,17 +2,17 @@
   "development": {
     "username": "root",
     "password": null,
-    "database": "relationgrowth",
+    "database": "relationGrowth_dev",
     "host": "127.0.0.1",
     "dialect": "sqlite",
-    "storage": "database.sqlite"
+    "storage": "database_dev.sqlite"
   },
   "production": {
     "username": "root",
     "password": null,
-    "database": "relationgrowth",
-    "host": "127.0.0.1",
+    "database": "relationGrowth_prod",
+    "host": "43.140.193.60",
     "dialect": "sqlite",
-    "storage": "database.sqlite"
+    "storage": "database_prod.sqlite"
   }
 }
