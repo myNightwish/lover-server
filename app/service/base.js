@@ -4,10 +4,12 @@ class BaseService {
   }
 
   async processGPTRequest(conversationId, question) {
+    console.log('etner processGPTRequest', conversationId, question);
     try {
       // 更新会话状态为处理中
       await this.updateConversationStatus(conversationId, 'processing');
       // 调用OpenAI API
+      console.log('准备进入generateResponse函数....');
       const { answer, tokenCount } = await this.ctx.service.openai.generateResponse(question);
       // 更新会话状态为完成
       await this.updateConversationStatus(conversationId, 'completed', answer, tokenCount);

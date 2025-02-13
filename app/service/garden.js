@@ -138,15 +138,8 @@ class GardenService extends Service {
    */
   async getBehaviorPathData(userId) {
     const { ctx } = this;
-    const data = await ctx.service.points.getHistory(userId, 1, 4);
-    const milestones = data.records.map((record, index) => ({
-      type: record.type,
-      category: record.category,
-      description: record.description,
-      points: record.points,
-    }));
-
-    return { milestones };
+    const data = await ctx.service.points.getUserPointsOverview(userId);
+    return { milestones: data?.records || [] };
   }
 
   /**

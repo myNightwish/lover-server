@@ -1,5 +1,4 @@
 const OpenAI = require('openai');
-const { AppError } = require('../utils/errors');
 
 class OpenAIService {
   constructor(ctx) {
@@ -11,15 +10,39 @@ class OpenAIService {
   }
 
   async generateResponse(question) {
-    try {
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4-turbo',
-        stream: false,
+    console.log(
+      'enter generateResponse ---->',
+      this.openai.chat.completions.create
+    );
+      const completion1 = await this.openai.chat.completions.create({
+        model: 'Atom-7B-Chat',
+        // stream: false,
+        temperature: 0.3,
         messages: [
-          { role: 'system', content: '你是一位专业资深心理专家，专注于关系咨询和亲密成长' },
-          { role: 'user', content: question },
+          {
+            role: 'system',
+            content: '你是一位专业资深心理专家，专注于关系咨询和亲密成长',
+          },
+          // { role: 'user', content: question },
+          { role: 'user', content: '请介绍一下Llama社区' },
         ],
       });
+      console.log('completion1 ---->', completion1);
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'Atom-7B-Chat',
+        // stream: false,
+        temperature: 0.3,
+        messages: [
+          // {
+          //   role: 'system',
+          //   content: '你是一位专业资深心理专家，专注于关系咨询和亲密成长',
+          // },
+          // { role: 'user', content: question },
+          { role: 'user', content: '请介绍一下Llama社区' },
+        ],
+      });
+      console.log('completion ---->', completion)
       return {
         answer: completion?.choices?.[0]?.message?.content || '🤔 哇偶，出现了什么问题',
         tokenCount: completion?.usage.total_tokens,

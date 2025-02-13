@@ -124,6 +124,11 @@ module.exports = app => {
   );
   // 伴侣绑定
   router.post('/api/relationship/bind', authWx, controller.relationship.bind);
+  router.post(
+    '/api/relationship/unbind',
+    authWx,
+    controller.relationship.unbind
+  );
   // 花园数据
   router.get(
     '/api/growth/garden-data',

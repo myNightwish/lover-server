@@ -15,9 +15,9 @@ class WxUserService extends Service {
       // 如果是新用户，进行注册
       user = await ctx.model.WxUser.create({
         openid,
-        nickName: '取个好听的昵称吧～',
+        nickName: '未设置昵称',
         avatarUrl:
-          'https://mynightwish.oss-cn-beijing.aliyuncs.com/user-avatars/mini-cat.jpg',
+          'https://mynightwish.oss-cn-beijing.aliyuncs.com/user-avatars/defaultAavatar.png',
       });
       await ctx.service.initUserProgress.initializeUserData(user.id);
     }

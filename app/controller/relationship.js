@@ -13,8 +13,36 @@ class RelationshipController extends Controller {
 
     const curUserOpenId = ctx.user.openid;
 
-    const result = await service.relationship.bindRelationship(curUserOpenId, partnerId);
+    const result = await service.relationship.bindRelationship(
+      curUserOpenId,
+      partnerId
+    );
     ctx.body = result;
+  }
+  async unbind() {
+    const { ctx } = this;
+    const userId = ctx.user.openid;
+    const partnerId = ctx.user.partner_id;
+    if (!partnerId) {
+      ctx.body = {
+        success: false,
+        message: '你没有绑定伴侣'
+      };
+      return;
+    }
+    try {
+      const result = await ctx.service.relationship.unbindRelationship(
+        userId,
+        partnerId
+      );
+      ctx.body = result;
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        message: error.message || '解除绑定失败',
+      };
+    }
   }
 }
 

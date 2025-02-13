@@ -6,7 +6,6 @@ class PointsService extends Service {
    */
   async recordBehavior(userId, targetId, data) {
     const { ctx } = this;
-
     try {
       // 验证用户存在
       const [user, target] = await Promise.all([
@@ -30,45 +29,107 @@ class PointsService extends Service {
           transaction
         );
 
+        let userDescription = '';
+        let targetDescription = '';
+
         // 根据行为类型处理积分
         if (data.type === 'praise') {
           // 表扬：转赠积分
           if (userBalance.balance < data.points) {
             throw new Error('积分不足');
           }
+
+          // 构造表扬描述
+          userDescription = `${user.nickName}表扬${target.nickName}: ${data.description}`;
+          targetDescription = `${user.nickName}表扬${target.nickName}: ${data.description}`;
+
+          // 扣除 user 积分
           await userBalance.decrement('balance', {
             by: data.points,
             transaction,
           });
+
+          // 增加 target 积分
           await targetBalance.increment('balance', {
             by: data.points,
             transaction,
           });
+
+          // 对 user 记录行为：praiseOther（扣除积分）
+          await ctx.model.PointsRecord.create(
+            {
+              user_id: userId,
+              target_id: targetId,
+              type: 'praiseOther',
+              points: -data.points,
+              description: userDescription,
+              category: data.category,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+            { transaction }
+          );
+
+          // 对 target 记录行为：bePraised（增加积分）
+          await ctx.model.PointsRecord.create(
+            {
+              user_id: targetId,
+              target_id: userId,
+              type: 'bePraised',
+              points: data.points,
+              description: targetDescription,
+              category: data.category,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+            { transaction }
+          );
         } else if (data.type === 'criticism') {
           // 批评：扣减对方积分
           if (targetBalance.balance < Math.abs(data.points)) {
             throw new Error('对方积分不足');
           }
+
+          // 构造批评描述
+          userDescription = `${user.nickName}批评${target.nickName}: ${data.description}`;
+          targetDescription = `${user.nickName}批评${target.nickName}: ${data.description}`;
+
+          // 扣除 target 积分
           await targetBalance.decrement('balance', {
             by: Math.abs(data.points),
             transaction,
           });
-        }
 
-        // 记录积分变动
-        const record = await ctx.model.PointsRecord.create(
-          {
-            user_id: userId,
-            target_id: targetId,
-            type: data.type,
-            points: data.points,
-            description: data.description,
-            category: data.category,
-            created_at: new Date(),
-            updated_at: new Date(),
-          },
-          { transaction }
-        );
+          // 对 user 记录行为：criticismOther（不扣除积分，行为记录）
+          await ctx.model.PointsRecord.create(
+            {
+              user_id: userId,
+              target_id: targetId,
+              type: 'criticismOther',
+              points: 0, // 批评自己不扣积分，只是记录行为
+              description: userDescription,
+              category: data.category,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+            { transaction }
+          );
+
+          // 对 target 记录行为：beCriticismed（扣除积分）
+          await ctx.model.PointsRecord.create(
+            {
+              user_id: targetId,
+              target_id: userId,
+              type: 'beCriticismed',
+              points: -Math.abs(data.points),
+              description: targetDescription,
+              category: data.category,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+            { transaction }
+          );
+        }
 
         // 重新加载余额
         const [newUserBalance, newTargetBalance] = await Promise.all([
@@ -77,7 +138,6 @@ class PointsService extends Service {
         ]);
 
         return {
-          record,
           userBalance: newUserBalance,
           targetBalance: newTargetBalance,
         };
@@ -89,6 +149,7 @@ class PointsService extends Service {
       throw error;
     }
   }
+
   /**
    * 发起兑换请求
    */
@@ -168,31 +229,40 @@ class PointsService extends Service {
   async getUserPointsOverview(userId) {
     const { ctx } = this;
 
-    const [balance, records] = await Promise.all([
-      ctx.model.PointsBalance.findOne({
-        where: { user_id: userId },
-      }),
-      ctx.model.PointsRecord.findAll({
-        where: {
-          [ctx.model.Sequelize.Op.or]: [
-            { user_id: userId },
-            { target_id: userId },
+    // 获取用户积分余额
+    const balance = await ctx.model.PointsBalance.findOne({
+      where: { user_id: userId },
+    });
+
+    // 获取用户积分记录，只返回与该用户相关的记录
+    const records = await ctx.model.PointsRecord.findAll({
+      where: {
+        [ctx.model.Sequelize.Op.or]: [
+          { user_id: userId }, // 记录用户自己发起的行为
+        ],
+        // 过滤掉不必要的记录
+        type: {
+          [ctx.model.Sequelize.Op.in]: [
+            'praiseOther',
+            'bePraised',
+            'criticismOther',
+            'beCriticismed',
+            'exchange',
           ],
         },
-        order: [['created_at', 'DESC']],
-        limit: 10,
-      }),
-    ]);
+      },
+      order: [['created_at', 'DESC']], // 按照创建时间降序排序
+    });
 
     return {
-      balance: balance?.balance || 0,
+      balance: balance?.balance || 0, // 用户余额
       records: records.map((record) => ({
         id: record.id,
         type: record.type,
         points: record.points,
         description: record.description,
         category: record.category,
-        isIncome: record.target_id === userId,
+        isIncome: record.target_id === userId, // 判断是增加还是减少
         createdAt: record.created_at,
       })),
     };
