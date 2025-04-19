@@ -3,8 +3,10 @@
  */
 module.exports = app => {
   const { router, controller } = app;
-  const authWx = require('./middleware/wxAuth.js');
-
+  // const authWx = require('./middleware/wxAuth.js');
+  // 现在是因为改名字的问题，其实真实不应该叫 wx，他是通用的
+  const authWx = require('./middleware/auth')(); // 通用鉴权中间件
+  const wxAuth = require('./middleware/wxAuth.js'); // 保留原有微信鉴权中间件，用于特定场景
   // 微信小程序登录
   router.post('/api/loginAndAutoSignUp', controller.wxUser.loginAndAutoSignUp);
   router.post('/api/refresh-token', authWx, controller.wxUser.refreshToken);
@@ -164,4 +166,20 @@ module.exports = app => {
     authWx,
     controller.message.markAsRead
   );
+   // 用户相关
+   router.post('/api/user/register', controller.user.register);
+   router.post('/api/user/login', controller.user.login);
+  //    // 需要鉴权的接口
+  // router.get('/api/user/profile', authWx, controller.user.profile);
+   // 问题相关
+   router.get('/api/categories', authWx,controller.question.getCategories);
+   router.get('/api/categories/:id/questions', authWx, controller.question.getQuestionsByCategory);
+   
+  //  会话相关
+   router.post('/api/sessions', authWx, controller.session.create);
+   router.get('/api/sessions/:id', authWx, controller.session.getSessionDetail);
+   router.get('/api/users/sessions', authWx, controller.session.getUserSessions);
+   router.post('/api/sessions/:id/answers', authWx, controller.session.submitAnswer);
+   router.get('/api/sessions/:id/results', authWx, controller.session.getSessionResults);
+   router.post('/api/sessions/:id/results', authWx, controller.session.saveSessionResults);
 };

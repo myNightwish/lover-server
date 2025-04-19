@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = app => {
   const { STRING, DATE, INTEGER } = app.Sequelize;
 
@@ -6,6 +8,14 @@ module.exports = app => {
       type: INTEGER,
       primaryKey: true,
       autoIncrement: true,
+    },
+    userId: {
+      type: INTEGER,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     openid: {
       type: STRING,
@@ -36,6 +46,12 @@ module.exports = app => {
   });
 
   WxUser.associate = () => {
+    // 关联到通用用户模型
+    WxUser.belongsTo(app.model.User, {
+      foreignKey: 'userId',
+      as: 'User',
+    });
+
     WxUser.hasMany(app.model.Relationship, {
       foreignKey: 'userOpenid',
       sourceKey: 'openid',
@@ -48,11 +64,12 @@ module.exports = app => {
       as: 'PartnerRelationships', // 用户作为伴侣的绑定关系
     });
   };
-   WxUser.sync({ force: false }) // force: false 确保不会删除表
-     .then(() => {})
-     .catch((err) => {
-       console.error('同步 WxUser 表失败:', err);
-     });
+  
+  WxUser.sync({ force: false }) // force: false 确保不会删除表
+    .then(() => {})
+    .catch((err) => {
+      console.error('同步 WxUser 表失败:', err);
+    });
 
   return WxUser;
 };

@@ -15,6 +15,7 @@
     "dotenv": "^16.4.7",
     "egg": "^3.17.5",
     "egg-cors": "^3.0.1",
+    "egg-jwt": "^3.1.7",
     "egg-mysql": "^4.0.0",
     "egg-redis": "^2.6.0",
     "egg-scripts": "2",
@@ -24,6 +25,7 @@
     "ioredis": "^5.3.2",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.0",
     "openai": "^4.11.0",
     "sqlite3": "^5.1.7"
   },

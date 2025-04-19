@@ -21,7 +21,6 @@ class MessageService extends Service {
 
       return message;
     } catch (error) {
-      ctx.logger.error('[MessageService] Create message failed:', error);
       throw error;
     }
   }
@@ -52,7 +51,6 @@ class MessageService extends Service {
         total: messages.count,
       };
     } catch (error) {
-      ctx.logger.error('[MessageService] Get user messages failed:', error);
       throw error;
     }
   }
@@ -75,7 +73,6 @@ class MessageService extends Service {
       await message.update({ is_read: true });
       return message;
     } catch (error) {
-      ctx.logger.error('[MessageService] Mark message as read failed:', error);
       throw error;
     }
   }

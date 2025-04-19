@@ -11,6 +11,11 @@ exports.io = {
 //   enable: true,
 //   package: 'egg-mysql',
 // };
+ // 启用JWT
+exports.jwt = {
+  enable: true,
+  package: 'egg-jwt',
+};
 exports.cors = {
   enable: true,
   package: 'egg-cors',
