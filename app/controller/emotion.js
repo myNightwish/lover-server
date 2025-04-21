@@ -3,7 +3,7 @@ const Controller = require('egg').Controller;
 class EmotionController extends Controller {
   async recordEmotion() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { question } = ctx.request.body;
 
     try {
@@ -24,7 +24,7 @@ class EmotionController extends Controller {
 
   async getEmotionTrend() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const trend = await ctx.service.emotion.analyzeEmotionTrend(userId);

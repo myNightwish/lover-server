@@ -6,7 +6,7 @@ class MessageController extends Controller {
    */
   async getMessages() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { page = 1, pageSize = 20 } = ctx.query;
 
     try {
@@ -34,7 +34,7 @@ class MessageController extends Controller {
    */
   async markAsRead() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { messageId } = ctx.params;
 
     try {

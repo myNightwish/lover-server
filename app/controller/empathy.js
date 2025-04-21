@@ -3,7 +3,7 @@ const Controller = require('egg').Controller;
 class EmpathyController extends Controller {
   async getTasks() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const tasks = await ctx.service.empathy.getAvailableTasks(userId);
@@ -22,7 +22,7 @@ class EmpathyController extends Controller {
 
   async completeTask() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { taskId, response } = ctx.request.body;
 
     try {
@@ -42,7 +42,7 @@ class EmpathyController extends Controller {
 
   async getProgress() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const progress = await ctx.service.empathy.getUserProgress(userId);
@@ -61,7 +61,7 @@ class EmpathyController extends Controller {
 
   async getTaskHistory() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const history = await ctx.service.empathy.getTaskHistory(userId);
@@ -80,7 +80,7 @@ class EmpathyController extends Controller {
 
   async getCurrentTask() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const task = await ctx.service.empathy.getCurrentTask(userId);

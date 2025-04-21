@@ -47,7 +47,7 @@ class MemoryPuzzleService extends Service {
       const partnerPuzzle = await ctx.model.MemoryPuzzle.findOne({
         where: {
           user_id: partnerId,
-          partner_id: ctx.user.id,
+          partner_id: ctx.state.user.id,
         },
         order: [[ 'created_at', 'DESC' ]],
       });

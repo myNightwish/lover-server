@@ -1,159 +1,188 @@
+'use strict';
+
 const Controller = require('egg').Controller;
 
 class QuestionController extends Controller {
-  // 获取所有问题分类
+  // 获取所有分类
   async getCategories() {
     const { ctx } = this;
+    const userId = ctx.state.user ? ctx.state.user.id : null;
     
     try {
-      const categories = await ctx.service.questionCategory.getAll();
+      // 获取所有分类模板
+      const categories = await ctx.service.template.getCategories();
       
       ctx.body = {
         success: true,
-        data: categories,
+        data: categories
       };
     } catch (error) {
-      ctx.logger.error('获取问题分类失败', error);
+      ctx.logger.error('获取分类列表失败', error);
       ctx.body = {
         success: false,
-        message: '获取问题分类失败',
+        message: error.message || '获取分类列表失败'
       };
     }
   }
-
-  // 获取分类下的问题
-  async getQuestionsByCategory() {
+  
+  // 获取分类详情
+  async getCategoryDetail() {
     const { ctx } = this;
-    const { id } = ctx.params;
+    const categoryId = ctx.params.id;
     
     try {
-      const questions = await ctx.service.question.getByCategory(id);
-      
-      ctx.body = {
-        success: true,
-        data: questions,
-      };
-    } catch (error) {
-      ctx.logger.error(`获取分类 ${id} 的问题失败`, error);
-      ctx.body = {
-        success: false,
-        message: '获取问题失败',
-      };
-    }
-  }
-
-  // 获取单个问题
-  async getQuestion() {
-    const { ctx } = this;
-    const { id } = ctx.params;
-    
-    try {
-      const question = await ctx.service.question.getById(id);
-      
-      if (!question) {
-        ctx.body = {
-          success: false,
-          message: '问题不存在',
-        };
-        return;
-      }
-      
-      ctx.body = {
-        success: true,
-        data: question,
-      };
-    } catch (error) {
-      ctx.logger.error(`获取问题 ${id} 失败`, error);
-      ctx.body = {
-        success: false,
-        message: '获取问题失败',
-      };
-    }
-  }
-
-  // 创建问题
-  async createQuestion() {
-    const { ctx } = this;
-    const data = ctx.request.body;
-    
-    try {
-      // 验证数据
-      ctx.validate({
-        category_id: { type: 'number', required: true },
-        text: { type: 'string', required: true },
-        type: { type: 'string', required: true },
+      // 查询分类
+      const category = await ctx.model.Category.findOne({
+        where: {
+          id: categoryId
+        },
+        attributes: ['id', 'code', 'name', 'description', 'icon', 'version']
       });
       
-      const question = await ctx.service.question.create(data);
-      
-      ctx.body = {
-        success: true,
-        data: question,
-      };
-    } catch (error) {
-      ctx.logger.error('创建问题失败', error);
-      ctx.body = {
-        success: false,
-        message: error.message || '创建问题失败',
-      };
-    }
-  }
-
-  // 更新问题
-  async updateQuestion() {
-    const { ctx } = this;
-    const { id } = ctx.params;
-    const data = ctx.request.body;
-    
-    try {
-      const question = await ctx.service.question.update(id, data);
-      
-      if (!question) {
+      if (!category) {
         ctx.body = {
           success: false,
-          message: '问题不存在',
+          message: '分类不存在'
         };
         return;
       }
       
       ctx.body = {
         success: true,
-        data: question,
+        data: category
       };
     } catch (error) {
-      ctx.logger.error(`更新问题 ${id} 失败`, error);
+      ctx.logger.error('获取分类详情失败', error);
       ctx.body = {
         success: false,
-        message: error.message || '更新问题失败',
+        message: error.message || '获取分类详情失败'
       };
     }
   }
-
-  // 删除问题
-  async deleteQuestion() {
+  
+  // 获取分类下的话题列表
+  async getTopicsByCategory() {
     const { ctx } = this;
-    const { id } = ctx.params;
-    
+    const categoryId = ctx.params.id;
+    const userId = ctx.state.user ? ctx.state.user.id : null;
+    console.log('🍎 ctx.service.UserProgress：', ctx.service);
     try {
-      const result = await ctx.service.question.delete(id);
+      // 获取用户的话题进度
+      const topics = await ctx.service.userProgress.getUserTopicProgress(userId, categoryId);
       
-      if (!result) {
-        ctx.body = {
-          success: false,
-          message: '问题不存在',
-        };
-        return;
-      }
+      // 分离普通话题和推荐话题
+      const regularTopics = topics.filter(t => !t.recommended);
+      const recommendedTopics = topics.filter(t => t.recommended);
       
       ctx.body = {
         success: true,
-        message: '删除问题成功',
+        data: {
+          topics: regularTopics,
+          recommendedTopics,
+          categoryId
+        }
       };
     } catch (error) {
-      ctx.logger.error(`删除问题 ${id} 失败`, error);
+      ctx.logger.error('获取分类话题列表失败', error);
       ctx.body = {
         success: false,
-        message: '删除问题失败',
+        message: error.message || '获取分类话题列表失败'
+      };
+    }
+  }
+  
+  // 获取话题下的问题列表
+  async getQuestionsByTopic() {
+    const { ctx } = this;
+    const topicId = ctx.params.id;
+    const userId = ctx.state.user ? ctx.state.user.id : null;
+    
+    try {
+      // 获取用户的问题回答
+      const questions = await ctx.service.userProgress.getUserQuestionAnswers(userId, topicId);
+      
+      ctx.body = {
+        success: true,
+        data: {
+          detailQuestions: questions,
+          topicId
+        }
+      };
+    } catch (error) {
+      ctx.logger.error('获取话题问题列表失败', error);
+      ctx.body = {
+        success: false,
+        message: error.message || '获取话题问题列表失败'
+      };
+    }
+  }
+  
+  // 解锁话题
+  async unlockTopic() {
+    const { ctx } = this;
+    const topicId = ctx.params.id;
+    const userId = ctx.state.user.id;
+    
+    try {
+      const result = await ctx.service.userProgress.unlockTopic(userId, topicId);
+      
+      ctx.body = result;
+    } catch (error) {
+      ctx.logger.error('解锁话题失败', error);
+      ctx.body = {
+        success: false,
+        message: error.message || '解锁话题失败'
+      };
+    }
+  }
+  
+  // 提交问题回答
+  async submitAnswer() {
+    const { ctx } = this;
+    const sessionId = ctx.params.sessionId;
+    const userId = ctx.state.user.id;
+    const { questionId, answerValue } = ctx.request.body;
+    
+    try {
+      const result = await ctx.service.userProgress.saveUserAnswer(
+        userId, questionId, answerValue, parseInt(sessionId)
+      );
+      
+      ctx.body = result;
+    } catch (error) {
+      ctx.logger.error('提交问题回答失败', error);
+      ctx.body = {
+        success: false,
+        message: error.message || '提交问题回答失败'
+      };
+    }
+  }
+  
+  // 初始化模板数据（仅管理员可用）
+  async initTemplateData() {
+    const { ctx } = this;
+    
+    // 检查是否为管理员
+    if (!ctx.state.user || !ctx.state.user.isAdmin) {
+      ctx.body = {
+        success: false,
+        message: '无权限执行此操作'
+      };
+      return;
+    }
+    
+    try {
+      const result = await ctx.service.template.initTemplateData();
+      
+      ctx.body = {
+        success: result,
+        message: result ? '初始化模板数据成功' : '初始化模板数据失败'
+      };
+    } catch (error) {
+      ctx.logger.error('初始化模板数据失败', error);
+      ctx.body = {
+        success: false,
+        message: error.message || '初始化模板数据失败'
       };
     }
   }

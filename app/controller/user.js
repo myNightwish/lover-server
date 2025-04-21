@@ -1,11 +1,14 @@
+'use strict';
+
 const Controller = require('egg').Controller;
-const crypto = require('crypto');
 
 class UserController extends Controller {
-  // 用户注册
+  /**
+   * 用户注册
+   */
   async register() {
     const { ctx } = this;
-    const data = ctx.request.body;
+    const userData = ctx.request.body;
     
     try {
       // 验证数据
@@ -17,61 +20,22 @@ class UserController extends Controller {
         phone: { type: 'string', required: false },
       });
       
-      // 检查用户名是否已存在
-      const existingUser = await ctx.model.User.findOne({
-        where: { username: data.username }
-      });
+      // 调用 service 进行注册
+      const result = await ctx.service.user.register(userData);
       
-      if (existingUser) {
-        ctx.body = {
-          success: false,
-          message: '用户名已存在'
-        };
-        return;
-      }
-      
-      // 加密密码
-      const salt = crypto.randomBytes(16).toString('hex');
-      const hash = crypto.pbkdf2Sync(data.password, salt, 1000, 64, 'sha512').toString('hex');
-      
-      // 创建用户
-      const user = await ctx.model.User.create({
-        username: data.username,
-        password: hash,
-        salt,
-        nickname: data.nickname || data.username,
-        email: data.email,
-        phone: data.phone,
-        avatar: data.avatar || '/static/images/default-avatar.png',
-        status: 'active',
-        role: 'user'
-      });
-      
-      // 生成token
-      const token = await ctx.service.auth.generateToken(user);
-      
-      // 返回用户信息和token
-      ctx.body = {
-        success: true,
-        data: {
-          id: user.id,
-          username: user.username,
-          nickname: user.nickname,
-          email: user.email,
-          phone: user.phone,
-          avatar: user.avatar,
-          token
-        }
-      };
+      ctx.body = result;
     } catch (error) {
+      ctx.logger.error('注册失败', error);
       ctx.body = {
         success: false,
         message: error.message || '注册失败'
       };
     }
   }
-
-  // 用户登录
+  
+  /**
+   * 用户登录
+   */
   async login() {
     const { ctx } = this;
     const { username, password } = ctx.request.body;
@@ -83,335 +47,184 @@ class UserController extends Controller {
         password: { type: 'string', required: true }
       });
       
-      // 查找用户
-      const user = await ctx.model.User.findOne({
-        where: { username }
-      });
+      // 调用 service 进行登录
+      const result = await ctx.service.user.login(username, password);
       
-      if (!user) {
-        ctx.body = {
-          success: false,
-          message: '用户名或密码错误'
-        };
-        return;
-      }
-      
-      // 验证密码
-      const hash = crypto.pbkdf2Sync(password, user.salt, 1000, 64, 'sha512').toString('hex');
-      if (hash !== user.password) {
-        ctx.body = {
-          success: false,
-          message: '用户名或密码错误'
-        };
-        return;
-      }
-      
-      // 生成token
-      const token = await ctx.service.auth.generateToken(user);
-      
-      // 返回用户信息和token
-      ctx.body = {
-        success: true,
-        data: {
-          id: user.id,
-          username: user.username,
-          nickname: user.nickname,
-          email: user.email,
-          phone: user.phone,
-          avatar: user.avatar,
-          token
-        }
-      };
+      ctx.body = result;
     } catch (error) {
+      ctx.logger.error('登录失败', error);
       ctx.body = {
         success: false,
         message: error.message || '登录失败'
       };
     }
   }
-
-  // 获取当前用户信息
+  
+  /**
+   * 刷新访问令牌
+   */
+  async refreshToken() {
+    const { ctx } = this;
+    const { refreshToken } = ctx.request.body;
+    
+    if (!refreshToken) {
+      ctx.body = {
+        success: false,
+        message: '缺少刷新令牌'
+      };
+      return;
+    }
+    
+    try {
+      // 调用 service 刷新令牌
+      const result = await ctx.service.user.refreshToken(refreshToken);
+      
+      ctx.body = result;
+    } catch (error) {
+      ctx.logger.error('刷新令牌失败', error);
+      ctx.body = {
+        success: false,
+        message: error.message || '刷新令牌失败'
+      };
+    }
+  }
+  
+  /**
+   * 获取当前用户信息
+   */
   async getCurrentUser() {
     const { ctx } = this;
     
     try {
-      // 获取当前用户
-      const user = await ctx.model.User.findByPk(ctx.user.id);
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
+      // 调用 service 获取用户信息
+      const result = await ctx.service.user.getCurrentUser(userId);
       
-      if (!user) {
-        ctx.body = {
-          success: false,
-          message: '用户不存在'
-        };
-        return;
-      }
-      
-      // 返回用户信息
-      ctx.body = {
-        success: true,
-        data: {
-          id: user.id,
-          username: user.username,
-          nickname: user.nickname,
-          email: user.email,
-          phone: user.phone,
-          avatar: user.avatar,
-          partner_id: user.partner_id,
-          created_at: user.created_at
-        }
-      };
+      ctx.body = result;
     } catch (error) {
+      ctx.logger.error('获取用户信息失败', error);
       ctx.body = {
         success: false,
-        message: '获取用户信息失败'
+        message: error.message || '获取用户信息失败'
       };
     }
   }
-
-  // 更新用户信息
+  
+  /**
+   * 更新用户信息
+   */
   async updateUser() {
     const { ctx } = this;
-    const data = ctx.request.body;
+    const userData = ctx.request.body;
     
     try {
-      // 获取当前用户
-      const user = await ctx.model.User.findByPk(ctx.user.id);
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
       
-      if (!user) {
-        ctx.body = {
-          success: false,
-          message: '用户不存在'
-        };
-        return;
-      }
+      // 调用 service 更新用户信息
+      const result = await ctx.service.user.updateUser(userId, userData);
       
-      // 更新用户信息
-      const updateData = {};
-      
-      if (data.nickname) updateData.nickname = data.nickname;
-      if (data.email) updateData.email = data.email;
-      if (data.phone) updateData.phone = data.phone;
-      if (data.avatar) updateData.avatar = data.avatar;
-      
-      // 如果要更新密码，需要验证旧密码
-      if (data.newPassword && data.oldPassword) {
-        const hash = crypto.pbkdf2Sync(data.oldPassword, user.salt, 1000, 64, 'sha512').toString('hex');
-        if (hash !== user.password) {
-          ctx.body = {
-            success: false,
-            message: '旧密码错误'
-          };
-          return;
-        }
-        
-        // 更新密码
-        const salt = crypto.randomBytes(16).toString('hex');
-        const newHash = crypto.pbkdf2Sync(data.newPassword, salt, 1000, 64, 'sha512').toString('hex');
-        
-        updateData.password = newHash;
-        updateData.salt = salt;
-      }
-      
-      await user.update(updateData);
-      
-      // 返回更新后的用户信息
-      ctx.body = {
-        success: true,
-        data: {
-          id: user.id,
-          username: user.username,
-          nickname: user.nickname,
-          email: user.email,
-          phone: user.phone,
-          avatar: user.avatar,
-          partner_id: user.partner_id
-        }
-      };
+      ctx.body = result;
     } catch (error) {
+      ctx.logger.error('更新用户信息失败', error);
       ctx.body = {
         success: false,
         message: error.message || '更新用户信息失败'
       };
     }
   }
-
-  // 绑定伴侣
+  
+  /**
+   * 绑定伴侣
+   */
   async bindPartner() {
     const { ctx } = this;
     const { partnerCode } = ctx.request.body;
     
-    try {
-      // 验证数据
-      ctx.validate({
-        partnerCode: { type: 'string', required: true }
-      });
-      
-      // 获取当前用户
-      const user = await ctx.model.User.findByPk(ctx.user.id);
-      
-      if (!user) {
-        ctx.body = {
-          success: false,
-          message: '用户不存在'
-        };
-        return;
-      }
-      
-      // 如果已经绑定伴侣，不能再次绑定
-      if (user.partner_id) {
-        ctx.body = {
-          success: false,
-          message: '您已经绑定了伴侣'
-        };
-        return;
-      }
-      
-      // 查找伴侣
-      const partner = await ctx.model.User.findOne({
-        where: { bind_code: partnerCode }
-      });
-      
-      if (!partner) {
-        ctx.body = {
-          success: false,
-          message: '伴侣绑定码无效'
-        };
-        return;
-      }
-      
-      // 不能绑定自己
-      if (partner.id === user.id) {
-        ctx.body = {
-          success: false,
-          message: '不能绑定自己为伴侣'
-        };
-        return;
-      }
-      
-      // 如果伴侣已经绑定了其他人，不能绑定
-      if (partner.partner_id && partner.partner_id !== user.id) {
-        ctx.body = {
-          success: false,
-          message: '该伴侣已经绑定了其他用户'
-        };
-        return;
-      }
-      
-      // 绑定伴侣
-      await user.update({ partner_id: partner.id });
-      await partner.update({ partner_id: user.id });
-      
-      // 返回绑定结果
+    if (!partnerCode) {
       ctx.body = {
-        success: true,
-        data: {
-          id: user.id,
-          partner_id: partner.id,
-          partner_nickname: partner.nickname,
-          partner_avatar: partner.avatar
-        }
+        success: false,
+        message: '缺少伴侣绑定码'
       };
+      return;
+    }
+    
+    try {
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
+      
+      // 调用 service 绑定伴侣
+      const result = await ctx.service.user.bindPartner(userId, partnerCode);
+      
+      ctx.body = result;
     } catch (error) {
+      ctx.logger.error('绑定伴侣失败', error);
       ctx.body = {
         success: false,
         message: error.message || '绑定伴侣失败'
       };
     }
   }
-
-  // 解绑伴侣
+  
+  /**
+   * 解绑伴侣
+   */
   async unbindPartner() {
     const { ctx } = this;
     
     try {
-      // 获取当前用户
-      const user = await ctx.model.User.findByPk(ctx.user.id);
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
       
-      if (!user) {
-        ctx.body = {
-          success: false,
-          message: '用户不存在'
-        };
-        return;
-      }
+      // 调用 service 解绑伴侣
+      const result = await ctx.service.user.unbindPartner(userId);
       
-      // 如果没有绑定伴侣，不需要解绑
-      if (!user.partner_id) {
-        ctx.body = {
-          success: false,
-          message: '您还没有绑定伴侣'
-        };
-        return;
-      }
-      
-      // 获取伴侣
-      const partner = await ctx.model.User.findByPk(user.partner_id);
-      
-      // 解绑伴侣
-      await user.update({ partner_id: null });
-      
-      // 如果伴侣存在，也解绑伴侣
-      if (partner) {
-        await partner.update({ partner_id: null });
-      }
-      
-      // 返回解绑结果
-      ctx.body = {
-        success: true,
-        message: '解绑伴侣成功'
-      };
+      ctx.body = result;
     } catch (error) {
+      ctx.logger.error('解绑伴侣失败', error);
       ctx.body = {
         success: false,
         message: error.message || '解绑伴侣失败'
       };
     }
   }
-
-  // 生成伴侣绑定码
+  
+  /**
+   * 生成伴侣绑定码
+   */
   async generateBindCode() {
     const { ctx } = this;
     
     try {
-      // 获取当前用户
-      const user = await ctx.model.User.findByPk(ctx.user.id);
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
       
-      if (!user) {
-        ctx.body = {
-          success: false,
-          message: '用户不存在'
-        };
-        return;
-      }
+      // 调用 service 生成绑定码
+      const result = await ctx.service.user.generateBindCode(userId);
       
-      // 生成绑定码
-      const bindCode = crypto.randomBytes(3).toString('hex').toUpperCase();
-      
-      // 更新用户绑定码
-      await user.update({ bind_code: bindCode });
-      
-      // 返回绑定码
-      ctx.body = {
-        success: true,
-        data: {
-          bind_code: bindCode
-        }
-      };
+      ctx.body = result;
     } catch (error) {
+      ctx.logger.error('生成绑定码失败', error);
       ctx.body = {
         success: false,
         message: error.message || '生成绑定码失败'
       };
     }
   }
-
-  // 获取伴侣信息
+  
+  /**
+   * 获取伴侣信息
+   */
   async getPartnerInfo() {
     const { ctx } = this;
     
     try {
-      // 获取当前用户
-      const user = await ctx.model.User.findByPk(ctx.user.id);
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
+      
+      // 获取用户信息
+      const user = await ctx.model.User.findByPk(userId);
       
       if (!user) {
         ctx.body = {
@@ -441,7 +254,6 @@ class UserController extends Controller {
         return;
       }
       
-      // 返回伴侣信息
       ctx.body = {
         success: true,
         data: {
@@ -449,173 +261,144 @@ class UserController extends Controller {
           username: partner.username,
           nickname: partner.nickname,
           avatar: partner.avatar,
-          bind_date: user.updated_at // 使用更新时间作为绑定时间
+          created_at: partner.created_at
         }
       };
     } catch (error) {
+      ctx.logger.error('获取伴侣信息失败', error);
       ctx.body = {
         success: false,
         message: error.message || '获取伴侣信息失败'
       };
     }
   }
-
-  // 获取用户的会话列表
+  
+  /**
+   * 获取用户会话列表
+   */
   async getUserSessions() {
     const { ctx } = this;
     
     try {
-      // 获取用户创建的会话
-      const createdSessions = await ctx.model.QuestionSession.findAll({
-        where: { creator_id: ctx.user.id },
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
+      
+      // 获取用户参与的会话
+      const sessions = await ctx.model.QuestionSession.findAll({
+        where: {
+          $or: [
+            { creator_id: userId },
+            { partner_id: userId }
+          ]
+        },
+        order: [['created_at', 'DESC']],
         include: [
           {
             model: ctx.model.User,
-            as: 'Creator',
+            as: 'creator',
             attributes: ['id', 'username', 'nickname', 'avatar']
           },
           {
             model: ctx.model.User,
-            as: 'Partner',
+            as: 'partner',
             attributes: ['id', 'username', 'nickname', 'avatar']
-          },
-          {
-            model: ctx.model.QuestionCategory,
-            as: 'Category',
-            attributes: ['id', 'name', 'description', 'icon']
           }
-        ],
-        order: [['created_at', 'DESC']]
+        ]
       });
       
-      // 获取用户参与的会话（作为伴侣）
-      const participatedSessions = await ctx.model.QuestionSession.findAll({
-        where: { partner_id: ctx.user.id },
-        include: [
-          {
-            model: ctx.model.User,
-            as: 'Creator',
-            attributes: ['id', 'username', 'nickname', 'avatar']
-          },
-          {
-            model: ctx.model.User,
-            as: 'Partner',
-            attributes: ['id', 'username', 'nickname', 'avatar']
-          },
-          {
-            model: ctx.model.QuestionCategory,
-            as: 'Category',
-            attributes: ['id', 'name', 'description', 'icon']
-          }
-        ],
-        order: [['created_at', 'DESC']]
-      });
-      
-      // 合并会话列表
-      const allSessions = [...createdSessions, ...participatedSessions];
-      
-      // 按创建时间排序
-      allSessions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      
-      // 返回会话列表
       ctx.body = {
         success: true,
-        data: allSessions
+        data: sessions
       };
     } catch (error) {
+      ctx.logger.error('获取用户会话列表失败', error);
       ctx.body = {
         success: false,
         message: error.message || '获取用户会话列表失败'
       };
     }
   }
-
-  // 获取用户的问答统计
+  
+  /**
+   * 获取用户统计数据
+   */
   async getUserStats() {
     const { ctx } = this;
     
     try {
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
+      
+      // 获取用户信息
+      const user = await ctx.model.User.findByPk(userId);
+      
+      if (!user) {
+        ctx.body = {
+          success: false,
+          message: '用户不存在'
+        };
+        return;
+      }
+      
       // 获取用户创建的会话数量
-      const createdSessionsCount = await ctx.model.QuestionSession.count({
-        where: { creator_id: ctx.user.id }
-      });
-      
-      // 获取用户参与的会话数量
-      const participatedSessionsCount = await ctx.model.QuestionSession.count({
-        where: { partner_id: ctx.user.id }
-      });
-      
-      // 获取用户完成的会话数量
-      const completedSessionsCount = await ctx.model.QuestionSession.count({
-        where: { 
-          [ctx.app.Sequelize.Op.or]: [
-            { creator_id: ctx.user.id },
-            { partner_id: ctx.user.id }
-          ],
-          status: 'completed'
-        }
+      const sessionCount = await ctx.model.QuestionSession.count({
+        where: { creator_id: userId }
       });
       
       // 获取用户回答的问题数量
-      const answeredQuestionsCount = await ctx.model.QuestionAnswer.count({
-        where: { user_id: ctx.user.id }
+      const answerCount = await ctx.model.QuestionAnswer.count({
+        where: { user_id: userId }
       });
       
-      // 获取用户的平均匹配度
-      const sessions = await ctx.model.QuestionSession.findAll({
-        where: { 
-          [ctx.app.Sequelize.Op.or]: [
-            { creator_id: ctx.user.id },
-            { partner_id: ctx.user.id }
-          ],
-          status: 'completed',
-          similarity_percentage: { [ctx.app.Sequelize.Op.ne]: null }
-        },
-        attributes: ['similarity_percentage']
+      // 获取用户收藏的问题数量
+      const favoriteCount = await ctx.model.UserFavorite.count({
+        where: { user_id: userId }
       });
       
-      let averageSimilarity = 0;
-      if (sessions.length > 0) {
-        const totalSimilarity = sessions.reduce((sum, session) => sum + session.similarity_percentage, 0);
-        averageSimilarity = Math.round(totalSimilarity / sessions.length);
-      }
+      // 计算用户注册天数
+      const registerDays = Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24));
       
-      // 返回统计数据
       ctx.body = {
         success: true,
         data: {
-          created_sessions_count: createdSessionsCount,
-          participated_sessions_count: participatedSessionsCount,
-          completed_sessions_count: completedSessionsCount,
-          answered_questions_count: answeredQuestionsCount,
-          average_similarity: averageSimilarity
+          sessionCount,
+          answerCount,
+          favoriteCount,
+          registerDays,
+          hasPartner: !!user.partner_id
         }
       };
     } catch (error) {
+      ctx.logger.error('获取用户统计数据失败', error);
       ctx.body = {
         success: false,
         message: error.message || '获取用户统计数据失败'
       };
     }
   }
-
-  // 获取用户的收藏问题
+  
+  /**
+   * 获取用户收藏的问题
+   */
   async getFavoriteQuestions() {
     const { ctx } = this;
     
     try {
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
+      
       // 获取用户收藏的问题
       const favorites = await ctx.model.UserFavorite.findAll({
-        where: { user_id: ctx.user.id, type: 'question' },
+        where: { user_id: userId },
         include: [
           {
             model: ctx.model.Question,
-            as: 'Question',
+            as: 'question',
             include: [
               {
                 model: ctx.model.QuestionCategory,
-                as: 'Category',
-                attributes: ['id', 'name', 'icon']
+                as: 'category',
+                attributes: ['id', 'name']
               }
             ]
           }
@@ -623,29 +406,53 @@ class UserController extends Controller {
         order: [['created_at', 'DESC']]
       });
       
-      // 返回收藏问题列表
+      // 格式化数据
+      const questions = favorites.map(favorite => {
+        const question = favorite.question;
+        return {
+          id: question.id,
+          text: question.text,
+          type: question.type,
+          category: question.category ? {
+            id: question.category.id,
+            name: question.category.name
+          } : null,
+          favoriteId: favorite.id,
+          createdAt: favorite.created_at
+        };
+      });
+      
       ctx.body = {
         success: true,
-        data: favorites.map(favorite => favorite.Question)
+        data: questions
       };
     } catch (error) {
+      ctx.logger.error('获取用户收藏问题失败', error);
       ctx.body = {
         success: false,
         message: error.message || '获取用户收藏问题失败'
       };
     }
   }
-
-  // 添加收藏问题
+  
+  /**
+   * 添加收藏问题
+   */
   async addFavoriteQuestion() {
     const { ctx } = this;
     const { questionId } = ctx.request.body;
     
+    if (!questionId) {
+      ctx.body = {
+        success: false,
+        message: '缺少问题ID'
+      };
+      return;
+    }
+    
     try {
-      // 验证数据
-      ctx.validate({
-        questionId: { type: 'number', required: true }
-      });
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
       
       // 检查问题是否存在
       const question = await ctx.model.Question.findByPk(questionId);
@@ -661,9 +468,8 @@ class UserController extends Controller {
       // 检查是否已经收藏
       const existingFavorite = await ctx.model.UserFavorite.findOne({
         where: {
-          user_id: ctx.user.id,
-          question_id: questionId,
-          type: 'question'
+          user_id: userId,
+          question_id: questionId
         }
       });
       
@@ -677,48 +483,54 @@ class UserController extends Controller {
       
       // 添加收藏
       await ctx.model.UserFavorite.create({
-        user_id: ctx.user.id,
-        question_id: questionId,
-        type: 'question'
+        user_id: userId,
+        question_id: questionId
       });
       
-      // 返回结果
       ctx.body = {
         success: true,
-        message: '收藏问题成功'
+        message: '收藏成功'
       };
     } catch (error) {
+      ctx.logger.error('添加收藏问题失败', error);
       ctx.body = {
         success: false,
-        message: error.message || '收藏问题失败'
+        message: error.message || '添加收藏问题失败'
       };
     }
   }
-
-  // 取消收藏问题
+  
+  /**
+   * 移除收藏问题
+   */
   async removeFavoriteQuestion() {
     const { ctx } = this;
-    const { questionId } = ctx.request.body;
+    const { favoriteId } = ctx.request.body;
+    
+    if (!favoriteId) {
+      ctx.body = {
+        success: false,
+        message: '缺少收藏ID'
+      };
+      return;
+    }
     
     try {
-      // 验证数据
-      ctx.validate({
-        questionId: { type: 'number', required: true }
-      });
+      // 从 JWT 中获取用户 ID
+      const userId = ctx.state.user.id;
       
       // 查找收藏记录
       const favorite = await ctx.model.UserFavorite.findOne({
         where: {
-          user_id: ctx.user.id,
-          question_id: questionId,
-          type: 'question'
+          id: favoriteId,
+          user_id: userId
         }
       });
       
       if (!favorite) {
         ctx.body = {
           success: false,
-          message: '未收藏该问题'
+          message: '收藏记录不存在'
         };
         return;
       }
@@ -726,15 +538,98 @@ class UserController extends Controller {
       // 删除收藏
       await favorite.destroy();
       
-      // 返回结果
       ctx.body = {
         success: true,
         message: '取消收藏成功'
       };
     } catch (error) {
+      ctx.logger.error('移除收藏问题失败', error);
       ctx.body = {
         success: false,
-        message: error.message || '取消收藏问题失败'
+        message: error.message || '移除收藏问题失败'
+      };
+    }
+  }
+  
+  /**
+   * 微信登录
+   */
+  async wechatLogin() {
+    const { ctx } = this;
+    const { code } = ctx.request.body;
+    
+    if (!code) {
+      ctx.body = {
+        success: false,
+        message: '缺少微信授权码'
+      };
+      return;
+    }
+    
+    try {
+      // 调用微信接口获取openid
+      const wxResult = await ctx.curl('https://api.weixin.qq.com/sns/jscode2session', {
+        method: 'GET',
+        dataType: 'json',
+        data: {
+          appid: ctx.app.config.wechat.appId,
+          secret: ctx.app.config.wechat.appSecret,
+          js_code: code,
+          grant_type: 'authorization_code'
+        }
+      });
+      
+      if (!wxResult.data.openid) {
+        ctx.body = {
+          success: false,
+          message: '微信授权失败'
+        };
+        return;
+      }
+      
+      const openid = wxResult.data.openid;
+      
+      // 查找用户是否已存在
+      let user = await ctx.model.User.findOne({
+        where: { openid }
+      });
+      
+      if (!user) {
+        // 创建新用户
+        user = await ctx.model.User.create({
+          username: `wx_${openid.substring(0, 8)}`,
+          nickname: `用户${Math.floor(Math.random() * 10000)}`,
+          openid,
+          password: '',
+          salt: '',
+          avatar: '/static/images/default-avatar.png',
+          status: 'active',
+          role: 'user'
+        });
+      }
+      
+      // 生成 token
+      const tokens = ctx.service.user.generateTokens(user);
+      
+      // 更新用户的最后登录时间
+      await user.update({ last_login: new Date() });
+      
+      ctx.body = {
+        success: true,
+        data: {
+          id: user.id,
+          username: user.username,
+          nickname: user.nickname,
+          avatar: user.avatar,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken
+        }
+      };
+    } catch (error) {
+      ctx.logger.error('微信登录失败', error);
+      ctx.body = {
+        success: false,
+        message: error.message || '微信登录失败'
       };
     }
   }

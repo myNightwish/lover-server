@@ -81,7 +81,7 @@ class QuestionnaireService extends Service {
    */
   async getQuestionnaireDetail(templateId) {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const template = await ctx.model.QuestionnaireTemplate.findOne({
@@ -111,7 +111,7 @@ class QuestionnaireService extends Service {
       }
 
       // 检查权限
-      if (template.type?.need_partner && !ctx.user.partner_id) {
+      if (template.type?.need_partner && !ctx.state.user.partner_id) {
         return {
           msg: '需要先绑定伴侣才能查看此问卷',
         };
@@ -191,7 +191,7 @@ class QuestionnaireService extends Service {
       }
 
       // 检查权限
-      if (template.type?.need_partner && !ctx.user.partner_id) {
+      if (template.type?.need_partner && !ctx.state.user.partner_id) {
         throw new Error('需要先绑定伴侣才能提交此问卷');
       }
 
@@ -279,7 +279,7 @@ class QuestionnaireService extends Service {
    */
   async checkAwarenessAnalysis(userId, typeCode) {
     const { ctx } = this;
-    const user = ctx.user;
+    const user = ctx.state.user;
 
     if (!user.partner_id) return;
 

@@ -6,7 +6,7 @@ class PointsController extends Controller {
    */
   async getOverview() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const overview = await ctx.service.points.getUserPointsOverview(userId);
@@ -28,8 +28,8 @@ class PointsController extends Controller {
    */
   async recordBehavior() {
     const { ctx } = this;
-    const userId = ctx.user.id;
-    const partnerId = ctx.user.partner_id;
+    const userId = ctx.state.user.id;
+    const partnerId = ctx.state.user.partner_id;
     const behaviorData = ctx.request.body;
 
     try {
@@ -57,8 +57,8 @@ class PointsController extends Controller {
    */
   // async getExchangeItems() {
   //   const { ctx } = this;
-  //   const userId = ctx.user.id;
-  //   const partnerId = ctx.user.partner_id;
+  //   const userId = ctx.state.user.id;
+  //   const partnerId = ctx.state.user.partner_id;
 
   //   try {
   //     const items = await ctx.model.ExchangeItem.findAll({
@@ -89,8 +89,8 @@ class PointsController extends Controller {
    */
   async createExchangeItem() {
     const { ctx } = this;
-    const userId = ctx.user.id;
-    const partnerId = ctx.user.partner_id;
+    const userId = ctx.state.user.id;
+    const partnerId = ctx.state.user.partner_id;
     const itemData = ctx.request.body;
     try {
       const result = await ctx.service.points.createExchangeItem(
@@ -116,8 +116,8 @@ class PointsController extends Controller {
    */
   async exchange() {
     const { ctx } = this;
-    const userId = ctx.user.id;
-    const partnerInfo = ctx.user.partnerInfo;
+    const userId = ctx.state.user.id;
+    const partnerInfo = ctx.state.user.partnerInfo;
     const { itemId } = ctx.request.body;
 
     try {
@@ -125,7 +125,7 @@ class PointsController extends Controller {
         userId,
         itemId,
         partnerInfo,
-        ctx.user
+        ctx.state.user
       );
 
       ctx.body = {
@@ -146,7 +146,7 @@ class PointsController extends Controller {
    */
   async getHistory() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { page = 1, pageSize = 20 } = ctx.query;
     const data = ctx.service.points.getHistory(userId, page, pageSize);
 
@@ -169,7 +169,7 @@ class PointsController extends Controller {
    */
   async getExchangeItems() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const items = await ctx.service.points.getAvailableExchangeItems(userId);
@@ -192,7 +192,7 @@ class PointsController extends Controller {
    */
   async completeExchange() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { id: exchangeId } = ctx.params;
 
     try {

@@ -7,7 +7,12 @@ module.exports = options => {
     const token = ctx.headers.authorization?.split(' ')[1]; // 获取 Authorization Header 中的 Token
     
     if (!token) {
-      ctx.throw(401, '未登录，缺少 Token');
+      ctx.status = 401;
+      ctx.body = {
+        success: false,
+        message: '未授权，请先登录'
+      };
+      return;
     }
 
     try {
@@ -41,24 +46,44 @@ module.exports = options => {
       } else {
         // 其他平台用户
         user = await ctx.service.user.findById(decoded.id);
-        
-        // 获取伴侣信息（如果有）
-        const partnerInfo = await ctx.service.user.getPartnerInfo(decoded.id);
-        if (partnerInfo) {
-          user.partner_id = partnerInfo.id;
-          user.partnerInfo = partnerInfo;
-        } else {
-          user.partner_id = null;
-          user.partnerInfo = {};
+        if (!user) {
+          ctx.status = 401;
+          ctx.body = {
+            success: false,
+            message: '用户不存在'
+          };
+          return;
         }
+        // 获取伴侣信息（如果有）
+        // const partnerInfo = await ctx.service.user.getPartnerInfo(decoded.id);
+        // if (partnerInfo) {
+        //   user.partner_id = partnerInfo.id;
+        //   user.partnerInfo = partnerInfo;
+        // } else {
+        //   user.partner_id = null;
+        //   user.partnerInfo = {};
+        // }
       }
       
       if (!user) {
-        ctx.throw(401, '用户不存在或已被禁用');
+        ctx.status = 401;
+        ctx.body = {
+          success: false,
+          message: '用户不存在'
+        };
+        return;
       }
-      
-      // 将用户信息挂载到 ctx.user 上
-      ctx.user = user;
+      // 将用户信息存入 ctx.state.user
+      ctx.state.user = {
+        id: user.id,
+        openid: user.openid,
+        nickname: user.nickname,
+        avatar: user.avatar,
+        isAdmin: user.role === 'admin'
+      };
+      console.log('ctx.state.user', ctx.service);
+      // 检查并执行版本迁移
+      await ctx.service.versionMigration.checkAndMigrate(user.id);
       
       await next(); // 继续执行后续中间件
     } catch (error) {

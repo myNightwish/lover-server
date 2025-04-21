@@ -11,7 +11,7 @@ class RelationshipController extends Controller {
       return;
     }
 
-    const curUserOpenId = ctx.user.openid;
+    const curUserOpenId = ctx.state.user.openid;
 
     const result = await service.relationship.bindRelationship(
       curUserOpenId,
@@ -21,8 +21,8 @@ class RelationshipController extends Controller {
   }
   async unbind() {
     const { ctx } = this;
-    const userId = ctx.user.openid;
-    const partnerId = ctx.user.partner_id;
+    const userId = ctx.state.user.openid;
+    const partnerId = ctx.state.user.partner_id;
     if (!partnerId) {
       ctx.body = {
         success: false,

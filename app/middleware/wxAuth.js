@@ -9,8 +9,8 @@ module.exports = async (ctx, next) => {
   // 验证并解码 Token
   const decoded = jwt.verify(token, ctx.app.config.jwt.secret);
   const user = await ctx.service.wxUser.findById(decoded.id);
-  // 将解码后的用户信息挂载到 ctx.user 上
-  ctx.user = user ? user : {
+  // 将解码后的用户信息挂载到 ctx.state.user 上
+  ctx.state.user = user ? user : {
     id: decoded.id,
     openid: decoded.openid,
   };
@@ -20,11 +20,11 @@ module.exports = async (ctx, next) => {
   );
 
   if (relationship) {
-    ctx.user.partner_id = relationship.id;
-    ctx.user.partnerInfo = relationship;
+    ctx.state.user.partner_id = relationship.id;
+    ctx.state.user.partnerInfo = relationship;
   } else {
-    ctx.user.partner_id = null;
-    ctx.user.partnerInfo = {};
+    ctx.state.user.partner_id = null;
+    ctx.state.user.partnerInfo = {};
   }
 
   await next(); // 继续执行后续中间件

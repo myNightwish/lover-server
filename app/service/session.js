@@ -5,7 +5,7 @@ const Service = require('egg').Service;
 class SessionService extends Service {
   // 创建新会话
   async create(data) {
-    const { creator_id, partner_id, category_id, title, questions } = data;
+    const { creator_id, partner_id, topic_id, title, questions } = data;
     
     // 开启事务
     const transaction = await this.ctx.model.transaction();
@@ -15,7 +15,7 @@ class SessionService extends Service {
       const session = await this.ctx.model.QuestionSession.create({
         creator_id,
         partner_id,
-        category_id,
+        topic_id,
         title,
         status: 'active',
       }, { transaction });

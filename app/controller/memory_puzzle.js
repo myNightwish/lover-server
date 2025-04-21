@@ -4,8 +4,8 @@ class MemoryPuzzleController extends Controller {
   async createPuzzle() {
     const { ctx } = this;
     const { description } = ctx.request.body;
-    const userId = ctx.user.id;
-    const partnerId = ctx.user.partner_id;
+    const userId = ctx.state.user.id;
+    const partnerId = ctx.state.user.partner_id;
     // 如果未绑定伴侣，返回错误信息
     if (!partnerId) {
       ctx.body = {

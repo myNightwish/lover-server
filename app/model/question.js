@@ -1,33 +1,17 @@
 'use strict';
 
 module.exports = app => {
-  const { STRING, TEXT, INTEGER, DATE } = app.Sequelize;
+  const { STRING, INTEGER, TEXT, DATE, JSON } = app.Sequelize;
 
   const Question = app.model.define('question', {
-    id: {
-      type: INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    category_id: {
-      type: INTEGER,
-      allowNull: false,
-      references: {
-        model: 'question_categories',
-        key: 'id'
-      }
-    },
-    text: {
-      type: TEXT,
-      allowNull: false,
-    },
-    type: {
-      type: STRING(20),
-      allowNull: false,
-    },
-    options: {
-      type: TEXT,
-      allowNull: true,
+    id: { type: INTEGER, primaryKey: true, autoIncrement: true },
+    topic_id: { type: INTEGER, comment: '所属话题ID' },
+    code: { type: STRING(50), comment: '问题编码，如q1' },
+    text: { type: TEXT, comment: '问题文本' },
+    type: { type: STRING(50), comment: '问题类型：text, options, who, thisorthat等' },
+    options: { 
+      type: TEXT, 
+      comment: '选项，用于options类型',
       get() {
         const rawValue = this.getDataValue('options');
         return rawValue ? JSON.parse(rawValue) : null;
@@ -36,64 +20,14 @@ module.exports = app => {
         this.setDataValue('options', value ? JSON.stringify(value) : null);
       }
     },
-    option1: {
-      type: STRING(255),
-      allowNull: true,
-    },
-    option2: {
-      type: STRING(255),
-      allowNull: true,
-    },
-    difficulty: {
-      type: STRING(20),
-      allowNull: false,
-      defaultValue: 'normal',
-    },
-    status: {
-      type: INTEGER,
-      allowNull: false,
-      defaultValue: 1,
-    },
-    createdAt: {
-      type: DATE,
-      allowNull: false,
-      defaultValue: app.Sequelize.NOW,
-    },
-    updatedAt: {
-      type: DATE,
-      allowNull: false,
-      defaultValue: app.Sequelize.NOW,
-    },
-  }, {
-    tableName: 'questions',
-    timestamps: true,
+    option1: { type: STRING(255), comment: '选项1，用于thisorthat类型' },
+    option2: { type: STRING(255), comment: '选项2，用于thisorthat类型' },
+    order: { type: INTEGER, defaultValue: 0, comment: '排序' },
+    version: { type: STRING(20), defaultValue: '1.0', comment: '版本号' },
+    status: { type: INTEGER, defaultValue: 1, comment: '状态：1-启用，0-禁用' },
+    created_at: DATE,
+    updated_at: DATE
   });
-
-  Question.associate = () => {
-    // 问题属于一个分类
-    Question.belongsTo(app.model.QuestionCategory, {
-      foreignKey: 'category_id',
-      as: 'Category',
-    });
-    
-    // 问题可以出现在多个会话中
-    Question.hasMany(app.model.SessionQuestion, {
-      foreignKey: 'question_id',
-      as: 'SessionQuestions',
-    });
-    
-    // 问题可以有多个用户回答
-    Question.hasMany(app.model.AnswersForUser, {
-      foreignKey: 'question_id',
-      as: 'Answers',
-    });
-  };
-
-  Question.sync({ force: false })
-    .then(() => {})
-    .catch((err) => {
-      console.error('同步 Question 表失败:', err);
-    });
 
   return Question;
 };

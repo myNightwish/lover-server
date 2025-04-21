@@ -14,8 +14,12 @@ module.exports = appInfo => {
 
   // use for cookie sign key, should change to your own and keep security
   config.keys = appInfo.name + '_1732811219584_6592';
+  // JWT配置
   config.jwt = {
-    secret: '1234', // 替换为实际的密钥
+    secret: 'pipilovewater', // 访问令牌密钥
+    refreshSecret: 'pipijiang', // 刷新令牌密钥
+    expiresIn: '3h', // 访问令牌过期时间
+    refreshExpiresIn: '7d' // 刷新令牌过期时间
   };
   config.rabbitmq = {
     url: process.env.RABBITMQ_URL,
@@ -35,6 +39,11 @@ module.exports = appInfo => {
     apiKey: process.env.OPENAI_API_KEY,
     maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS, 10),
     baseURL: process.env.AI_BASE_URL,
+  };
+   // 静态文件配置
+   config.static = {
+    prefix: '/public/',
+    dir: path.join(appInfo.baseDir, 'app/public'),
   };
   // add your middleware config here
   config.middleware = [];

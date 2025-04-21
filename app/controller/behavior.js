@@ -3,9 +3,9 @@ const Controller = require('egg').Controller;
 class BehaviorController extends Controller {
   async recordBehavior() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const behaviorData = ctx.request.body;
-    const partnerId = ctx.user.partner_id;
+    const partnerId = ctx.state.user.partner_id;
     // 如果未绑定伴侣，返回错误信息
     if (!partnerId) {
       ctx.body = {
@@ -37,7 +37,7 @@ class BehaviorController extends Controller {
 
   async getBehaviorAnalysis() {
     const { ctx } = this;
-    const partnerId = ctx.user.partner_id;
+    const partnerId = ctx.state.user.partner_id;
     // 如果未绑定伴侣，返回错误信息
     if (!partnerId) {
       ctx.body = {

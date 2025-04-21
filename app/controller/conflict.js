@@ -3,9 +3,9 @@ const Controller = require('egg').Controller;
 class ConflictController extends Controller {
   async recordConflict() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const conflictData = ctx.request.body;
-    const partnerId = ctx.user.partner_id;
+    const partnerId = ctx.state.user.partner_id;
     // 如果未绑定伴侣，返回错误信息
     if (!partnerId) {
       ctx.body = {
@@ -31,8 +31,8 @@ class ConflictController extends Controller {
 
   async getConflictAnalysis() {
     const { ctx } = this;
-    const userId = ctx.user.id;
-    const partnerId = ctx.user.partner_id;
+    const userId = ctx.state.user.id;
+    const partnerId = ctx.state.user.partner_id;
     // 如果未绑定伴侣，返回错误信息
     if (!partnerId) {
       ctx.body = {

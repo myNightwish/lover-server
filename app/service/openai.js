@@ -305,7 +305,6 @@ class OpenAIService {
       const prompt = `基于以下冲突分析生成建议:\n${JSON.stringify(analysis)}`;
       return await this.generateResponse(prompt);
     } catch (error) {
-      this.ctx.logger.error('[OpenAI] Conflict suggestion failed:', error);
       return '建议保持开放和理性的沟通态度，共同寻找解决方案。';
     }
   }

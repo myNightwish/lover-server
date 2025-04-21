@@ -15,7 +15,7 @@ class ChatController extends Controller {
       if (error) {
         throw new Error('Invalid question parameter');
       }
-      const userId = ctx.user.id;
+      const userId = ctx.state.user.id;
       // 创建会话记录
       const conversation = await ctx.model.Conversation.create({
         userId,
@@ -87,7 +87,7 @@ class ChatController extends Controller {
   async history() {
     const { ctx } = this;
     const { page = 1, pageSize = 10 } = ctx.query;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     try {
       const result = await ctx.model.Conversation.findByUserId(
         userId,

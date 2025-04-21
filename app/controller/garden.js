@@ -3,7 +3,7 @@ const Controller = require('egg').Controller;
 class GardenController extends Controller {
   async getGardenData() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const gardenData = await ctx.service.garden.getGardenData(userId);

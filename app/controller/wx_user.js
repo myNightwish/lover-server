@@ -58,7 +58,7 @@ class WxUserController extends Controller {
   }
   async updateWxUser() {
     const { ctx, service } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     const { ...updateData } = ctx.request.body;
     // 更新数据库中的用户信息
@@ -78,8 +78,8 @@ class WxUserController extends Controller {
   }
   async getUserInfo() {
     const { ctx, service } = this;
-    const userId = ctx.user.id;
-    const openid = ctx.user.openid;
+    const userId = ctx.state.user.id;
+    const openid = ctx.state.user.openid;
 
     // 获取用户信息，同时携带绑定的伴侣信息
     const userInfo = await this.app.model.WxUser.findOne({

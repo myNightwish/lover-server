@@ -166,20 +166,36 @@ module.exports = app => {
     authWx,
     controller.message.markAsRead
   );
-   // 用户相关
-   router.post('/api/user/register', controller.user.register);
-   router.post('/api/user/login', controller.user.login);
-  //    // 需要鉴权的接口
-  // router.get('/api/user/profile', authWx, controller.user.profile);
-   // 问题相关
-   router.get('/api/categories', authWx,controller.question.getCategories);
-   router.get('/api/categories/:id/questions', authWx, controller.question.getQuestionsByCategory);
-   
+  // 需要鉴权的接口
+  router.post('/api/user/register', controller.user.register);
+  router.post('/api/user/login', controller.user.login);
+  // 问题相关路由
+  router.get('/api/categories', authWx, controller.question.getCategories);
+  router.get('/api/categories/:id', authWx, controller.question.getCategoryDetail);
+  router.get('/api/categories/:id/topics', authWx, controller.question.getTopicsByCategory);
+  router.get('/api/topics/:id/questions', authWx, controller.question.getQuestionsByTopic);
+  router.post('/api/topics/:id/unlock', authWx, controller.question.unlockTopic);
+  // 管理员路由
+  router.post('/api/admin/init-template', authWx, controller.question.initTemplateData);
+  // 管理员接口
+  router.post('/api/admin/init-template', authWx, controller.admin.initTemplateData);
+  router.post('/api/admin/update-template', authWx, controller.admin.updateTemplateData);
+  router.get('/api/admin/user-stats', authWx, controller.admin.getUserStats);
   //  会话相关
-   router.post('/api/sessions', authWx, controller.session.create);
-   router.get('/api/sessions/:id', authWx, controller.session.getSessionDetail);
-   router.get('/api/users/sessions', authWx, controller.session.getUserSessions);
-   router.post('/api/sessions/:id/answers', authWx, controller.session.submitAnswer);
-   router.get('/api/sessions/:id/results', authWx, controller.session.getSessionResults);
-   router.post('/api/sessions/:id/results', authWx, controller.session.saveSessionResults);
+  router.post('/api/sessions', authWx, controller.session.createSession);
+  router.get('/api/sessions', authWx, controller.session.getUserSessions);
+  router.get('/api/sessions/:id', authWx, controller.session.getSessionDetail);
+  router.post('/api/sessions/:id/invite', authWx, controller.session.invitePartner);
+  router.post('/api/sessions/:id/complete', authWx, controller.session.completeSession);
+  router.post('/api/sessions/:sessionId/answers', authWx, controller.question.submitAnswer);
+  
+  // 问题回答相关
+  router.post('/api/sessions/:sessionId/answers', authWx, controller.question.submitAnswer);
+  // router.get('/api/sessions/:sessionId/answers', authWx, controller.question.getSessionAnswers);
+
+  // 伴侣相关
+  router.get('/api/partners', authWx, controller.partner.getPartners);
+  router.post('/api/partners', authWx, controller.partner.addPartner);
+  router.delete('/api/partners/:id', authWx, controller.partner.removePartner);
+  
 };
