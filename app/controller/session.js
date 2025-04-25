@@ -10,7 +10,7 @@ class SessionController extends Controller {
     const { topicId, title } = ctx.request.body;
     
     try {
-      const result = await ctx.service.question_session.createSession(userId, topicId, title);
+      const result = await ctx.service.questionSession.createSession(userId, topicId, title);
       
       ctx.body = result;
     } catch (error) {

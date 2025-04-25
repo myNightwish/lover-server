@@ -34,10 +34,12 @@ class QuestionController extends Controller {
       // 查询分类
       const category = await ctx.model.Category.findOne({
         where: {
-          id: categoryId
+          code: categoryId
         },
         attributes: ['id', 'code', 'name', 'description', 'icon', 'version']
       });
+    console.log('category---', category)
+
       
       if (!category) {
         ctx.body = {
@@ -65,10 +67,11 @@ class QuestionController extends Controller {
     const { ctx } = this;
     const categoryId = ctx.params.id;
     const userId = ctx.state.user ? ctx.state.user.id : null;
-    console.log('🍎 ctx.service.UserProgress：', ctx.service);
     try {
       // 获取用户的话题进度
       const topics = await ctx.service.userProgress.getUserTopicProgress(userId, categoryId);
+     console.log('🍎 topics：', topics);
+
       
       // 分离普通话题和推荐话题
       const regularTopics = topics.filter(t => !t.recommended);

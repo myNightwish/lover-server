@@ -21,7 +21,7 @@ module.exports = app => {
       type: STRING(255),
       allowNull: true,
     },
-    type: {
+    code: {
       type: STRING(30),
       allowNull: false,
     },
@@ -40,9 +40,6 @@ module.exports = app => {
       allowNull: false,
       defaultValue: app.Sequelize.NOW,
     },
-  }, {
-    tableName: 'question_categories',
-    timestamps: true,
   });
 
   QuestionCategory.associate = () => {

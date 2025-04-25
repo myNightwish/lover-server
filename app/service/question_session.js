@@ -6,9 +6,10 @@ class QuestionSessionService extends Service {
   // 创建问答会话
   async createSession(userId, topicId, title) {
     const { ctx } = this;
-    
     // 检查话题是否存在
-    const topic = await ctx.model.Topic.findByPk(topicId);
+    const topic = await ctx.model.QuestionTopic.findByPk(topicId);
+    console.log('topicId===>', topicId, topic , title)
+
     if (!topic) {
       return { success: false, message: '话题不存在' };
     }
@@ -17,7 +18,8 @@ class QuestionSessionService extends Service {
     const session = await ctx.model.QuestionSession.create({
       creator_id: userId,
       topic_id: topicId,
-      title: title || topic.name,
+      topic_code: topic.code, 
+      title: title || topic.title,
       status: 1, // 1-进行中
       created_at: new Date(),
       updated_at: new Date()

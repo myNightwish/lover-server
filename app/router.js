@@ -187,7 +187,6 @@ module.exports = app => {
   router.get('/api/sessions/:id', authWx, controller.session.getSessionDetail);
   router.post('/api/sessions/:id/invite', authWx, controller.session.invitePartner);
   router.post('/api/sessions/:id/complete', authWx, controller.session.completeSession);
-  router.post('/api/sessions/:sessionId/answers', authWx, controller.question.submitAnswer);
   
   // 问题回答相关
   router.post('/api/sessions/:sessionId/answers', authWx, controller.question.submitAnswer);

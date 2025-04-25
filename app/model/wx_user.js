@@ -13,7 +13,7 @@ module.exports = app => {
       type: INTEGER,
       allowNull: false,
       references: {
-        model: 'users',
+        model: 'user',
         key: 'id'
       }
     },

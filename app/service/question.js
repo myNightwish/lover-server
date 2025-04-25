@@ -10,7 +10,6 @@ class QuestionService extends Service {
         category_id: categoryId,
         status: 1 
       },
-      order: [['id', 'ASC']],
     });
   }
 
@@ -97,7 +96,6 @@ async getQuestionsByCategory(categoryId, userId) {
       status: 1
     },
     attributes: ['id', 'text', 'type', 'options', 'status'],
-    order: [['id', 'ASC']]
   });
   
   // 转换为普通对象
@@ -247,7 +245,6 @@ async getTopicQuestionsByCategory(categoryId, userId) {
       status: 1
     },
     attributes: ['id', 'text', 'type', 'options', 'status'],
-    order: [['id', 'ASC']]
   });
   
   // 转换为普通对象
@@ -397,25 +394,57 @@ async getTopicsByCategory(categoryId, userId) {
     }
   });
   
-  // 获取分类类型
-  const categoryType = category ? category.type : 
-    (typeof categoryId === 'string' ? categoryId : 'default');
+  if (!category) {
+    return { topics: [], recommendedTopics: [], categoryId, categoryType: 'default' };
+  }
   
-  // 获取预定义的话题数据
-  const topicsData = this.getPredefinedTopics(categoryType);
+  // 获取分类类型
+  const categoryType = category.type || 'default';
+  
+  // 从数据库中获取话题数据，而不是使用预定义数据
+  let topics = await ctx.model.QuestionTopic.findAll({
+    where: { 
+      category_id: category.id,
+      recommended: false,
+      status: 1
+    },
+    attributes: ['id', 'title', 'type', 'icon', 'recommended', 'status'],
+  });
+  
+  // 获取推荐话题
+  let recommendedTopics = await ctx.model.QuestionTopic.findAll({
+    where: { 
+      category_id: category.id,
+      recommended: true,
+      status: 1
+    },
+    attributes: ['id', 'title', 'type', 'icon', 'recommended', 'status'],
+  });
+  
+  // 转换为普通对象
+  topics = topics.map(t => t.get({ plain: true }));
+  recommendedTopics = recommendedTopics.map(t => t.get({ plain: true }));
+  
+  // 如果数据库中没有话题数据，使用预定义的话题作为备份
+  if (topics.length === 0) {
+    const defaultData = this.getPredefinedTopics(categoryType);
+    topics = defaultData.topics;
+  }
+  
+  if (recommendedTopics.length === 0 && topics.length > 0) {
+    const defaultData = this.getPredefinedTopics(categoryType);
+    recommendedTopics = defaultData.recommendedTopics;
+  }
   
   // 如果有用户ID，添加用户特定信息
-  let topics = topicsData.topics;
-  let recommendedTopics = topicsData.recommendedTopics;
-  
   if (userId) {
     // 获取用户解锁的话题
-    // const unlockedTopics = await ctx.model.UserUnlockedTopic.findAll({
-    //   where: { user_id: userId },
-    //   attributes: ['topic_id']
-    // });
+    const unlockedTopics = await ctx.model.UserUnlockedTopic.findAll({
+      where: { user_id: userId },
+      attributes: ['topic_id']
+    });
     
-    // const unlockedTopicIds = new Set(unlockedTopics.map(u => u.topic_id));
+    const unlockedTopicIds = new Set(unlockedTopics.map(u => u.topic_id));
     
     // 获取用户会话信息
     const sessions = await ctx.model.QuestionSession.findAll({
@@ -426,7 +455,7 @@ async getTopicsByCategory(categoryId, userId) {
         ],
         status: { [Op.ne]: 0 } // 非删除状态
       },
-      attributes: ['id', 'creator_id', 'partner_id']
+      attributes: ['id', 'topic_id', 'creator_id', 'partner_id']
     });
     
     // 创建话题ID到会话的映射
@@ -450,22 +479,60 @@ async getTopicsByCategory(categoryId, userId) {
       
       // 判断话题是否锁定
       // 规则：前3个话题对所有用户开放，其余话题根据解锁状态决定
-      // const isUnlocked = topicsData.has(topic.id) || index < 3;
+      const isUnlocked = unlockedTopicIds.has(topic.id) || index < 3;
+      
+      // 确保每个话题都有背景类和图标
+      const bgClass = this.getTopicBgClass(topic.type);
+      const icon = topic.icon || this.getTopicIcon(topic.type);
       
       return {
         ...topic,
         answered,
         partnerAnswered,
-        locked: false
+        locked: !isUnlocked,
+        bgClass,
+        icon
       };
     });
     
     // 处理推荐话题
     recommendedTopics = recommendedTopics.map(topic => {
-      // const isUnlocked = unlockedTopicIds.has(topic.id);
+      const isUnlocked = unlockedTopicIds.has(topic.id);
+      const bgClass = this.getTopicBgClass(topic.type);
+      const icon = topic.icon || this.getTopicIcon(topic.type);
+      
       return {
         ...topic,
-        locked: false
+        locked: !isUnlocked,
+        bgClass,
+        icon
+      };
+    });
+  } else {
+    // 没有用户ID，为话题添加默认值
+    topics = topics.map(topic => {
+      const bgClass = this.getTopicBgClass(topic.type);
+      const icon = topic.icon || this.getTopicIcon(topic.type);
+      
+      return {
+        ...topic,
+        answered: false,
+        partnerAnswered: false,
+        locked: false,
+        bgClass,
+        icon
+      };
+    });
+    
+    recommendedTopics = recommendedTopics.map(topic => {
+      const bgClass = this.getTopicBgClass(topic.type);
+      const icon = topic.icon || this.getTopicIcon(topic.type);
+      
+      return {
+        ...topic,
+        locked: true,
+        bgClass,
+        icon
       };
     });
   }
@@ -473,10 +540,11 @@ async getTopicsByCategory(categoryId, userId) {
   return {
     topics,
     recommendedTopics,
-    categoryId: category ? category.id : categoryId,
+    categoryId: category.id,
     categoryType
   };
 }
+
 
 /**
  * 获取预定义的话题数据

@@ -29,5 +29,11 @@ module.exports = app => {
     updated_at: DATE
   });
 
+  Question.sync({ force: false }) // force: false 确保不会删除表
+  .then(() => {})
+  .catch((err) => {
+    console.error('同步 Question 表失败:', err);
+  });
+
   return Question;
 };

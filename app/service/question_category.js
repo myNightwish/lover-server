@@ -26,7 +26,7 @@ class QuestionCategoryService extends Service {
    */
   async getCachedCategories() {
     const { app } = this;
-    const cacheKey = 'question_categories';
+    const cacheKey = 'question_category';
     
     // 尝试从缓存获取
     let categories = await app.redis.get(cacheKey);
@@ -120,8 +120,9 @@ class QuestionCategoryService extends Service {
     // 批量创建分类
     const createdCategories = await this.ctx.model.QuestionCategory.bulkCreate(defaultCategories);
     
-    // 为每个分类创建默认问题
-    // await this.createDefaultTopics();
+    // 为每个分类创建默认话题和问题
+    await this.createDefaultTopics();
+    console.log('9999')
     
     return createdCategories.map(category => category.get({ plain: true }));
   }
@@ -163,11 +164,73 @@ class QuestionCategoryService extends Service {
     // 其他分类的问题...
     
     // 批量创建问题
-    if (defaultTopics.length > 0) {
-      await this.ctx.model.Question.bulkCreate(defaultTopics);
+     // 批量创建话题
+     let createdTopics = [];
+     try {
+       // 检查QuestionTopic表是否存在
+       try {
+         await ctx.model.QuestionTopic.findOne();
+         console.log('QuestionTopic表存在，继续创建话题');
+       } catch (error) {
+         console.error('QuestionTopic表不存在，请先创建该表:', error);
+         return;
+       }
+       
+       createdTopics = await ctx.model.QuestionTopic.bulkCreate(defaultTopics);
+       console.log(`成功创建${createdTopics.length}个话题`);
+     } catch (error) {
+       console.error('创建话题失败:', error);
+       return;
+     }
+       // 为每个话题创建默认问题
+      const topicMap = {};
+      createdTopics.forEach(topic => {
+        topicMap[topic.code] = topic.id;
+      });
+      
+      const defaultQuestions = [];
+        // 日常生活话题的问题
+    if (topicMap['daily-life']) {
+      defaultQuestions.push(
+        { 
+          topic_id: topicMap['daily-life'], 
+          text: '你是否曾经因为工作或学习而忽略了我们的关系？', 
+          type: 'yesno',
+          code: 'work-neglect',
+          status: 1 
+        },
+        { 
+          topic_id: topicMap['daily-life'], 
+          text: '你是否曾经为了对方改变自己的生活习惯？', 
+          type: 'yesno',
+          code: 'change-habits',
+          status: 1 
+        }
+      );
+    }
+
+     
+    // 亲密生活话题的问题
+    if (topicMap['intimate-life']) {
+      defaultQuestions.push(
+        { 
+          topic_id: topicMap['intimate-life'], 
+          text: '你认为我们的亲密关系中最重要的是什么？', 
+          type: 'text',
+          code: 'intimacy-important',
+          status: 1 
+        }
+      );
+    }
+
+     // 批量创建问题
+     try {
+      await ctx.model.Question.bulkCreate(defaultQuestions);
+      console.log(`成功创建${defaultQuestions.length}个问题`);
+    } catch (error) {
+      console.error('创建问题失败:', error);
     }
   }
-
 
   /**
    * 为分类添加用户进度信息

@@ -13,5 +13,12 @@ module.exports = app => {
     updated_at: DATE
   });
 
+
+  QuestionAnswer.sync({ force: false })
+  .then(() => {})
+  .catch((err) => {
+    console.error('同步 QuestionAnswer 表失败:', err);
+  });
+
   return QuestionAnswer;
 };

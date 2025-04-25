@@ -15,6 +15,7 @@ class UserProgressService extends Service {
     try {
       // 获取分类下的所有话题模板
       const topicTemplates = await ctx.service.template.getTopicsByCategoryId(categoryId);
+      console.log('🍎 topicTemplates：', topicTemplates);
       
       // 如果没有用户ID，直接返回模板数据
       if (!userId) {
@@ -25,7 +26,7 @@ class UserProgressService extends Service {
           locked: topic.index > 2 // 前三个话题默认解锁
         }));
       }
-      
+      console.log('8888')
       // 获取用户解锁的话题
       const unlockedTopics = await ctx.model.UserUnlockedTopic.findAll({
         where: { user_id: userId },
@@ -211,10 +212,16 @@ class UserProgressService extends Service {
    */
   async saveUserAnswer(userId, questionId, answerValue, sessionId) {
     const { ctx } = this;
+    console.log('hrll---', sessionId)
     
     try {
       // 检查会话是否存在
-      const session = await ctx.model.QuestionSession.findByPk(sessionId);
+      const session = await ctx.model.QuestionSession.findOne({
+        where: { id: sessionId },
+        include: [], // 不包含任何关联
+        attributes: ['id', 'creator_id', 'partner_id', 'topic_id'] // 明确指定需要的字段
+      });
+      console.log('hrll---2', session)
       
       if (!session) {
         return {
@@ -222,10 +229,13 @@ class UserProgressService extends Service {
           message: '会话不存在'
         };
       }
-      
-      // 检查问题是否存在
-      const question = await ctx.service.template.getQuestionById(questionId);
-      
+      // 检查问题是否存在 - 直接使用 
+      const question = await ctx.model.Question.findOne({
+        where: { id: questionId },
+        include: [], // 不包含任何关联
+        attributes: ['id', 'code', 'topic_id'] // 明确指定需要的字段
+      });
+
       if (!question) {
         return {
           success: false,
