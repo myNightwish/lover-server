@@ -274,7 +274,7 @@ class QuestionController extends Controller {
       }
 
       // 保存会话结果
-      const saveResult = await ctx.service.userProgress.saveSessionResults(sessionId, userId, answers);
+      const saveResult = await ctx.service.userProgress.saveSessionResults(sessionId, userId, answers, qaType);
 
       ctx.body = {
         success: saveResult.success,
