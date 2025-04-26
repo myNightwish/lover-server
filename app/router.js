@@ -190,7 +190,8 @@ module.exports = app => {
   
   // 问题回答相关
   router.post('/api/sessions/:sessionId/answers', authWx, controller.question.submitAnswer);
-  // router.get('/api/sessions/:sessionId/answers', authWx, controller.question.getSessionAnswers);
+  router.get('/api/sessions/:sessionId/answers', authWx, controller.question.getSessionAnswers);
+  router.post('/api/sessions/:sessionId/results', authWx, controller.question.saveSessionResults);
 
   // 伴侣相关
   router.get('/api/partners', authWx, controller.partner.getPartners);

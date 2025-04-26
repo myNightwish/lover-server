@@ -5,6 +5,7 @@ module.exports = app => {
 
   const QuestionAnswer = app.model.define('question_answer', {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },
+    type: { type: STRING(50), comment: '问题类型：text, options, who, thisorthat等' },
     session_id: INTEGER,
     user_id: INTEGER,
     question_id: STRING(50),

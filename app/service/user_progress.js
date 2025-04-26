@@ -212,7 +212,6 @@ class UserProgressService extends Service {
    */
   async saveUserAnswer(userId, questionId, answerValue, sessionId) {
     const { ctx } = this;
-    console.log('hrll---', sessionId)
     
     try {
       // 检查会话是否存在
@@ -221,7 +220,6 @@ class UserProgressService extends Service {
         include: [], // 不包含任何关联
         attributes: ['id', 'creator_id', 'partner_id', 'topic_id'] // 明确指定需要的字段
       });
-      console.log('hrll---2', session)
       
       if (!session) {
         return {
@@ -231,7 +229,7 @@ class UserProgressService extends Service {
       }
       // 检查问题是否存在 - 直接使用 
       const question = await ctx.model.Question.findOne({
-        where: { id: questionId },
+        where: { code: questionId },
         include: [], // 不包含任何关联
         attributes: ['id', 'code', 'topic_id'] // 明确指定需要的字段
       });
@@ -256,7 +254,8 @@ class UserProgressService extends Service {
       if (existingAnswer) {
         await existingAnswer.update({
           answer_value: typeof answerValue === 'object' ? JSON.stringify(answerValue) : answerValue,
-          updated_at: new Date()
+          updated_at: new Date(),
+          type: question.type
         });
       } else {
         // 否则创建新回答
@@ -265,7 +264,8 @@ class UserProgressService extends Service {
           user_id: userId,
           question_id: questionId,
           answer_value: typeof answerValue === 'object' ? JSON.stringify(answerValue) : answerValue,
-          created_at: new Date()
+          created_at: new Date(),
+          type: question.type
         });
       }
       
@@ -278,6 +278,192 @@ class UserProgressService extends Service {
       return {
         success: false,
         message: error.message || '保存用户回答失败'
+      };
+    }
+  }
+  /**
+   * 获取会话的所有回答
+   * @param {number} sessionId - 会话ID
+   * @return {Object} 会话回答数据
+   */
+  async getSessionAnswers(sessionId, userId) {
+    const { ctx, app } = this;
+    
+    try {
+      // 使用原始 SQL 查询会话
+      const sessions = await app.model.query(
+        'SELECT * FROM question_session WHERE id = ? AND status != 0',
+        {
+          type: app.model.QueryTypes.SELECT,
+          replacements: [sessionId]
+        }
+      );
+      console.log('🍊 会话信息:', sessions);
+      
+      const session = sessions && sessions.length > 0 ? sessions[0] : null;
+      
+      if (!session) {
+        return {
+          success: false,
+          message: '会话不存在'
+        };
+      }
+      
+      // 获取会话结果 - 使用原始 SQL
+      const results = await app.model.query(
+        'SELECT * FROM question_session_result WHERE session_id = ?',
+        {
+          type: app.model.QueryTypes.SELECT,
+          replacements: [sessionId]
+        }
+      );
+      console.log('🍊 会话结果:', results);
+      
+      // 如果没有结果记录，返回空数据
+      if (!results || results.length === 0) {
+        return {
+          success: true,
+          data: {
+            sessionId,
+            topicId: session.topic_id,
+            creatorId: session.creator_id,
+            partnerId: session.partner_id,
+            creatorResults: null,
+            partnerResults: null,
+            createdAt: session.created_at,
+            updatedAt: session.updated_at
+          }
+        };
+      }
+      
+      // 处理结果数据
+      const ownResults = results.find(r => r.user_id === userId);
+      // todo: 这里得用传入的
+      const partnerResults = results.find(r => r.user_id === session.partner_id);
+      
+      // 解析JSON数据
+      const parseResultData = (result) => {
+        if (!result) return null;
+        
+        try {
+          return typeof result.result_data === 'string' 
+            ? JSON.parse(result.result_data) 
+            : result.result_data;
+        } catch (e) {
+          return result.result_data;
+        }
+      };
+      
+      return {
+        success: true,
+        data: {
+          sessionId,
+          topicId: session.topic_id,
+          creatorId: session.creator_id,
+          partnerId: session.partner_id,
+          ownResults: parseResultData(ownResults),
+          partnerResults: parseResultData(partnerResults),
+          createdAt: session.created_at,
+          updatedAt: session.updated_at
+        }
+      };
+    } catch (error) {
+      ctx.logger.error('获取会话结果失败', error);
+      return {
+        success: false,
+        message: error.message || '获取会话结果失败'
+      };
+    }
+  }
+  
+  /**
+   * 保存会话结果
+   * @param {number} sessionId - 会话ID
+   * @param {number} userId - 用户ID
+   * @param {Object} results - 结果数据
+   * @return {Object} 保存结果
+   */
+  async saveSessionResults(sessionId, userId, results, qaType) {
+    const { ctx, app } = this;
+    
+    try {
+      // 使用原始 SQL 查询会话
+      const sessions = await app.model.query(
+        'SELECT * FROM question_session WHERE id = ? AND status != 0',
+        {
+          type: app.model.QueryTypes.SELECT,
+          replacements: [sessionId]
+        }
+      );
+      const session = sessions && sessions.length > 0 ? sessions[0] : null;
+      console.log('检查会话是否存在===', session);
+
+      if (!session) {
+        return {
+          success: false,
+          message: '会话不存在'
+        };
+      }
+      
+      // 检查用户是否有权限操作此会话
+      if (session.creator_id !== userId && session.partner_id !== userId) {
+        return {
+          success: false,
+          message: '无权操作此会话'
+        };
+      }
+      
+      // 检查是否已存在结果记录 - 使用原始 SQL
+      const [existingResults] = await app.model.query(
+        'SELECT * FROM question_session_result WHERE session_id = ? AND user_id = ?',
+        {
+          type: app.model.QueryTypes.SELECT,
+          replacements: [sessionId, userId]
+        }
+      );
+      
+      const resultData = typeof results === 'object' ? JSON.stringify(results) : results;
+      const now = new Date();
+      
+      if (existingResults && existingResults.length > 0) {
+        // 更新现有记录 - 使用原始 SQL
+        await app.model.query(
+          'UPDATE question_session_result SET result_data = ?, updated_at = ? WHERE session_id = ? AND user_id = ? AND type = ?',
+          {
+            type: app.model.QueryTypes.UPDATE,
+            replacements: [resultData, now, sessionId, userId, qaType],
+          }
+        );
+      } else {
+        // 创建新记录 - 使用原始 SQL
+        await app.model.query(
+          'INSERT INTO question_session_result (session_id, user_id, result_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+          {
+            type: app.model.QueryTypes.INSERT,
+            replacements: [sessionId, userId, resultData, now, now]
+          }
+        );
+      }
+      
+      // 更新会话状态 - 使用原始 SQL
+      await app.model.query(
+        'UPDATE question_session SET status = 2, updated_at = ? WHERE id = ?',
+        {
+          type: app.model.QueryTypes.UPDATE,
+          replacements: [now, sessionId]
+        }
+      );
+      
+      return {
+        success: true,
+        message: '保存会话结果成功',
+        data: { sessionId }
+      };
+    } catch (error) {
+      ctx.logger.error('保存会话结果失败', error);
+      return {
+        success: false,
+        message: error.message || '保存会话结果失败'
       };
     }
   }

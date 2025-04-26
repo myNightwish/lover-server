@@ -81,7 +81,6 @@ module.exports = options => {
         avatar: user.avatar,
         isAdmin: user.role === 'admin'
       };
-      console.log('ctx.state.user', ctx.service);
       // 检查并执行版本迁移
       await ctx.service.versionMigration.checkAndMigrate(user.id);
       

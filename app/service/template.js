@@ -381,17 +381,20 @@ class TemplateService extends Service {
         {
           id: 'starter-q2-1',
           text: '你最喜欢我们之间的哪个共同点？',
+          code: 'starter-q2-1',
           type: 'text',
           version: '1.0'
         },
         {
           id: 'starter-q2-2',
+          code: 'starter-q2-2',
           text: '你认为我们之间最大的不同是什么？',
           type: 'text',
           version: '1.0'
         },
         {
           id: 'starter-q2-3',
+          code: 'starter-q2-3',
           text: '你觉得我们的关系中最需要改进的是什么？',
           type: 'text',
           version: '1.0'
@@ -471,9 +474,8 @@ class TemplateService extends Service {
           version: '1.0'
         }
       ],
-      // 入门话题 - 爱的平衡（你会选择）
       // 性爱话题 - 深度对话（亲密关系中的期望）
-      'sex-love-q1': [
+      'intimacy-expectations': [
         {
           id: 'sex-love-q1-1',
           code: 'intimacy-exp-1',
@@ -490,7 +492,7 @@ class TemplateService extends Service {
         }
       ],
       // 性爱话题 - 你会选择（浪漫表达方式）
-      'sex-love-q2': [
+      'romance': [
         {
           id: 'sex-love-q2-1',
           code: 'romance-1',
@@ -509,6 +511,7 @@ class TemplateService extends Service {
         }
       ],
       // 关系话题 - 二选一（关系中的优先级）
+      // 入门话题 - 爱的平衡（你会选择）
       'love-balance': [
         {
           id: 'rec-relationship-1-1',
@@ -530,7 +533,7 @@ class TemplateService extends Service {
         }
       ],
       // 性爱话题 - 谁更可能（亲密行为）
-      'rec-sex-love-1': [
+      'roles': [
         {
           id: 'rec-sex-love-1-1',
           code: 'intimate-behavior-1',
@@ -547,9 +550,9 @@ class TemplateService extends Service {
         }
       ]
     };
-    console.log('topicCode---',topicCode, topicId)
+    console.log('topicCode---',topicCode, topicDbId, questionsMap[topicCode])
     // 如果找不到对应的话题，返回默认问题
-   let predefinedQuestions = questionsMap[topicCode] || questionsMap[topicId];
+   let predefinedQuestions = questionsMap[topicCode];
    // 如果有话题ID，将预设数据同步到数据库
    if (topicDbId) {
     try {
@@ -557,18 +560,30 @@ class TemplateService extends Service {
       const questionsToCreate = [];
       
       for (const question of predefinedQuestions) {
+        console.log('111---', question)
+
         // 检查问题是否已存在
-        const existingQuestion = await ctx.model.Question.findOne({
-          where: { 
-            topic_id: topicDbId,
-            code: question.code || `question-${question.id}`
+        // const existingQuestion = await ctx.model.Question.findOne({
+        //   where: { 
+        //     topic_id: topicDbId,
+        //     code: question.code || `question-${question.id}`
+        //   },
+        //   include: [], // 明确指定不加载任何关联
+        //   raw: true    // 使用原始查询
+        // });
+        // 修改查询方式，使用原始 SQL
+        const existingQuestion = await ctx.model.query(
+          'SELECT id FROM question WHERE topic_id = ? AND code = ? LIMIT 1',
+          {
+            type: ctx.model.QueryTypes.SELECT,
+            replacements: [topicDbId, question.code || `question-${question.id}`]
           }
-        });
+        );
         
-        if (!existingQuestion) {
+        if (!existingQuestion || !existingQuestion.length) {
           // 准备创建新问题
           questionsToCreate.push({
-            code: question.code || `question-${question.id}`,
+            code: question.code,
             text: question.text,
             type: question.type,
             option1: question.option1,
@@ -586,12 +601,21 @@ class TemplateService extends Service {
         await ctx.model.Question.bulkCreate(questionsToCreate);
         
         // 重新从数据库获取问题
-        const newDbQuestions = await ctx.model.Question.findAll({
-          where: { 
-            topic_id: topicDbId,
-            status: 1
-          },
-        });
+        // const newDbQuestions = await ctx.model.Question.findAll({
+        //   where: { 
+        //     topic_id: topicDbId,
+        //     status: 1,
+        //   },
+        //   include: [], // 明确指定不加载任何关联
+        //   raw: true    // 使用原始查询
+        // });
+        const newDbQuestions = await ctx.model.query(
+          'SELECT * FROM question WHERE topic_id = ? AND status = 1',
+          {
+            type: ctx.model.QueryTypes.SELECT,
+            replacements: [topicDbId]
+          }
+        );
         
         if (newDbQuestions && newDbQuestions.length > 0) {
           return newDbQuestions.map(question => {

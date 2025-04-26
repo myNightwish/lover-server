@@ -28,6 +28,17 @@ module.exports = app => {
     created_at: DATE,
     updated_at: DATE
   });
+   // 定义关联关系
+   Question.associate = function() {
+    app.model.Question.belongsTo(app.model.QuestionTopic, { 
+      as: 'topic', 
+      foreignKey: 'topic_id',
+      constraints: false, // 禁用外键约束
+      scope: {
+        status: 1 // 只关联状态正常的话题
+      }
+    });
+  };
 
   Question.sync({ force: false }) // force: false 确保不会删除表
   .then(() => {})
