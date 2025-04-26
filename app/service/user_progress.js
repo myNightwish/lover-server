@@ -355,8 +355,6 @@ class UserProgressService extends Service {
       };
       
       return {
-        success: true,
-        data: {
           sessionId,
           topicId: session.topic_id,
           creatorId: session.creator_id,
@@ -365,7 +363,6 @@ class UserProgressService extends Service {
           partnerResults: parseResultData(partnerResults),
           createdAt: session.created_at,
           updatedAt: session.updated_at
-        }
       };
     } catch (error) {
       ctx.logger.error('获取会话结果失败', error);

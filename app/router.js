@@ -166,6 +166,7 @@ module.exports = app => {
     authWx,
     controller.message.markAsRead
   );
+  // 以上为微信小程序的老接口
   // 需要鉴权的接口
   router.post('/api/user/register', controller.user.register);
   router.post('/api/user/login', controller.user.login);
@@ -175,9 +176,8 @@ module.exports = app => {
   router.get('/api/categories/:id/topics', authWx, controller.question.getTopicsByCategory);
   router.get('/api/topics/:id/questions', authWx, controller.question.getQuestionsByTopic);
   router.post('/api/topics/:id/unlock', authWx, controller.question.unlockTopic);
-  // 管理员路由
-  router.post('/api/admin/init-template', authWx, controller.question.initTemplateData);
   // 管理员接口
+  router.post('/api/admin/init-template', authWx, controller.question.initTemplateData);
   router.post('/api/admin/init-template', authWx, controller.admin.initTemplateData);
   router.post('/api/admin/update-template', authWx, controller.admin.updateTemplateData);
   router.get('/api/admin/user-stats', authWx, controller.admin.getUserStats);
@@ -187,7 +187,6 @@ module.exports = app => {
   router.get('/api/sessions/:id', authWx, controller.session.getSessionDetail);
   router.post('/api/sessions/:id/invite', authWx, controller.session.invitePartner);
   router.post('/api/sessions/:id/complete', authWx, controller.session.completeSession);
-  
   // 问题回答相关
   router.post('/api/sessions/:sessionId/answers', authWx, controller.question.submitAnswer);
   router.get('/api/sessions/:sessionId/answers', authWx, controller.question.getSessionAnswers);
