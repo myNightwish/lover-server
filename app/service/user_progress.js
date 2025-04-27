@@ -255,7 +255,8 @@ class UserProgressService extends Service {
         await existingAnswer.update({
           answer_value: typeof answerValue === 'object' ? JSON.stringify(answerValue) : answerValue,
           updated_at: new Date(),
-          type: question.type
+          type: question.type,
+          question_text: question.text
         });
       } else {
         // 否则创建新回答
@@ -265,7 +266,8 @@ class UserProgressService extends Service {
           question_id: questionId,
           answer_value: typeof answerValue === 'object' ? JSON.stringify(answerValue) : answerValue,
           created_at: new Date(),
-          type: question.type
+          type: question.type,
+          question_text: question.text
         });
       }
       
@@ -425,10 +427,10 @@ class UserProgressService extends Service {
       if (existingResults && existingResults.length > 0) {
         // 更新现有记录 - 使用原始 SQL
         await app.model.query(
-          'UPDATE question_session_result SET result_data = ?, updated_at = ? WHERE session_id = ? AND user_id = ? AND type = ?',
+          'UPDATE question_session_result SET result_data = ?, updated_at = ? WHERE session_id = ? AND user_id = ? AND type = ? AND question_text = ?',
           {
             type: app.model.QueryTypes.UPDATE,
-            replacements: [resultData, now, sessionId, userId, qaType],
+          replacements: [resultData, now, sessionId, userId, qaType],
           }
         );
       } else {

@@ -697,73 +697,6 @@ class TemplateService extends Service {
     
     return null;
   }
-  
-  /**
-   * 获取问题详情
-   * @param {string|number} questionId - 问题ID
-   * @return {Object} 问题详情
-   */
-  async getQuestionById(questionId) {
-    const { ctx, app } = this;
-    const { Op } = app.Sequelize;
-    
-    // 先从数据库查询问题
-    const question = await ctx.model.Question.findOne({
-      where: {
-        [Op.or]: [
-          { id: questionId },
-          { code: questionId }
-        ],
-        status: 1
-      },
-      include: [
-        {
-          model: ctx.model.QuestionTopic,
-          as: 'topic',
-          include: [
-            {
-              model: ctx.model.QuestionCategory,
-              as: 'category'
-            }
-          ]
-        }
-      ]
-    });
-    
-    // 如果数据库中有数据，直接返回
-    if (question) {
-      const plainQuestion = question.get({ plain: true });
-      return {
-        ...plainQuestion,
-        topicId: plainQuestion.topic_id,
-        categoryId: plainQuestion.topic?.category_id
-      };
-    }
-    
-    // 获取所有分类
-    const categories = await this.getCategories();
-    
-    // 遍历所有分类和话题，查找问题
-    for (const category of categories) {
-      const topics = await this.getTopicsByCategoryId(category.id);
-      
-      for (const topic of topics) {
-        const questions = await this.getQuestionsByTopicId(topic.id);
-        const question = questions.find(q => q.id === questionId || q.code === questionId);
-        
-        if (question) {
-          return {
-            ...question,
-            topicId: topic.id,
-            categoryId: category.id
-          };
-        }
-      }
-    }
-    
-    return null;
-  }
-  
   /**
    * 初始化模板数据
    * @return {boolean} 是否成功
@@ -836,91 +769,91 @@ class TemplateService extends Service {
       });
       
       // 3. 初始化话题
-      const topicsMap = {
-        'starters': [
-          {
-            code: 'daily-life',
-            title: '日常生活',
-            type: '你是否曾经',
-            icon: '👀',
-            bgClass: 'bg-pink',
-            recommended: false,
-            status: 1,
-            version: '1.0'
-          },
-          // ... 其他话题 ...
-        ],
-        // ... 其他分类的话题 ...
-      };
+      // const topicsMap = {
+      //   'starters': [
+      //     {
+      //       code: 'daily-life',
+      //       title: '日常生活',
+      //       type: '你是否曾经',
+      //       icon: '👀',
+      //       bgClass: 'bg-pink',
+      //       recommended: false,
+      //       status: 1,
+      //       version: '1.0'
+      //     },
+      //     // ... 其他话题 ...
+      //   ],
+      //   // ... 其他分类的话题 ...
+      // };
       
       // 插入话题数据
-      for (const [categoryCode, topics] of Object.entries(topicsMap)) {
-        const categoryId = categoryMap.get(categoryCode);
-        if (!categoryId) continue;
+      // for (const [categoryCode, topics] of Object.entries(topicsMap)) {
+      //   const categoryId = categoryMap.get(categoryCode);
+      //   if (!categoryId) continue;
         
-        for (const topic of topics) {
-          // 检查是否已存在
-          const existingTopic = await ctx.model.QuestionTopic.findOne({
-            where: { 
-              category_id: categoryId,
-              code: topic.code
-            }
-          });
+      //   for (const topic of topics) {
+      //     // 检查是否已存在
+      //     const existingTopic = await ctx.model.QuestionTopic.findOne({
+      //       where: { 
+      //         category_id: categoryId,
+      //         code: topic.code
+      //       }
+      //     });
           
-          if (!existingTopic) {
-            await ctx.model.QuestionTopic.create({
-              ...topic,
-              category_id: categoryId
-            });
-          }
-        }
-      }
+      //     if (!existingTopic) {
+      //       await ctx.model.QuestionTopic.create({
+      //         ...topic,
+      //         category_id: categoryId
+      //       });
+      //     }
+      //   }
+      // }
       
       // 4. 获取所有话题
-      const dbTopics = await ctx.model.QuestionTopic.findAll();
-      const topicMap = new Map();
-      dbTopics.forEach(topic => {
-        topicMap.set(`${topic.category_id}-${topic.code}`, topic.id);
-      });
+      // const dbTopics = await ctx.model.QuestionTopic.findAll();
+      // const topicMap = new Map();
+      // dbTopics.forEach(topic => {
+      //   topicMap.set(`${topic.category_id}-${topic.code}`, topic.id);
+      // });
       
       // 5. 初始化问题
-      const questionsMap = {
-        'daily-life': [
-          {
-            code: 'work-neglect',
-            text: '你是否曾经因为工作或学习而忽略了我们的关系？',
-            type: 'yesno',
-            status: 1,
-            version: '1.0'
-          },
-          // ... 其他问题 ...
-        ],
-        // ... 其他话题的问题 ...
-      };
+      // const questionsMap = {
+      //   'daily-life': [
+      //     {
+      //       code: 'work-neglect',
+      //       text: '你是否曾经因为工作或学习而忽略了我们的关系？',
+      //       type: 'yesno',
+      //       status: 1,
+      //       version: '1.0'
+      //     },
+      //     // ... 其他问题 ...
+      //   ],
+      //   // ... 其他话题的问题 ...
+      // };
       
       // 插入问题数据
-      for (const [topicCode, questions] of Object.entries(questionsMap)) {
-        // 找到对应的话题
-        const matchingTopic = dbTopics.find(t => t.code === topicCode);
-        if (!matchingTopic) continue;
+      // for (const [topicCode, questions] of Object.entries(questionsMap)) {
+      //   // 找到对应的话题
+      //   const matchingTopic = dbTopics.find(t => t.code === topicCode);
+      //   if (!matchingTopic) continue;
         
-        for (const question of questions) {
-          // 检查是否已存在
-          const existingQuestion = await ctx.model.Question.findOne({
-            where: { 
-              topic_id: matchingTopic.id,
-              code: question.code
-            }
-          });
+      //   for (const question of questions) {
+      //     // 检查是否已存在
+      //     const existingQuestion = await ctx.model.Question.findOne({
+      //       where: { 
+      //         topic_id: matchingTopic.id,
+      //         code: question.code
+      //       }
+      //     });
           
-          if (!existingQuestion) {
-            await ctx.model.Question.create({
-              ...question,
-              topic_id: matchingTopic.id
-            });
-          }
-        }
-      }
+      //     if (!existingQuestion) {
+      //       await ctx.model.Question.create({
+      //         ...question,
+      //         topic_id: matchingTopic.id
+      //       });
+      //     }
+      //   }
+      // }
       
       return true;
     } catch (error) {
