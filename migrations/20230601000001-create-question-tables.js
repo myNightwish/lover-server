@@ -74,22 +74,9 @@ module.exports = {
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE
     });
-
-    // 创建版本迁移日志表
-    await queryInterface.createTable('version_migration_log', {
-      id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-      user_id: { type: Sequelize.INTEGER, comment: '用户ID' },
-      topic_id: { type: Sequelize.INTEGER, comment: '话题ID' },
-      old_version: { type: Sequelize.STRING(20), comment: '旧版本' },
-      new_version: { type: Sequelize.STRING(20), comment: '新版本' },
-      migration_time: Sequelize.DATE,
-      created_at: Sequelize.DATE,
-      updated_at: Sequelize.DATE
-    });
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('version_migration_log');
     await queryInterface.dropTable('user_question_answer');
     await queryInterface.dropTable('user_topic_progress');
     await queryInterface.dropTable('question');

@@ -81,9 +81,6 @@ module.exports = options => {
         avatar: user.avatar,
         isAdmin: user.role === 'admin'
       };
-      // 检查并执行版本迁移
-      await ctx.service.versionMigration.checkAndMigrate(user.id);
-      
       await next(); // 继续执行后续中间件
     } catch (error) {
       if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
