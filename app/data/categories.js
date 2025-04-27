@@ -16,14 +16,6 @@ const categoriesMap = [
     version: '1.0'
   },
   {
-    code: 'close-love',
-    name: '亲密的爱',
-    description: '探讨亲密关系中的期望与感受',
-    icon: '🔞',
-    status: 1,
-    version: '1.0'
-  },
-  {
     code: 'moral-values',
     name: '道德与价值观',
     description: '了解彼此的价值观和道德准则',
@@ -38,7 +30,7 @@ const categoriesMap = [
     icon: '💵',
     status: 1,
     version: '1.0'
-  }
+  },
 ];
 
 module.exports = categoriesMap;

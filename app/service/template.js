@@ -1,9 +1,9 @@
 'use strict';
 
 const Service = require('egg').Service;
-const questionsMap = require('../data/questions');
-const topicsMap = require('../data/topics');
-const categoriesMap = require('../data/categories');
+const questionsMap = require('../data/questions.js');
+const topicsMap = require('../data/topics.js');
+const categoriesMap = require('../data/categories.js');
 
 class TemplateService extends Service {
   /**
@@ -72,21 +72,7 @@ class TemplateService extends Service {
     }
     
     // 获取预设话题数据
-    let predefinedTopics = topicsMap[categoryCode] || [
-      {
-        id: 'default-q1',
-        code: 'about-us',
-        title: '关于我们的对话',
-        type: '深度对话',
-        index: 0,
-        bgClass: 'bg-pink',
-        icon: '💬',
-        recommended: false,
-        version: '1.0'
-      },
-      // ... 其他默认话题 ...
-    ];
-    
+    let predefinedTopics = topicsMap[categoryCode] || []
     // 如果有分类ID，将预设数据同步到数据库
     if (categoryDbId) {
       try {
@@ -199,18 +185,7 @@ class TemplateService extends Service {
       const questionsToCreate = [];
       
       for (const question of predefinedQuestions) {
-        console.log('111---', question)
-
-        // 检查问题是否已存在
-        // const existingQuestion = await ctx.model.Question.findOne({
-        //   where: { 
-        //     topic_id: topicDbId,
-        //     code: question.code || `question-${question.id}`
-        //   },
-        //   include: [], // 明确指定不加载任何关联
-        //   raw: true    // 使用原始查询
-        // });
-        // 修改查询方式，使用原始 SQL
+        // 检查问题是否已存在: 修改查询方式，使用原始 SQL
         const existingQuestion = await ctx.model.query(
           'SELECT id FROM question WHERE topic_id = ? AND code = ? LIMIT 1',
           {

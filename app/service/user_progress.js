@@ -300,8 +300,6 @@ class UserProgressService extends Service {
           replacements: [sessionId]
         }
       );
-      console.log('🍊 会话信息:', sessions);
-      
       const session = sessions && sessions.length > 0 ? sessions[0] : null;
       
       if (!session) {

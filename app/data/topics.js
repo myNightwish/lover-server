@@ -71,6 +71,39 @@ const topicsMap = {
   // 关系话题
   'relationship': [
     {
+      id: 'close-love-q1',
+      code: 'intimacy-expectations',
+      title: '亲密关系中的期望',
+      type: 'DEEP_CONVERSATION',
+      index: 0,
+      bgClass: 'bg-pink',
+      icon: '💋',
+      recommended: false,
+      version: '1.0'
+    },
+    {
+      id: 'close-love-q2',
+      code: 'romance',
+      title: '浪漫表达方式',
+      type: '你会选择',
+      index: 1,
+      bgClass: 'bg-purple',
+      icon: '💘',
+      recommended: false,
+      version: '1.0'
+    },
+    {
+      id: 'close-love-q3',
+      code: 'intimate-behavior',
+      title: '亲密行为',
+      type: 'WHOS_MORE_LIKELY',
+      index: 2,
+      bgClass: 'bg-blue',
+      icon: '🔥',
+      recommended: true,
+      version: '1.0'
+    },
+    {
       id: 'relationship-q1',
       code: 'dream-wedding',
       title: '梦想的婚礼',
@@ -104,40 +137,76 @@ const topicsMap = {
       version: '1.0'
     }
   ],
-  // 亲密爱话题
-  'close-love': [
+  // 新增道德与价值观分类
+  'moral-values': [
     {
-      id: 'close-love-q1',
-      code: 'intimacy-expectations',
-      title: '亲密关系中的期望',
+      id: 'mv1',
+      code: 'ethical-dilemmas',
+      title: '伦理困境',
       type: 'DEEP_CONVERSATION',
       index: 0,
-      bgClass: 'bg-pink',
-      icon: '💋',
-      recommended: false,
-      version: '1.0'
-    },
-    {
-      id: 'close-love-q2',
-      code: 'romance',
-      title: '浪漫表达方式',
-      type: '你会选择',
-      index: 1,
       bgClass: 'bg-purple',
-      icon: '💘',
-      recommended: false,
-      version: '1.0'
+      icon: '⚖️',
+      recommended: true,
+      version: '1.1'
     },
     {
-      id: 'close-love-q3',
-      code: 'intimate-behavior',
-      title: '亲密行为',
-      type: 'WHOS_MORE_LIKELY',
-      index: 2,
+      id: 'mv2',
+      code: 'social-justice',
+      title: '社会正义',
+      type: 'THIS_OR_THAT',
+      index: 1,
       bgClass: 'bg-blue',
-      icon: '🔥',
+      icon: '🌍',
+      recommended: false,
+      version: '1.1'
+    },
+    {
+      id: 'mv3',
+      code: 'family-traditions',
+      title: '家庭传统',
+      type: 'DEEP_CONVERSATION',
+      index: 2,
+      bgClass: 'bg-orange',
+      icon: '👨👩👧',
       recommended: true,
-      version: '1.0'
+      version: '1.1'
+    }
+  ],
+  // 新增金钱与财务分类
+  'money-finances': [
+    {
+      id: 'mf1',
+      code: 'spending-habits',
+      title: '消费习惯',
+      type: 'THIS_OR_THAT',
+      index: 0,
+      bgClass: 'bg-green',
+      icon: '💳',
+      recommended: true,
+      version: '1.1'
+    },
+    {
+      id: 'mf2',
+      code: 'investment-philosophy',
+      title: '投资理念',
+      type: 'DEEP_CONVERSATION',
+      index: 1,
+      bgClass: 'bg-gold',
+      icon: '📈',
+      recommended: false,
+      version: '1.1'
+    },
+    {
+      id: 'mf3',
+      code: 'financial-goals',
+      title: '财务规划',
+      type: 'WOULD_YOU_RATHER',
+      index: 2,
+      bgClass: 'bg-silver',
+      icon: '🎯',
+      recommended: true,
+      version: '1.1'
     }
   ]
 };

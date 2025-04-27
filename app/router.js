@@ -193,8 +193,16 @@ module.exports = app => {
   router.post('/api/sessions/:sessionId/results', authWx, controller.question.saveSessionResults);
 
   // 伴侣相关
-  router.get('/api/partners', authWx, controller.partner.getPartners);
-  router.post('/api/partners', authWx, controller.partner.addPartner);
-  router.delete('/api/partners/:id', authWx, controller.partner.removePartner);
+  // router.get('/api/partners', authWx, controller.partner.getPartners);
+  // router.post('/api/partners', authWx, controller.partner.addPartner);
+  // router.delete('/api/partners/:id', authWx, controller.partner.removePartner);
+  
+  // 伴侣绑定相关功能
+  router.post('/api/partners/bind-request', authWx, controller.partner.sendBindRequest); // 发送绑定请求
+  router.post('/api/partners/bind-request/:requestId/accept', authWx, controller.partner.acceptBindRequest); // 接受绑定请求
+  router.post('/api/partners/bind-request/:requestId/reject', authWx, controller.partner.rejectBindRequest); // 拒绝绑定请求
+  router.get('/api/partners/bind-requests', authWx, controller.partner.getBindRequests); // 获取绑定请求列表
+  router.get('/api/partners/bind-status', authWx, controller.partner.getBindStatus); // 获取当前绑定状态
+  router.post('/api/partners/unbind', authWx, controller.partner.unbindPartner); // 解除绑定关系
   
 };

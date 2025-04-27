@@ -1,5 +1,6 @@
 const questionsMap = {
-  // 入门话题 - 你是否曾经（日常生活）
+  // ========== 入门话题 ==========
+  // 你是否曾经（日常生活）
   'daily-life': [
     {
       id: 'starter-q1-1',
@@ -26,7 +27,7 @@ const questionsMap = {
       version: '1.0'
     }
   ],
-  // 入门话题 - 深度对话（我们的亲密生活）
+  // 深度对话（我们的亲密生活）
   'intimate-life': [
     {
       id: 'starter-q2-1',
@@ -62,7 +63,7 @@ const questionsMap = {
     {id:'il7', text:'哪个瞬间让你想按下人生的暂停键？', type:'text', version:'1.0'},
     {id:'il8', text:'如果我们的爱情有颜色，现在是什么色调？', type:'text', version:'1.0'}
   ],
-  // 入门话题 - 谁更可能（情侣生活）
+  // 谁更可能（情侣生活）
   'couple-life': [
     {
       id: 'starter-q3-1',
@@ -91,7 +92,7 @@ const questionsMap = {
     {id:'cl1', text:'谁更可能策划说走就走的旅行？', type:'who', version:'3.3'},
     {id:'cl2', text:'谁更擅长主动化解矛盾与尴尬？', type:'who', version:'3.3'},
   ],
-  // 入门话题 - 二选一（我们的梦想家园）
+  // 二选一（我们的梦想家园）
   'dream-home': [
     {
       id: 'starter-q4-1',
@@ -126,6 +127,7 @@ const questionsMap = {
     {id:'dh7', text:'卫浴升级重点？', type:'thisorthat', option1:'温泉式泡澡系统', option2:'智能健康监测', version:'3.3'},
     {id:'dh8', text:'庭院设计倾向？', type:'thisorthat', option1:'可食花园', option2:'疗愈景观', version:'3.3'}
   ],
+  // ========== 亲密关系 ==========
   // 深度对话（亲密关系中的期望）
   'intimacy-expectations': [
     {
@@ -287,7 +289,56 @@ const questionsMap = {
       option1: 'NFT爱情区块链',
       option2: '手工火漆信物库',
       version: '3.5'
-    }]
+    }],
+     // ========== 道德与价值观 ==========
+  'ethical-dilemmas': [
+    {id:'ed1', text:'当个人利益与公共利益冲突时，你的决策原则是什么？', type:'text', version:'1.1'},
+    {id:'ed2', text:'如何看待善意谎言与绝对诚实的关系？', type:'text', version:'1.1'},
+    {id:'ed3', text:'如果发现好友的伴侣出轨，你会如何处理？', type:'text', version:'1.1'},
+    {id:'ed4', text:'当法律与道德冲突时，你的选择倾向？', type:'text', version:'1.1'},
+  ],
+
+  'social-justice': [
+    {id:'sj1', text:'更倾向？', type:'thisorthat', option1:'机会平等', option2:'结果平等', version:'1.1'},
+    {id:'sj2', text:'优先选择？', type:'thisorthat', option1:'效率优先', option2:'公平优先', version:'1.1'},
+    {id:'sj3', text:'更认同？', type:'thisorthat', option1:'个人奋斗', option2:'社会支持', version:'1.1'},
+    {id:'sj4', text:'倾向于？', type:'thisorthat', option1:'市场竞争', option2:'政府调控', version:'1.1'},
+    {id:'sj5', text:'更看重？', type:'thisorthat', option1:'个人自由', option2:'集体利益', version:'1.1'}
+  ],
+
+  'family-traditions': [
+    {id:'ft1', text:'哪些传统是你希望延续到新家庭的？', type:'text', version:'1.1'},
+    {id:'ft2', text:'如何看待节日礼金的文化意义？', type:'text', version:'1.1'},
+    {id:'ft4', text:'如何平衡传统习俗与现代生活方式？', type:'text', version:'1.1'},
+    {id:'ft5', text:'对"门当户对"观念的看法？', type:'text', version:'1.1'},
+    {id:'ft6', text:'家族聚会频率的理想状态？', type:'text', version:'1.1'}
+  ],
+
+  // ========== 金钱与财务 ==========
+  'spending-habits': [
+    {id:'sh1', text:'更倾向？', type:'thisorthat', option1:'即时享受', option2:'延迟满足', version:'1.1'},
+    {id:'sh2', text:'优先选择？', type:'thisorthat', option1:'品质优先', option2:'性价比优先', version:'1.1'},
+    {id:'sh3', text:'消费决策更依赖？', type:'thisorthat', option1:'情感驱动', option2:'理性分析', version:'1.1'},
+    {id:'sh4', text:'如何处理冲动消费？', type:'thisorthat', option1:'设立冷静期', option2:'预算硬约束', version:'1.1'},
+    {id:'sh5', text:'更看重？', type:'thisorthat', option1:'体验消费', option2:'实物消费', version:'1.1'}
+  ],
+
+  'investment-philosophy': [
+    {id:'ip1', text:'投资组合中风险资产的理想占比？', type:'text', version:'1.1'},
+    {id:'ip2', text:'如何看待加密货币的投资价值？', type:'text', version:'1.1'},
+    {id:'ip3', text:'长期投资与短期套利的平衡策略？', type:'text', version:'1.1'},
+    {id:'ip4', text:'对杠杆投资的风险接受度？', type:'text', version:'1.1'},
+    {id:'ip5', text:'如何定义投资成功的关键指标？', type:'text', version:'1.1'},
+    {id:'ip6', text:'对ESG投资理念的认同程度？', type:'text', version:'1.1'}
+  ],
+
+  'financial-goals': [
+    {id:'fg1', text:'更倾向？', type:'thisorthat', option1:'激进增长', option2:'稳健保值', version:'1.1'},
+    {id:'fg2', text:'优先选择？', type:'thisorthat', option1:'房产投资', option2:'金融资产', version:'1.1'},
+    {id:'fg3', text:'退休规划启动时间？', type:'thisorthat', option1:'30岁前', option2:'40岁后', version:'1.1'},
+    {id:'fg4', text:'应急储备金应覆盖？', type:'thisorthat', option1:'3个月支出', option2:'6个月支出', version:'1.1'},
+    {id:'fg5', text:'子女教育金筹备方式？', type:'thisorthat', option1:'专项储蓄', option2:'投资收益', version:'1.1'}
+  ]
 };
 
 module.exports = questionsMap;
