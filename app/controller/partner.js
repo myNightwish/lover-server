@@ -3,146 +3,84 @@
 const Controller = require('egg').Controller;
 
 class PartnerController extends Controller {
-  // 获取伴侣列表
-  async getPartners() {
+  /**
+   * 发送伴侣绑定请求
+   */
+  async sendBindRequest() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
+    const { targetId, targetPhone, type = 'id' } = ctx.request.body;
     
-    try {
-      // 查询用户的伴侣关系
-      const partners = await ctx.model.UserPartner.findAll({
-        where: { user_id: userId },
-        include: [
-          {
-            model: ctx.model.User,
-            as: 'partner',
-            attributes: ['id', 'nickname', 'avatar', 'gender']
-          }
-        ]
-      });
-      
-      // 处理伴侣数据
-      const result = partners.map(p => ({
-        id: p.id,
-        partnerId: p.partner_id,
-        nickname: p.partner ? p.partner.nickname : '',
-        avatar: p.partner ? p.partner.avatar : '',
-        gender: p.partner ? p.partner.gender : '',
-        status: p.status,
-        createdAt: p.created_at
-      }));
-      
-      ctx.body = {
-        success: true,
-        data: result
-      };
-    } catch (error) {
-      ctx.logger.error('获取伴侣列表失败', error);
+    // 根据类型选择目标标识符
+    const targetIdentifier = type === 'phone' ? targetPhone : targetId;
+    
+    if (!targetIdentifier) {
       ctx.body = {
         success: false,
-        message: error.message || '获取伴侣列表失败'
+        message: '缺少目标用户信息'
       };
+      return;
     }
+    
+    const result = await ctx.service.partner.sendBindRequest(userId, targetIdentifier, type);
+    ctx.body = result;
   }
   
-  // 添加伴侣
-  async addPartner() {
+  /**
+   * 接受伴侣绑定请求
+   */
+  async acceptBindRequest() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
-    const { partnerId } = ctx.request.body;
+    const { requestId } = ctx.params;
     
-    try {
-      // 检查伴侣是否存在
-      const partner = await ctx.model.User.findByPk(partnerId);
-      if (!partner) {
-        ctx.body = {
-          success: false,
-          message: '伴侣不存在'
-        };
-        return;
-      }
-      
-      // 检查是否已经是伴侣
-      const existPartner = await ctx.model.UserPartner.findOne({
-        where: {
-          user_id: userId,
-          partner_id: partnerId
-        }
-      });
-      
-      if (existPartner) {
-        ctx.body = {
-          success: false,
-          message: '已经是伴侣关系'
-        };
-        return;
-      }
-      
-      // 创建伴侣关系
-      await ctx.model.UserPartner.create({
-        user_id: userId,
-        partner_id: partnerId,
-        status: 1, // 1-正常
-        created_at: new Date(),
-        updated_at: new Date()
-      });
-      
-      // 创建反向伴侣关系
-      await ctx.model.UserPartner.create({
-        user_id: partnerId,
-        partner_id: userId,
-        status: 1, // 1-正常
-        created_at: new Date(),
-        updated_at: new Date()
-      });
-      
-      ctx.body = {
-        success: true,
-        message: '添加伴侣成功'
-      };
-    } catch (error) {
-      ctx.logger.error('添加伴侣失败', error);
-      ctx.body = {
-        success: false,
-        message: error.message || '添加伴侣失败'
-      };
-    }
+    const result = await ctx.service.partner.acceptBindRequest(userId, requestId);
+    ctx.body = result;
   }
   
-  // 移除伴侣
-  async removePartner() {
+  /**
+   * 拒绝伴侣绑定请求
+   */
+  async rejectBindRequest() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
-    const partnerId = ctx.params.id;
+    const { requestId } = ctx.params;
     
-    try {
-      // 移除伴侣关系
-      await ctx.model.UserPartner.destroy({
-        where: {
-          user_id: userId,
-          partner_id: partnerId
-        }
-      });
-      
-      // 移除反向伴侣关系
-      await ctx.model.UserPartner.destroy({
-        where: {
-          user_id: partnerId,
-          partner_id: userId
-        }
-      });
-      
-      ctx.body = {
-        success: true,
-        message: '移除伴侣成功'
-      };
-    } catch (error) {
-      ctx.logger.error('移除伴侣失败', error);
-      ctx.body = {
-        success: false,
-        message: error.message || '移除伴侣失败'
-      };
-    }
+    const result = await ctx.service.partner.rejectBindRequest(userId, requestId);
+    ctx.body = result;
+  }
+  
+  /**
+   * 获取绑定请求列表
+   */
+  async getBindRequests() {
+    const { ctx } = this;
+    const userId = ctx.state.user.id;
+    
+    const result = await ctx.service.partner.getBindRequests(userId);
+    ctx.body = result;
+  }
+  
+  /**
+   * 获取绑定状态
+   */
+  async getBindStatus() {
+    const { ctx } = this;
+    const userId = ctx.state.user.id;
+    
+    const result = await ctx.service.partner.getBindStatus(userId);
+    ctx.body = result;
+  }
+  
+  /**
+   * 解除伴侣绑定
+   */
+  async unbindPartner() {
+    const { ctx } = this;
+    const userId = ctx.state.user.id;
+    
+    const result = await ctx.service.partner.unbindPartner(userId);
+    ctx.body = result;
   }
 }
 
