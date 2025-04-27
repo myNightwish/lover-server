@@ -72,6 +72,7 @@ module.exports = app => {
     bind_code: {
       type: STRING(10),
       allowNull: true, // 伴侣绑定码
+      unique: true,    // 确保唯一性
     },
     createdAt: {
       type: DATE,
@@ -86,6 +87,22 @@ module.exports = app => {
   }, {
     tableName: 'users',
     timestamps: true,
+    hooks: {
+      beforeCreate: async (user) => {
+        // 如果没有绑定码，自动生成一个唯一的8位数字码
+        if (!user.bind_code) {
+          user.bind_code = await generateUniqueBindCode(app);
+        }
+      },
+      beforeBulkCreate: async (users) => {
+        // 批量创建时也处理绑定码
+        for (const user of users) {
+          if (!user.bind_code) {
+            user.bind_code = await generateUniqueBindCode(app);
+          }
+        }
+      }
+    }
   });
 
   User.associate = () => {
@@ -118,6 +135,28 @@ module.exports = app => {
       as: 'Partner',
     });
   };
+
+  // 生成唯一的绑定码
+  async function generateUniqueBindCode(app) {
+    let isUnique = false;
+    let bindCode = '';
+    
+    while (!isUnique) {
+      // 生成8位随机数字
+      bindCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+      
+      // 检查是否已存在
+      const existingUser = await app.model.User.findOne({
+        where: { bind_code: bindCode }
+      });
+      
+      if (!existingUser) {
+        isUnique = true;
+      }
+    }
+    
+    return bindCode;
+  }
 
   User.sync({ force: false, alter: true }) // 使用 alter: true 允许模型更新表结构
     .then(() => {

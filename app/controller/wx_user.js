@@ -80,11 +80,12 @@ class WxUserController extends Controller {
     const { ctx, service } = this;
     const userId = ctx.state.user.id;
     const openid = ctx.state.user.openid;
+    const bind_code = ctx.state.user.bind_code;
 
     // 获取用户信息，同时携带绑定的伴侣信息
     const userInfo = await this.app.model.WxUser.findOne({
       where: { id: userId },
-      attributes: [ 'openid', 'nickName', 'avatarUrl' ], // 只查询需要的字段
+      attributes: [ 'openid', 'nickName', 'avatarUrl', 'bind_code' ], // 只查询需要的字段
       include: [
         {
           model: this.app.model.Relationship,
@@ -94,7 +95,7 @@ class WxUserController extends Controller {
             {
               model: this.app.model.WxUser,
               as: 'PartnerOpenId', // 被绑定的伴侣
-              attributes: [ 'openid', 'nickName', 'avatarUrl' ], // 伴侣字段
+              attributes: [ 'openid', 'nickName', 'avatarUrl', 'bind_code' ], // 伴侣字段
             },
           ],
         },
@@ -107,6 +108,7 @@ class WxUserController extends Controller {
         openid: userInfo?.openid || null,
         nickName: userInfo?.nickName || null,
         avatarUrl: userInfo?.avatarUrl || null,
+        bindCode: userInfo?.bind_code || null,
         partnerInfo: partnerInfo || '', // 如果有绑定关系，返回伴侣信息
       },
     };

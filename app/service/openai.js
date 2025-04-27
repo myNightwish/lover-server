@@ -263,7 +263,6 @@ class OpenAIService {
         include: [{
           model: ctx.model.WxUser,
           as: 'user',
-          // attributes: [ 'id', 'nickName', 'openid' ],
         }, {
           model: ctx.model.QuestionnaireTemplate,
           as: 'questionnaire',
