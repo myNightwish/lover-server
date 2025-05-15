@@ -39,9 +39,9 @@ class MessageService extends Service {
         offset: (page - 1) * pageSize,
         include: [
           {
-            model: ctx.model.WxUser,
+            model: ctx.model.User,
             as: 'sender',
-            attributes: ['id', 'nickName', 'avatarUrl'],
+            attributes: ['id', 'nickname', 'avatarUrl'],
           },
         ],
       });

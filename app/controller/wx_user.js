@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 class WxUserController extends Controller {
   // 登录/注册接口
   async loginAndAutoSignUp() {
+    console.log('999----->')
     const { ctx } = this;
     const { code } = ctx.request.body;
     try {
@@ -82,9 +83,9 @@ class WxUserController extends Controller {
     const openid = ctx.state.user.openid;
 
     // 获取用户信息，同时携带绑定的伴侣信息
-    const userInfo = await this.app.model.WxUser.findOne({
+    const userInfo = await this.app.model.User.findOne({
       where: { id: userId },
-      attributes: [ 'openid', 'nickName', 'avatarUrl' ], // 只查询需要的字段
+      attributes: [ 'openid', 'nickname', 'avatarUrl' ], // 只查询需要的字段
       include: [
         {
           model: this.app.model.Relationship,
@@ -92,9 +93,9 @@ class WxUserController extends Controller {
           attributes: [ 'partnerOpenid' ], // 只获取 partnerOpenid
           include: [
             {
-              model: this.app.model.WxUser,
+              model: this.app.model.User,
               as: 'PartnerOpenId', // 被绑定的伴侣
-              attributes: [ 'openid', 'nickName', 'avatarUrl', ], // 伴侣字段
+              attributes: [ 'openid', 'nickname', 'avatarUrl', ], // 伴侣字段
             },
           ],
         },
@@ -105,7 +106,7 @@ class WxUserController extends Controller {
       success: true,
       data: {
         openid: userInfo?.openid || null,
-        nickName: userInfo?.nickName || null,
+        nickname: userInfo?.nickname || null,
         avatarUrl: userInfo?.avatarUrl || null,
         bindCode: userInfo?.bind_code || null,
         partnerInfo: partnerInfo || '', // 如果有绑定关系，返回伴侣信息

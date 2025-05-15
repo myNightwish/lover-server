@@ -9,8 +9,8 @@ class PointsService extends Service {
     try {
       // 验证用户存在
       const [user, target] = await Promise.all([
-        ctx.model.WxUser.findByPk(userId),
-        ctx.model.WxUser.findByPk(targetId),
+        ctx.model.User.findByPk(userId),
+        ctx.model.User.findByPk(targetId),
       ]);
 
       if (!user) {
@@ -40,8 +40,8 @@ class PointsService extends Service {
           }
 
           // 构造表扬描述
-          userDescription = `${user.nickName}表扬${target.nickName}: ${data.description}`;
-          targetDescription = `${user.nickName}表扬${target.nickName}: ${data.description}`;
+          userDescription = `${user.nickname}表扬${target.nickname}: ${data.description}`;
+          targetDescription = `${user.nickname}表扬${target.nickname}: ${data.description}`;
 
           // 扣除 user 积分
           await userBalance.decrement('balance', {
@@ -91,8 +91,8 @@ class PointsService extends Service {
           }
 
           // 构造批评描述
-          userDescription = `${user.nickName}批评${target.nickName}: ${data.description}`;
-          targetDescription = `${user.nickName}批评${target.nickName}: ${data.description}`;
+          userDescription = `${user.nickname}批评${target.nickname}: ${data.description}`;
+          targetDescription = `${user.nickname}批评${target.nickname}: ${data.description}`;
 
           // 扣除 target 积分
           await targetBalance.decrement('balance', {
@@ -186,7 +186,7 @@ class PointsService extends Service {
         senderId: userId,
         type: 'exchange_request',
         title: '新的兑换请求',
-        content: `【${userInfo.nickName}】想要兑换「${item.title}」，需要消耗 ${item.points_cost} 积分，是否同意？`,
+        content: `【${userInfo.nickname}】想要兑换「${item.title}」，需要消耗 ${item.points_cost} 积分，是否同意？`,
         relatedId: exchangeRecord.id,
       });
 
@@ -317,7 +317,7 @@ class PointsService extends Service {
     const { ctx } = this;
 
     try {
-      const user = await ctx.model.WxUser.findByPk(userId);
+      const user = await ctx.model.User.findByPk(userId);
 
       const items = await ctx.model.ExchangeItem.findAll({
         where: {
@@ -423,14 +423,14 @@ class PointsService extends Service {
         offset: (page - 1) * pageSize,
         include: [
           {
-            model: ctx.model.WxUser,
+            model: ctx.model.User,
             as: 'user',
-            attributes: ['id', 'nickName', 'avatarUrl'],
+            attributes: ['id', 'nickname', 'avatarUrl'],
           },
           {
-            model: ctx.model.WxUser,
+            model: ctx.model.User,
             as: 'target',
-            attributes: ['id', 'nickName', 'avatarUrl'],
+            attributes: ['id', 'nickname', 'avatarUrl'],
           },
         ],
       });

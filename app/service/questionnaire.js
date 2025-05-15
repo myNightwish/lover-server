@@ -250,7 +250,7 @@ class QuestionnaireService extends Service {
   async checkCoupleMatch(userId, templateId) {
     const { ctx } = this;
 
-    const user = await ctx.model.WxUser.findByPk(userId);
+    const user = await ctx.model.User.findByPk(userId);
     if (!user.partner_id) return;
 
     // 获取双方的答案

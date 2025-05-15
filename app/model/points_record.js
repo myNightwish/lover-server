@@ -42,14 +42,14 @@ module.exports = (app) => {
   });
 
   PointsRecord.associate = function () {
-    const { WxUser } = app.model;
+    const { User } = app.model;
 
-    PointsRecord.belongsTo(WxUser, {
+    PointsRecord.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user',
     });
 
-    PointsRecord.belongsTo(WxUser, {
+    PointsRecord.belongsTo(User, {
       foreignKey: 'target_id',
       as: 'target',
     });

@@ -18,7 +18,7 @@ module.exports = app => {
   });
 
   UserProgress.associate = function() {
-    app.model.UserProgress.belongsTo(app.model.WxUser, {
+    app.model.UserProgress.belongsTo(app.model.User, {
       foreignKey: 'user_id'
     });
     

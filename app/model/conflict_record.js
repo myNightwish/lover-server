@@ -23,14 +23,14 @@ module.exports = app => {
   });
 
   ConflictRecord.associate = function() {
-    const { WxUser } = app.model;
+    const { User } = app.model;
     
-    ConflictRecord.belongsTo(WxUser, {
+    ConflictRecord.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user'
     });
     
-    ConflictRecord.belongsTo(WxUser, {
+    ConflictRecord.belongsTo(User, {
       foreignKey: 'partner_id',
       as: 'partner'
     });

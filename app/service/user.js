@@ -39,7 +39,6 @@ class UserService extends Service {
         status: 'active',
         role: 'user',
         create_at: new Date(),
-        last_login: new Date(),
         bind_code: crypto.randomBytes(3).toString('hex').toUpperCase()
         });
       

@@ -12,7 +12,7 @@ module.exports = app => {
       type: INTEGER,
       allowNull: false,
       references: {
-        model: 'wx_users',
+        model: 'users',
         key: 'id',
       },
     },
@@ -35,9 +35,9 @@ module.exports = app => {
   });
 
   GptAnalysis.associate = function() {
-    const { WxUser, QuestionnaireTemplate } = app.model;
+    const { User, QuestionnaireTemplate } = app.model;
 
-    GptAnalysis.belongsTo(WxUser, {
+    GptAnalysis.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user',
     });

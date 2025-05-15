@@ -23,7 +23,7 @@ module.exports = (app) => {
   });
 
   PointsBalance.associate = function () {
-    PointsBalance.belongsTo(app.model.WxUser, {
+    PointsBalance.belongsTo(app.model.User, {
       foreignKey: 'user_id',
       as: 'user',
     });

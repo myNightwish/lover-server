@@ -135,9 +135,9 @@ class RelationshipService extends Service {
       where: { userOpenid: openid },
       include: [
         {
-          model: app.model.WxUser,
+          model: app.model.User,
           as: 'PartnerOpenId',
-          attributes: ['openid', 'nickName', 'avatarUrl', 'id'], // 需要返回的伴侣字段
+          attributes: ['openid', 'nickname', 'avatarUrl', 'id'], // 需要返回的伴侣字段
         },
       ],
     });
@@ -151,9 +151,9 @@ class RelationshipService extends Service {
       where: { partnerOpenid: openid },
       include: [
         {
-          model: app.model.WxUser,
+          model: app.model.User,
           as: 'UserOpenId',
-          attributes: ['openid', 'nickName', 'avatarUrl', 'id'], // 需要返回的绑定者字段
+          attributes: ['openid', 'nickname', 'avatarUrl', 'id'], // 需要返回的绑定者字段
         },
       ],
     });

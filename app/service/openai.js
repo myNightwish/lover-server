@@ -261,7 +261,7 @@ class OpenAIService {
         },
         order: [[ 'created_at', 'DESC' ]],
         include: [{
-          model: ctx.model.WxUser,
+          model: ctx.model.User,
           as: 'user',
         }, {
           model: ctx.model.QuestionnaireTemplate,

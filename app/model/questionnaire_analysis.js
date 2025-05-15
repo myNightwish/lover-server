@@ -19,9 +19,9 @@ module.exports = app => {
   });
 
   QuestionnaireAnalysis.associate = function() {
-    app.model.QuestionnaireAnalysis.belongsTo(app.model.WxUser, {
-      foreignKey: 'user_id',
-    });
+    // app.model.QuestionnaireAnalysis.belongsTo(app.model.User, {
+    //   foreignKey: 'user_id',
+    // });
 
     app.model.QuestionnaireAnalysis.belongsTo(app.model.QuestionnaireTemplate, {
       foreignKey: 'questionnaire_id',

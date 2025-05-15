@@ -11,7 +11,7 @@ module.exports = app => {
       type: STRING,
       allowNull: false,
       references: {
-        model: 'wx_users', // 引用 wx_user 表
+        model: 'users', // 引用 user 表
         key: 'openid',
       },
       onUpdate: 'CASCADE',
@@ -21,7 +21,7 @@ module.exports = app => {
       type: STRING,
       allowNull: false,
       references: {
-        model: 'wx_users', // 引用 wx_user 表
+        model: 'users', // 引用 user 表
         key: 'openid',
       },
       onUpdate: 'CASCADE',
@@ -49,14 +49,14 @@ module.exports = app => {
   });
 
   Relationship.associate = () => {
-    // 定义与 WxUser 的关联，并给别名
-    Relationship.belongsTo(app.model.WxUser, {
+    // 定义与 User 的关联，并给别名
+    Relationship.belongsTo(app.model.User, {
       foreignKey: 'userOpenid',
       targetKey: 'openid',
       as: 'UserOpenId', // 唯一别名
     });
 
-    Relationship.belongsTo(app.model.WxUser, {
+    Relationship.belongsTo(app.model.User, {
       foreignKey: 'partnerOpenid',
       targetKey: 'openid',
       as: 'PartnerOpenId', // 被绑定方

@@ -34,14 +34,14 @@ module.exports = app => {
   });
 
   QuestionnaireMatch.associate = function() {
-    const { WxUser, QuestionnaireTemplate } = app.model;
+    const { User, QuestionnaireTemplate } = app.model;
     
-    QuestionnaireMatch.belongsTo(WxUser, {
+    QuestionnaireMatch.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user',
     });
     
-    QuestionnaireMatch.belongsTo(WxUser, {
+    QuestionnaireMatch.belongsTo(User, {
       foreignKey: 'partner_id',
       as: 'partner',
     });

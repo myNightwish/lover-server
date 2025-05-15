@@ -21,7 +21,7 @@ module.exports = app => {
   });
 
   UserAnswer.associate = function () {
-    app.model.UserAnswer.belongsTo(app.model.WxUser, {
+    app.model.UserAnswer.belongsTo(app.model.User, {
       foreignKey: 'user_id',
       as: 'user',
     });

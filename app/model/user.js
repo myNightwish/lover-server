@@ -12,7 +12,6 @@ module.exports = app => {
     username: {
       type: STRING,
       allowNull: false,
-      unique: true,
     },
     password: {
       type: STRING,
@@ -23,6 +22,10 @@ module.exports = app => {
       allowNull: true, // 密码加密的盐值
     },
     nickname: {
+      type: STRING,
+      allowNull: true,
+    },
+    avatarUrl: {
       type: STRING,
       allowNull: true,
     },
@@ -122,17 +125,22 @@ module.exports = app => {
       foreignKey: 'user_id',
       as: 'Answers',
     });
-    
-    // 与微信用户的关联
-    User.hasOne(app.model.WxUser, {
-      foreignKey: 'userId',
-      as: 'WxUserInfo',
-    });
-    
     // 伴侣关系
     User.belongsTo(User, {
       foreignKey: 'partner_id',
       as: 'Partner',
+    });
+
+    User.hasMany(app.model.Relationship, {
+      foreignKey: 'userOpenid',
+      sourceKey: 'openid',
+      as: 'UserRelationships', // 用户发起的绑定关系
+    });
+
+    User.hasMany(app.model.Relationship, {
+      foreignKey: 'partnerOpenid',
+      sourceKey: 'openid',
+      as: 'PartnerRelationships', // 用户作为伴侣的绑定关系
     });
   };
 

@@ -12,7 +12,7 @@ module.exports = app => {
   });
 
   QuestionnaireScore.associate = function() {
-    app.model.QuestionnaireScore.belongsTo(app.model.WxUser, {
+    app.model.QuestionnaireScore.belongsTo(app.model.User, {
       foreignKey: 'user_id',
     });
     app.model.QuestionnaireScore.belongsTo(app.model.QuestionnaireTemplate, {

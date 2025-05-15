@@ -38,14 +38,14 @@ module.exports = (app) => {
   });
 
   ExchangeRecord.associate = function () {
-    const { WxUser, ExchangeItem } = app.model;
+    const { User, ExchangeItem } = app.model;
 
-    ExchangeRecord.belongsTo(WxUser, {
+    ExchangeRecord.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user',
     });
 
-    ExchangeRecord.belongsTo(WxUser, {
+    ExchangeRecord.belongsTo(User, {
       foreignKey: 'target_id',
       as: 'target',
     });

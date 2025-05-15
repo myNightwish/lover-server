@@ -41,14 +41,14 @@ module.exports = (app) => {
   });
 
   UserMessage.associate = function () {
-    const { WxUser } = app.model;
+    const { User } = app.model;
 
-    UserMessage.belongsTo(WxUser, {
+    UserMessage.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user',
     });
 
-    UserMessage.belongsTo(WxUser, {
+    UserMessage.belongsTo(User, {
       foreignKey: 'sender_id',
       as: 'sender',
     });
