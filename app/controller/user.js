@@ -633,6 +633,168 @@ class UserController extends Controller {
       };
     }
   }
+
+  /**
+   * 根据绑定码查找用户
+   * @return {Promise<void>}
+   */
+  async findUserByBindCode() {
+    const { ctx } = this;
+    const { bindCode } = ctx.query;
+
+    if (!bindCode) {
+      ctx.body = {
+        success: false,
+        message: '绑定码不能为空',
+      };
+      return;
+    }
+
+    try {
+      // 查找用户
+      const user = await ctx.model.User.findOne({
+        where: { bind_code: bindCode },
+        attributes: ['id', 'nickname', 'avatar', 'bind_code'],
+      });
+
+      if (!user) {
+        ctx.body = {
+          success: false,
+          message: '未找到该用户',
+        };
+        return;
+      }
+
+      // 返回用户基本信息
+      ctx.body = {
+        success: true,
+        data: {
+          id: user.id,
+          nickname: user.nickname,
+          avatar: user.avatar,
+          bindCode: user.bind_code,
+        },
+      };
+    } catch (error) {
+      ctx.logger.error('查找用户失败', error);
+      ctx.body = {
+        success: false,
+        message: '查找用户失败',
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * 获取当前用户信息
+   * @return {Promise<void>}
+   */
+  async getUserInfo() {
+    const { ctx } = this;
+    const userId = ctx.state.user.id;
+
+    try {
+      // 查询用户信息
+      const user = await ctx.model.User.findByPk(userId, {
+        attributes: ['id', 'username', 'nickname', 'avatar', 'bind_code', 'partner_id'],
+      });
+
+      if (!user) {
+        ctx.body = {
+          success: false,
+          message: '用户不存在',
+        };
+        return;
+      }
+
+      // 获取伴侣信息
+      let partnerInfo = null;
+      if (user.partner_id) {
+        const partner = await ctx.model.User.findByPk(user.partner_id, {
+          attributes: ['id', 'nickname', 'avatar'],
+        });
+        
+        if (partner) {
+          partnerInfo = {
+            id: partner.id,
+            nickname: partner.nickname,
+            avatar: partner.avatar,
+          };
+        }
+      }
+
+      // 返回用户信息
+      ctx.body = {
+        success: true,
+        data: {
+          id: user.id,
+          username: user.username,
+          nickname: user.nickname,
+          avatar: user.avatar,
+          bindCode: user.bind_code,
+          partnerInfo,
+        },
+      };
+    } catch (error) {
+      ctx.logger.error('获取用户信息失败', error);
+      ctx.body = {
+        success: false,
+        message: '获取用户信息失败',
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * 搜索用户
+   * @return {Promise<void>}
+   */
+  async searchUsers() {
+    const { ctx } = this;
+    const { keyword } = ctx.query;
+    const userId = ctx.state.user.id;
+
+    if (!keyword) {
+      ctx.body = {
+        success: false,
+        message: '搜索关键词不能为空',
+      };
+      return;
+    }
+
+    try {
+      // 搜索用户
+      const users = await ctx.model.User.findAll({
+        where: {
+          id: { $ne: userId }, // 排除自己
+          $or: [
+            { nickname: { $like: `%${keyword}%` } },
+            { username: { $like: `%${keyword}%` } },
+            { bind_code: keyword },
+          ],
+        },
+        attributes: ['id', 'nickname', 'avatar', 'bind_code'],
+        limit: 10, // 限制返回数量
+      });
+
+      ctx.body = {
+        success: true,
+        data: users.map(user => ({
+          id: user.id,
+          nickname: user.nickname,
+          avatar: user.avatar,
+          bindCode: user.bind_code,
+        })),
+      };
+    } catch (error) {
+      ctx.logger.error('搜索用户失败', error);
+      ctx.body = {
+        success: false,
+        message: '搜索用户失败',
+        error: error.message,
+      };
+    }
+  }
 }
 
 module.exports = UserController;

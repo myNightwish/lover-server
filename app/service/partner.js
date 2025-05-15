@@ -4,6 +4,149 @@ const Service = require('egg').Service;
 
 class PartnerService extends Service {
   /**
+   * 创建绑定关系
+   * @param {number} userId - 当前用户ID
+   * @param {number} targetId - 目标用户ID
+   * @return {Object} 结果
+   */
+  async createBindRelationship(userId, targetId) {
+    const { ctx } = this;
+    
+    // 开启事务
+    const transaction = await ctx.model.transaction();
+    
+    try {
+      // 检查是否已存在绑定请求
+      const existingRequest = await ctx.model.BindRequest.findOne({
+        where: {
+          $or: [
+            { user_id: userId, target_id: targetId },
+            { user_id: targetId, target_id: userId }
+          ],
+          status: 'pending'
+        },
+        transaction
+      });
+      
+      if (existingRequest) {
+        await transaction.commit();
+        return {
+          success: false,
+          message: '已存在绑定请求，请勿重复发送'
+        };
+      }
+      
+      // 创建绑定请求
+      const bindRequest = await ctx.model.BindRequest.create({
+        user_id: userId,
+        target_id: targetId,
+        status: 'pending',
+        created_at: new Date()
+      }, { transaction });
+      
+      // 获取用户信息
+      const user = await ctx.model.User.findByPk(userId, {
+        attributes: ['id', 'nickname', 'avatar'],
+        transaction
+      });
+      
+      await transaction.commit();
+      
+      // 可以在这里添加消息通知逻辑
+      
+      return {
+        success: true,
+        message: '绑定请求已发送，等待对方确认',
+        data: {
+          requestId: bindRequest.id,
+          targetId,
+          status: 'pending'
+        }
+      };
+    } catch (error) {
+      await transaction.rollback();
+      this.ctx.logger.error('创建绑定关系失败', error);
+      return {
+        success: false,
+        message: '创建绑定关系失败',
+        error: error.message
+      };
+    }
+  }
+  
+  /**
+   * 接受绑定请求
+   * @param {number} userId - 当前用户ID
+   * @param {number} requestId - 请求ID
+   * @return {Object} 结果
+   */
+  async acceptBindRequest(userId, requestId) {
+    const { ctx } = this;
+    
+    // 开启事务
+    const transaction = await ctx.model.transaction();
+    
+    try {
+      // 查找绑定请求
+      const bindRequest = await ctx.model.BindRequest.findOne({
+        where: {
+          id: requestId,
+          target_id: userId,
+          status: 'pending'
+        },
+        transaction
+      });
+      
+      if (!bindRequest) {
+        await transaction.commit();
+        return {
+          success: false,
+          message: '绑定请求不存在或已处理'
+        };
+      }
+      
+      // 更新绑定请求状态
+      await bindRequest.update({
+        status: 'accepted',
+        updated_at: new Date()
+      }, { transaction });
+      
+      // 更新用户伴侣关系
+      await ctx.model.User.update({
+        partner_id: bindRequest.user_id
+      }, {
+        where: { id: userId },
+        transaction
+      });
+      
+      await ctx.model.User.update({
+        partner_id: userId
+      }, {
+        where: { id: bindRequest.user_id },
+        transaction
+      });
+      
+      await transaction.commit();
+      
+      return {
+        success: true,
+        message: '已成功绑定伴侣关系',
+        data: {
+          partnerId: bindRequest.user_id
+        }
+      };
+    } catch (error) {
+      await transaction.rollback();
+      this.ctx.logger.error('接受绑定请求失败', error);
+      return {
+        success: false,
+        message: '接受绑定请求失败',
+        error: error.message
+      };
+    }
+  }
+  
+  /**
    * 发送伴侣绑定请求
    * @param {number} requesterId - 请求者ID
    * @param {number|string} targetIdentifier - 目标用户标识（ID或手机号）
@@ -417,6 +560,67 @@ class PartnerService extends Service {
       return {
         success: false,
         message: error.message || '解除伴侣绑定失败'
+      };
+    }
+  }
+  
+  /**
+   * 直接绑定伴侣关系
+   * @param {number} userId - 当前用户ID
+   * @param {number} partnerId - 伴侣用户ID
+   * @return {Object} 结果
+   */
+  async directBindPartner(userId, partnerId) {
+    const { ctx } = this;
+    
+    // 开启事务
+    const transaction = await ctx.model.transaction();
+    
+    try {
+      // 更新双方的伴侣关系
+      await ctx.model.User.update({
+        partner_id: partnerId
+      }, {
+        where: { id: userId },
+        transaction
+      });
+      
+      await ctx.model.User.update({
+        partner_id: userId
+      }, {
+        where: { id: partnerId },
+        transaction
+      });
+      
+      // 获取伴侣信息
+      const partnerInfo = await ctx.model.User.findByPk(partnerId, {
+        attributes: ['id', 'nickname', 'avatar'],
+        transaction
+      });
+      
+      await transaction.commit();
+      
+      // 可以在这里添加消息通知逻辑
+      
+      return {
+        success: true,
+        message: '已成功绑定伴侣关系',
+        data: {
+          partnerId,
+          partnerInfo: {
+            id: partnerInfo.id,
+            nickname: partnerInfo.nickname,
+            avatar: partnerInfo.avatar
+          }
+        }
+      };
+    } catch (error) {
+      await transaction.rollback();
+      this.ctx.logger.error('绑定伴侣关系失败', error);
+      return {
+        success: false,
+        message: '绑定伴侣关系失败',
+        error: error.message
       };
     }
   }

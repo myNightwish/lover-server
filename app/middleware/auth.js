@@ -59,11 +59,9 @@ module.exports = options => {
       const partnerRelationship = await ctx.service.partnerRelationship.getRelationshipByUserId(user.id);
       console.log('partnerRelationship--',partnerRelationship)
       if (partnerRelationship) {
-        // 确定伴侣ID（如果当前用户是user1，则伴侣是user2，反之亦然）
-        const partnerId = partnerRelationship.user_id === user.id 
-          ? partnerRelationship.user2_id 
-          : partnerRelationship.user1_id;
-          
+        // 获取伴侣ID
+        const partnerId = partnerRelationship.partner_id;
+        
         // 获取伴侣详细信息
         const partnerInfo = await ctx.service.user.findById(partnerId);
         
@@ -84,7 +82,7 @@ module.exports = options => {
         user.partner_id = null;
         user.partnerInfo = null;
       }
-      
+      console.log('sj---->', user.bind_code)
       // 确保用户有绑定码
       if (!user.bind_code) {
         // 如果没有绑定码，可以在这里生成并保存

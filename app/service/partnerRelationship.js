@@ -11,18 +11,20 @@ class PartnerRelationshipService extends Service {
   async getRelationshipByUserId(userId) {
     const { ctx } = this;
     
-    // 查询用户作为user1或user2的伴侣关系
-    const relationship = await ctx.model.PartnerRelationship.findOne({
-      where: {
-        $or: [
-          { user1_id: userId },
-          { user2_id: userId }
-        ],
-        status: 'active' // 假设有状态字段表示关系是否有效
-      }
+    // 直接查询用户的伴侣关系
+    const user = await ctx.model.User.findByPk(userId, {
+      attributes: ['id', 'partner_id']
     });
     
-    return relationship;
+    if (user && user.partner_id) {
+      // 如果用户有伴侣ID，构造一个简单的关系对象返回
+      return {
+        user_id: userId,
+        partner_id: user.partner_id
+      };
+    }
+    
+    return null;
   }
   
   /**
