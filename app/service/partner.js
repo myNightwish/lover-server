@@ -227,12 +227,11 @@ class PartnerService extends Service {
       
       // 创建通知消息
       await ctx.service.message.createMessage({
-        user_id: targetUser.id,
+        userId: targetUser.id,
+        senderId: targetUser.id,
         title: '新的伴侣绑定请求',
         content: `有用户请求与你建立伴侣关系`,
         type: 'partner_request',
-        related_id: request.id,
-        status: 0
       });
       
       return {
@@ -308,12 +307,11 @@ class PartnerService extends Service {
       
       // 创建通知消息
       await ctx.service.message.createMessage({
-        user_id: request.requester_id,
+        userId: request.requester_id,
+        senderId: request.requester_id,
         title: '伴侣绑定成功',
         content: `你的伴侣绑定请求已被接受`,
         type: 'partner_accepted',
-        related_id: request.id,
-        status: 0
       }, transaction);
       
       await transaction.commit();
@@ -367,12 +365,11 @@ class PartnerService extends Service {
       
       // 创建通知消息
       await ctx.service.message.createMessage({
-        user_id: request.requester_id,
+        userId: request.requester_id,
+        senderId: request.requester_id,
         title: '伴侣绑定被拒绝',
         content: `你的伴侣绑定请求已被拒绝`,
         type: 'partner_rejected',
-        related_id: request.id,
-        status: 0
       });
       
       return {
@@ -436,31 +433,50 @@ class PartnerService extends Service {
   /**
    * 获取绑定状态
    * @param {number} userId - 用户ID
-   * @return {Object} 绑定状态
+   * @return {Object} 绑定状态信息
    */
   async getBindStatus(userId) {
     const { ctx } = this;
     
     try {
-      // 查询当前有效的伴侣关系
-      const relationship = await ctx.model.PartnerRelationship.findOne({
-        where: {
-          user_id: userId,
-          status: 1
-        },
-        include: [{
-          model: ctx.model.User,
-          as: 'partner',
-          attributes: ['id', 'username', 'avatar']
-        }]
+      // 从 user 表直接查询用户及其伴侣信息
+      const user = await ctx.model.User.findByPk(userId, {
+        attributes: ['id', 'nickname', 'partner_id']
       });
       
-      if (!relationship) {
+      if (!user) {
+        return {
+          success: false,
+          message: '用户不存在'
+        };
+      }
+      
+      // 如果没有伴侣
+      if (!user.partner_id) {
         return {
           success: true,
           data: {
             isBound: false,
-            partner: null
+            partnerInfo: null
+          }
+        };
+      }
+      
+      // 查询伴侣信息
+      const partner = await ctx.model.User.findByPk(user.partner_id, {
+        attributes: ['id', 'nickname', 'bind_code']
+      });
+      
+      if (!partner) {
+        // 伴侣ID存在但伴侣不存在，这是一种异常情况
+        // 可以考虑清除这个无效的伴侣ID
+        await user.update({ partner_id: null });
+        
+        return {
+          success: true,
+          data: {
+            isBound: false,
+            partnerInfo: null
           }
         };
       }
@@ -469,8 +485,12 @@ class PartnerService extends Service {
         success: true,
         data: {
           isBound: true,
-          partner: relationship.partner,
-          bindTime: relationship.bind_time
+          partnerInfo: {
+            id: partner.id,
+            nickname: partner.nickname,
+            avatar: partner.avatar,
+            bindCode: partner.bind_code
+          }
         }
       };
     } catch (error) {
@@ -492,15 +512,13 @@ class PartnerService extends Service {
     const transaction = await ctx.model.transaction();
     
     try {
-      // 查询当前有效的伴侣关系
-      const relationship = await ctx.model.PartnerRelationship.findOne({
-        where: {
-          user_id: userId,
-          status: 1
-        }
+      // 查询当前用户信息，获取伴侣ID
+      const user = await ctx.model.User.findByPk(userId, {
+        attributes: ['id', 'nickname', 'partner_id'],
+        transaction
       });
       
-      if (!relationship) {
+      if (!user || !user.partner_id) {
         await transaction.rollback();
         return {
           success: false,
@@ -508,42 +526,64 @@ class PartnerService extends Service {
         };
       }
       
-      const partnerId = relationship.partner_id;
+      const partnerId = user.partner_id;
       const now = new Date();
       
-      // 更新双方的伴侣关系状态
-      await ctx.model.PartnerRelationship.update({
-        status: 0,
-        unbind_time: now
+      // 更新 user 表，清除双方的 partner_id
+      await ctx.model.User.update({
+        partner_id: null
       }, {
-        where: {
-          user_id: userId,
-          partner_id: partnerId,
-          status: 1
-        },
+        where: { id: userId },
         transaction
       });
       
-      await ctx.model.PartnerRelationship.update({
-        status: 0,
-        unbind_time: now
+      await ctx.model.User.update({
+        partner_id: null
       }, {
-        where: {
-          user_id: partnerId,
-          partner_id: userId,
-          status: 1
-        },
+        where: { id: partnerId },
         transaction
       });
       
-      // 创建通知消息
-      await ctx.service.message.createMessage({
-        user_id: partnerId,
-        title: '伴侣关系解除',
-        content: `你的伴侣已解除与你的绑定关系`,
-        type: 'partner_unbind',
-        status: 0
-      }, transaction);
+      // 如果存在 PartnerRelationship 表，也更新该表
+      if (ctx.model.PartnerRelationship) {
+        // 更新双方的伴侣关系状态
+        await ctx.model.PartnerRelationship.update({
+          status: 0,
+          unbind_time: now
+        }, {
+          where: {
+            user_id: userId,
+            partner_id: partnerId,
+            status: 1
+          },
+          transaction
+        });
+        
+        await ctx.model.PartnerRelationship.update({
+          status: 0,
+          unbind_time: now
+        }, {
+          where: {
+            user_id: partnerId,
+            partner_id: userId,
+            status: 1
+          },
+          transaction
+        });
+      }
+      
+      // 修复：确保提供所有必需的消息字段
+      // todo：@add：这里将来如果做拒绝，需要消息的
+      if (partnerId) {
+        await ctx.service.message.createMessage({
+          userId: partnerId,      // 接收消息的用户ID
+          senderId: userId,       // 发送消息的用户ID
+          title: '伴侣关系解除',
+          content: `你的伴侣已解除与你的绑定关系`,
+          type: 'partner_unbind',
+          isRead: false,              // 未读状态
+        }, { transaction });
+      }
       
       await transaction.commit();
       
@@ -591,6 +631,15 @@ class PartnerService extends Service {
         where: { id: partnerId },
         transaction
       });
+      
+      // 如果需要保留 partner_relationship 表，同时更新该表
+      await ctx.model.PartnerRelationship.create({
+        user_id: userId,
+        partner_id: partnerId,
+        status: 'active',
+        bind_time: new Date(),
+        created_at: new Date()
+      }, { transaction });
       
       // 获取伴侣信息
       const partnerInfo = await ctx.model.User.findByPk(partnerId, {

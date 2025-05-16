@@ -1,5 +1,7 @@
 'use strict';
 
+const { success } = require('../extend/helper');
+
 const Controller = require('egg').Controller;
 
 class PartnerController extends Controller {
@@ -25,6 +27,7 @@ class PartnerController extends Controller {
         where: { bind_code: bind_partner_code },
         attributes: ['id', 'nickname', 'avatar', 'partner_id']
       });
+      console.log('9999---->',targetUser)
       
       if (!targetUser) {
         ctx.body = {
@@ -131,6 +134,12 @@ class PartnerController extends Controller {
   async unbindPartner() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
+    console.log('userId', userId)
+    if(!userId) {
+      ctx.body = {
+        success: false,
+      };
+    }
     
     const result = await ctx.service.partner.unbindPartner(userId);
     ctx.body = result;

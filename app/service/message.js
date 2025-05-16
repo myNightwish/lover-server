@@ -13,6 +13,7 @@ class MessageService extends Service {
         sender_id: data.senderId,
         type: data.type,
         title: data.title,
+        is_read: !!data.isRead,
         content: data.content,
         related_id: data.relatedId,
         created_at: new Date(),
