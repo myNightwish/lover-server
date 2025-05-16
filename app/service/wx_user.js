@@ -25,7 +25,6 @@ class WxUserService extends Service {
         password: '',
         salt: '',
         avatar: '/static/images/default-avatar.png',
-        status: 'active',
         role: 'user',
         bind_code: crypto.randomBytes(3).toString('hex').toUpperCase()
       });

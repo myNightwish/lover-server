@@ -6,11 +6,32 @@ class MessageService extends Service {
    */
   async createMessage(data) {
     const { ctx } = this;
+    console.log('enter--message:', data);
 
     try {
+      // 验证用户ID和发送者ID是否存在
+      if (!data.userId) {
+        throw new Error('接收者ID不能为空');
+      }
+      
+      // 验证用户是否存在
+      const receiver = await ctx.model.User.findByPk(data.userId);
+      if (!receiver) {
+        throw new Error(`接收者用户(ID: ${data.userId})不存在`);
+      }
+      
+      // 如果有发送者ID，验证发送者是否存在
+      if (data.senderId) {
+        const sender = await ctx.model.User.findByPk(data.senderId);
+        if (!sender) {
+          throw new Error(`发送者用户(ID: ${data.senderId})不存在`);
+        }
+      }
+      
+      // 创建消息
       const message = await ctx.model.UserMessage.create({
         user_id: data.userId,
-        sender_id: data.senderId,
+        sender_id: data.senderId || null, // 如果没有发送者ID，设置为null
         type: data.type,
         title: data.title,
         is_read: !!data.isRead,
@@ -20,8 +41,10 @@ class MessageService extends Service {
         updated_at: new Date(),
       });
 
+      console.log('enter--message done:', message);
       return message;
     } catch (error) {
+      ctx.logger.error('创建消息失败', error);
       throw error;
     }
   }

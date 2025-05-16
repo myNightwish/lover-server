@@ -1,6 +1,6 @@
 // 用户消息表
-module.exports = (app) => {
-  const { INTEGER, STRING, TEXT, DATE, BOOLEAN } = app.Sequelize;
+module.exports = app => {
+  const { INTEGER, STRING, TEXT, BOOLEAN, DATE, ENUM } = app.Sequelize;
 
   const UserMessage = app.model.define('user_message', {
     id: {
@@ -11,48 +11,77 @@ module.exports = (app) => {
     user_id: {
       type: INTEGER,
       allowNull: false,
-      comment: '消息接收者ID',
+      references: {
+        model: 'users',  // 确保这里是正确的表名
+        key: 'id'
+      }
     },
     sender_id: {
       type: INTEGER,
-      allowNull: false,
-      comment: '消息发送者ID',
+      allowNull: true,  // 允许为空，系统消息可能没有发送者
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     },
     type: {
-      type: STRING(20),
+      type: STRING,
       allowNull: false,
-      comment: 'exchange_request(兑换请求)/system(系统消息)',
+      defaultValue: 'system'
     },
     title: {
-      type: STRING(100),
-      allowNull: false,
+      type: STRING,
+      allowNull: false
     },
-    content: TEXT,
+    content: {
+      type: TEXT,
+      allowNull: false
+    },
     is_read: {
       type: BOOLEAN,
-      defaultValue: false,
+      allowNull: false,
+      defaultValue: false
     },
     related_id: {
       type: INTEGER,
-      comment: '相关记录ID，如兑换记录ID',
+      allowNull: true
     },
-    created_at: DATE,
-    updated_at: DATE,
+    created_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW
+    },
+    updated_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.NOW
+    }
+  }, {
+    tableName: 'user_message',
+    timestamps: true,
+    underscored: true,
   });
 
-  UserMessage.associate = function () {
-    const { User } = app.model;
-
-    UserMessage.belongsTo(User, {
+  UserMessage.associate = function() {
+    // 关联用户（接收者）
+    UserMessage.belongsTo(app.model.User, {
       foreignKey: 'user_id',
-      as: 'user',
+      as: 'user'
     });
-
-    UserMessage.belongsTo(User, {
-      foreignKey: 'sender_id',
-      as: 'sender',
-    });
+    
+    // 关联发送者
+    // UserMessage.belongsTo(app.model.User, {
+    //   foreignKey: 'sender_id',
+    //   as: 'sender'
+    // });
   };
+  UserMessage.sync({ force: false, alter: true }) // 使用 alter: true 允许模型更新表结构
+  .then(() => {
+    console.log('UserMessage 表同步成功');
+  })
+  .catch((err) => {
+    console.error('同步 UserMessage 表失败:', err);
+  });
 
   return UserMessage;
 };

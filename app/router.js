@@ -12,12 +12,15 @@ module.exports = app => {
   router.post('/api/refresh-token', authCommon, controller.wxUser.refreshToken);
   router.post('/api/user/register', controller.user.register);
   router.post('/api/user/login', controller.user.login);
+  // 个人信息：
   router.get('/api/user/info', authCommon, controller.user.getUserInfo);
+  router.post('/api/wxUser/update', authCommon, controller.wxUser.updateWxUser);
+  router.get('/api/oss/upload-params', authCommon, controller.oss.getUploadParams); // oos存储
   // 伴侣绑定相关功能
   router.post('/api/partners/bind-request', authCommon, controller.partner.sendBindRequest); // 发送绑定请求
   router.post('/api/partners/unbind', authCommon, controller.partner.unbindPartner); // 解除绑定关系
   router.get('/api/partners/bind-status', authCommon, controller.partner.getBindStatus); // 获取当前绑定状态
-
+  
   router.post('/api/partners/bind-request/:requestId/accept', authCommon, controller.partner.acceptBindRequest); // 接受绑定请求
   router.post('/api/partners/bind-request/:requestId/reject', authCommon, controller.partner.rejectBindRequest); // 拒绝绑定请求
   router.get('/api/partners/bind-requests', authCommon, controller.partner.getBindRequests); // 获取绑定请求列表
@@ -32,26 +35,14 @@ module.exports = app => {
   router.post('/api/questionnaire/submit', authCommon, controller.questionnaire.submit);
   router.get('/api/questionnaire/detail', authCommon, controller.questionnaire.detail);
   router.get('/api/questionnaire/friends',authCommon, controller.questionnaire.friends);
-  router.post(
-    '/api/questionnaire/analyze',
-    authCommon,
-    controller.questionnaire.analyze
-  );
-  router.post(
-    '/api/questionnaire/addfriends',
-    authCommon,
-    controller.questionnaire.addFriends
-  );
+  router.post('/api/questionnaire/analyze', authCommon, controller.questionnaire.analyze);
+  router.post('/api/questionnaire/addfriends', authCommon, controller.questionnaire.addFriends);
   // 获取GPT分析结果
   router.get(
     '/api/questionnaire/gptanalysis',
     authCommon,
     controller.questionnaire.getGptAnalysis
   );
-
-  // oos存储
-  router.get('/api/oss/upload-params', authCommon, controller.oss.getUploadParams);
-  router.post('/api/wxUser/update', authCommon, controller.wxUser.updateWxUser);
 
   // 情绪记录相关路由
   router.post('/api/emotion/record', authCommon, controller.emotion.recordEmotion);
@@ -123,43 +114,21 @@ module.exports = app => {
   );
 
   // 花园数据
-  router.get(
-    '/api/growth/garden-data',
-    authCommon,
-    controller.garden.getGardenData
-  );
-
+  router.get('/api/growth/garden-data', authCommon, controller.garden.getGardenData);
   // 积分系统相关路由
   router.get('/api/points/overview', authCommon, controller.points.getOverview);
   router.post('/api/points/record', authCommon, controller.points.recordBehavior);
-  router.get(
-    '/api/points/exchange-items',
-    authCommon,
-    controller.points.getExchangeItems
-  );
-  router.post(
-    '/api/points/exchange-items',
-    authCommon,
-    controller.points.createExchangeItem
-  );
-  router.post(
-    '/api/points/exchange/complete/:id',
-    authCommon,
-    controller.points.completeExchange
-  );
+  router.get('/api/points/exchange-items', authCommon, controller.points.getExchangeItems);
+  router.post('/api/points/exchange-items', authCommon, controller.points.createExchangeItem);
+  router.post('/api/points/exchange/complete/:id', authCommon, controller.points.completeExchange);
   router.post('/api/points/exchange', authCommon, controller.points.exchange);
   router.get('/api/points/history', authCommon, controller.points.getHistory);
 
   // 消息系统相关路由
   router.get('/api/messages/all', authCommon, controller.message.getMessages);
-  router.put(
-    '/api/messages/read/:messageId',
-    authCommon,
-    controller.message.markAsRead
-  );
-  // 以上为微信小程序的老接口
+  router.put('/api/messages/read/:messageId', authCommon, controller.message.markAsRead);
 
-  // 问题相关路由
+  // categories 问答问题相关：
   router.get('/api/categories', authCommon, controller.question.getCategories);
   router.get('/api/categories/:id', authCommon, controller.question.getCategoryDetail);
   router.get('/api/categories/:id/topics', authCommon, controller.question.getTopicsByCategory);

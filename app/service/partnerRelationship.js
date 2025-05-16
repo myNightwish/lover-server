@@ -43,32 +43,6 @@ class PartnerRelationshipService extends Service {
     
     return user;
   }
-  
-  /**
-   * 创建伴侣关系
-   * @param {number} user1Id - 用户1 ID
-   * @param {number} user2Id - 用户2 ID
-   * @return {Object} 创建的伴侣关系
-   */
-  async createRelationship(user1Id, user2Id) {
-    const { ctx } = this;
-    
-    // 检查是否已存在关系
-    const existingRelationship = await this.getRelationshipByUserId(user1Id);
-    if (existingRelationship) {
-      throw new Error('用户已有伴侣关系');
-    }
-    
-    const relationship = await ctx.model.PartnerRelationship.create({
-      user1_id: user1Id,
-      user2_id: user2Id,
-      status: 'active',
-      created_at: new Date(),
-      updated_at: new Date()
-    });
-    
-    return relationship;
-  }
 }
 
 module.exports = PartnerRelationshipService;
