@@ -25,7 +25,7 @@ module.exports = app => {
       type: STRING,
       allowNull: true,
     },
-    avatarUrl: {
+    avatar: {
       type: STRING,
       allowNull: true,
     },
@@ -34,10 +34,6 @@ module.exports = app => {
       allowNull: true,
     },
     phone: {
-      type: STRING,
-      allowNull: true,
-    },
-    avatar: {
       type: STRING,
       allowNull: true,
     },

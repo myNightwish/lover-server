@@ -15,7 +15,7 @@ class UserProgressService extends Service {
     try {
       // 获取分类下的所有话题模板
       const topicTemplates = await ctx.service.template.getTopicsByCategoryId(categoryId);
-      console.log('🍎 topicTemplates：', topicTemplates);
+      console.log('🍎 topicTemplates：', topicTemplates, userId);
       
       // 如果没有用户ID，直接返回模板数据
       if (!userId) {
@@ -26,7 +26,6 @@ class UserProgressService extends Service {
           locked: topic.index > 2 // 前三个话题默认解锁
         }));
       }
-      console.log('8888')
       // 获取用户解锁的话题
       const unlockedTopics = await ctx.model.UserUnlockedTopic.findAll({
         where: { user_id: userId },
@@ -40,11 +39,12 @@ class UserProgressService extends Service {
         where: {
           creator_id: userId,
           topic_id: topicTemplates.map(t => t.id),
-          status: { $ne: 0 } // 非删除状态
         },
         attributes: ['id', 'topic_id', 'creator_id', 'partner_id', 'updated_at']
       });
       
+      console.log('8888', sessions)
+
       // 创建话题ID到会话的映射
       const topicSessionMap = new Map();
       sessions.forEach(session => {
@@ -378,9 +378,18 @@ class UserProgressService extends Service {
    * @param {number} sessionId - 会话ID
    * @param {number} userId - 用户ID
    * @param {Object} results - 结果数据
+   * @param {string} qaType - 问答类型
    * @return {Object} 保存结果
    */
-  async saveSessionResults(sessionId, userId, results, qaType) {
+   /**
+   * 保存会话结果
+   * @param {number} sessionId - 会话ID
+   * @param {number} userId - 用户ID
+   * @param {Object} results - 结果数据
+   * @param {string} qaType - 问答类型
+   * @return {Object} 保存结果
+   */
+   async saveSessionResults(sessionId, userId, results, qaType) {
     const { ctx, app } = this;
     
     try {
@@ -393,8 +402,7 @@ class UserProgressService extends Service {
         }
       );
       const session = sessions && sessions.length > 0 ? sessions[0] : null;
-      console.log('检查会话是否存在===', session);
-
+      
       if (!session) {
         return {
           success: false,
@@ -411,7 +419,7 @@ class UserProgressService extends Service {
       }
       
       // 检查是否已存在结果记录 - 使用原始 SQL
-      const [existingResults] = await app.model.query(
+      const existingResults = await app.model.query(
         'SELECT * FROM question_session_result WHERE session_id = ? AND user_id = ?',
         {
           type: app.model.QueryTypes.SELECT,
@@ -425,10 +433,10 @@ class UserProgressService extends Service {
       if (existingResults && existingResults.length > 0) {
         // 更新现有记录 - 使用原始 SQL
         await app.model.query(
-          'UPDATE question_session_result SET result_data = ?, updated_at = ? WHERE session_id = ? AND user_id = ? AND type = ? AND question_text = ?',
+          'UPDATE question_session_result SET result_data = ?, updated_at = ? WHERE session_id = ? AND user_id = ?',
           {
             type: app.model.QueryTypes.UPDATE,
-          replacements: [resultData, now, sessionId, userId, qaType],
+            replacements: [resultData, now, sessionId, userId]
           }
         );
       } else {
@@ -451,6 +459,9 @@ class UserProgressService extends Service {
         }
       );
       
+      // 更新用户的话题回答状态
+      await this.updateTopicAnsweredStatus(userId, session.topic_id);
+      
       return {
         success: true,
         message: '保存会话结果成功',
@@ -462,6 +473,54 @@ class UserProgressService extends Service {
         success: false,
         message: error.message || '保存会话结果失败'
       };
+    }
+  }
+  
+  /**
+   * 更新用户话题回答状态
+   * @param {number} userId - 用户ID
+   * @param {string|number} topicId - 话题ID
+   * @return {boolean} 更新结果
+   */
+  async updateTopicAnsweredStatus(userId, topicId) {
+    const { ctx, app } = this;
+    
+    try {
+      // 检查是否已有进度记录
+      const existingProgress = await app.model.query(
+        'SELECT * FROM user_topic_progress WHERE user_id = ? AND topic_id = ?',
+        {
+          type: app.model.QueryTypes.SELECT,
+          replacements: [userId, topicId]
+        }
+      );
+      
+      const now = new Date();
+      
+      if (existingProgress && existingProgress.length > 0) {
+        // 更新现有进度
+        await app.model.query(
+          'UPDATE user_topic_progress SET answered = 1, updated_at = ? WHERE user_id = ? AND topic_id = ?',
+          {
+            type: app.model.QueryTypes.UPDATE,
+            replacements: [now, userId, topicId]
+          }
+        );
+      } else {
+        // 创建新进度记录
+        await app.model.query(
+          'INSERT INTO user_topic_progress (user_id, topic_id, answered, completed, created_at, updated_at) VALUES (?, ?, 1, 0, ?, ?)',
+          {
+            type: app.model.QueryTypes.INSERT,
+            replacements: [userId, topicId, now, now]
+          }
+        );
+      }
+      
+      return true;
+    } catch (error) {
+      ctx.logger.error('更新用户话题回答状态失败', error);
+      return false;
     }
   }
 }

@@ -544,33 +544,31 @@ class PartnerService extends Service {
           where: { id: partnerId },
           transaction
         });
-        // 如果存在 PartnerRelationship 表，也更新该表
-        if (ctx.model.PartnerRelationship) {
-          // 更新双方的伴侣关系状态
-          await ctx.model.PartnerRelationship.update({
-            status: 0,
-            unbind_time: now
-          }, {
-            where: {
-              user_id: userId,
-              partner_id: partnerId,
-              status: 1
-            },
-            transaction
-          });
+        // 也更新PartnerRelationship 表
+        // 更新双方的伴侣关系状态
+        await ctx.model.PartnerRelationship.update({
+          status: 0,
+          unbind_time: now
+        }, {
+          where: {
+            user_id: userId,
+            partner_id: partnerId,
+            status: 1
+          },
+          transaction
+        });
           
-          await ctx.model.PartnerRelationship.update({
-            status: 0,
-            unbind_time: now
-          }, {
-            where: {
-              user_id: partnerId,
-              partner_id: userId,
-              status: 1
-            },
-            transaction
-          });
-        }
+        await ctx.model.PartnerRelationship.update({
+          status: 0,
+          unbind_time: now
+        }, {
+          where: {
+            user_id: partnerId,
+            partner_id: userId,
+            status: 1
+          },
+          transaction
+        });
         
         // 保存伴侣ID，用于后续创建消息
         const savedPartnerId = partnerId;
@@ -634,41 +632,35 @@ class PartnerService extends Service {
     
     try {
       // 更新双方的伴侣关系
-      await ctx.model.User.update({
-        partner_id: partnerId
-      }, {
+      await ctx.model.User.update({ partner_id: partnerId }, {
         where: { id: userId },
         transaction
       });
       
-      await ctx.model.User.update({
-        partner_id: userId
-      }, {
+      await ctx.model.User.update({ partner_id: userId }, {
         where: { id: partnerId },
         transaction
       });
       
-      // 如果需要保留 partner_relationship 表，同时更新该表
-      if (ctx.model.PartnerRelationship) {
-        const now = new Date();
-        // 创建双向伴侣关系记录
-        await ctx.model.PartnerRelationship.bulkCreate([
-          {
-            user_id: userId,
-            partner_id: partnerId,
-            bind_time: now,
-            status: 1,
-            created_at: now
-          },
-          {
-            user_id: partnerId,
-            partner_id: userId,
-            bind_time: now,
-            status: 1,
-            created_at: now
-          }
-        ], { transaction });
-      }
+      // 同时更新该表
+      const now = new Date();
+      // 创建双向伴侣关系记录
+      await ctx.model.PartnerRelationship.bulkCreate([
+        {
+          user_id: userId,
+          partner_id: partnerId,
+          bind_time: now,
+          status: 1,
+          created_at: now
+        },
+        {
+          user_id: partnerId,
+          partner_id: userId,
+          bind_time: now,
+          status: 1,
+          created_at: now
+        }
+      ], { transaction });
       
       // 获取伴侣信息
       const partnerInfo = await ctx.model.User.findByPk(partnerId, {
@@ -679,7 +671,6 @@ class PartnerService extends Service {
       await transaction.commit();
       
       // 可以在这里添加消息通知逻辑
-
       
       return {
         success: true,

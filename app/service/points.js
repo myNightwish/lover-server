@@ -153,7 +153,7 @@ class PointsService extends Service {
   /**
    * 发起兑换请求
    */
-  async exchange(userId, itemId, partnerInfo, userInfo) {
+  async exchange(userId, itemId, partnerId, userInfo) {
     const { ctx } = this;
 
     try {
@@ -172,7 +172,7 @@ class PointsService extends Service {
       // 创建兑换记录
       const exchangeRecord = await ctx.model.ExchangeRecord.create({
         user_id: userId,
-        target_id: partnerInfo.id,
+        target_id: partnerId,
         item_id: itemId,
         points_cost: item.points_cost,
         status: 'pending',
@@ -182,7 +182,7 @@ class PointsService extends Service {
 
       // 创建消息通知
       await ctx.service.message.createMessage({
-        userId: partnerInfo.id,
+        userId: partnerId,
         senderId: userId,
         type: 'exchange_request',
         title: '新的兑换请求',
@@ -319,7 +319,7 @@ class PointsService extends Service {
     try {
       const user = await ctx.model.User.findByPk(userId);
 
-      const items = await ctx.model.ExchangeItem.findAll({
+      let items = await ctx.model.ExchangeItem.findAll({
         where: {
           [ctx.model.Sequelize.Op.or]: [
             { is_system: true },
@@ -329,6 +329,24 @@ class PointsService extends Service {
         },
         order: [['points_cost', 'ASC']],
       });
+      
+      // 如果没有找到兑换项目，先初始化
+      if (!items || items.length === 0) {
+        console.log('未找到兑换项目，正在初始化...');
+        await ctx.service.initUserProgress.initializePoints(userId);
+        await ctx.service.initUserProgress.initializeUserData(userId);
+        // 初始化后重新查询
+        items = await ctx.model.ExchangeItem.findAll({
+          where: {
+            [ctx.model.Sequelize.Op.or]: [
+              { is_system: true },
+              { creator_id: userId },
+              user.partner_id ? { creator_id: user.partner_id } : null,
+            ].filter(Boolean),
+          },
+          order: [['points_cost', 'ASC']],
+        });
+      }
 
       return items;
     } catch (error) {
@@ -425,12 +443,12 @@ class PointsService extends Service {
           {
             model: ctx.model.User,
             as: 'user',
-            attributes: ['id', 'nickname', 'avatarUrl'],
+            attributes: ['id', 'nickname', 'avatar'],
           },
           {
             model: ctx.model.User,
             as: 'target',
-            attributes: ['id', 'nickname', 'avatarUrl'],
+            attributes: ['id', 'nickname', 'avatar'],
           },
         ],
       });

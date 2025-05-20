@@ -93,7 +93,7 @@ class FriendService extends Service {
       include: [{
         model: ctx.model.User,
         as: 'friend', // 必须和关联别名一致
-        attributes: [ 'id', 'nickname', 'avatarUrl' ], // 只获取需要的字段
+        attributes: [ 'id', 'nickname', 'avatar' ], // 只获取需要的字段
       }, {
         model: ctx.model.QuestionnaireScore, // 加入 QuestionnaireScore 关联
         as: 'questionnaireScores', // 关联别名
@@ -114,7 +114,7 @@ class FriendService extends Service {
     return friends.map(f => ({
       friendId: f.friend?.id || 0, // 从关联的 friend 对象获取 ID
       nickname: f.friend?.nickname || '未设置昵称', // 从关联的 friend 对象获取昵称
-      avatarUrl: f.friend?.avatarUrl || 'https://m.duitang.com/blogs/tag/?name=%E5%88%98%E4%BA%A6%E8%8F%B2%E5%B0%8F%E9%BE%99%E5%A5%B3', // 从关联的 friend 对象获取头像
+      avatar: f.friend?.avatar || 'https://m.duitang.com/blogs/tag/?name=%E5%88%98%E4%BA%A6%E8%8F%B2%E5%B0%8F%E9%BE%99%E5%A5%B3', // 从关联的 friend 对象获取头像
       createdAt: f.created_at,
       questionnaireScores: f.questionnaireScores && f.questionnaireScores.map(score => ({
         questionnaireId: score.questionnaire_id, // 获取问卷 ID

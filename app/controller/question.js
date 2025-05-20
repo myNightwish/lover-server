@@ -70,8 +70,7 @@ class QuestionController extends Controller {
     try {
       // 获取用户的话题进度
       const topics = await ctx.service.userProgress.getUserTopicProgress(userId, categoryId);
-     console.log('🍎 topics：', topics);
-
+      console.log('🍎 topics：', topics);
       
       // 分离普通话题和推荐话题
       const regularTopics = topics.filter(t => !t.recommended);

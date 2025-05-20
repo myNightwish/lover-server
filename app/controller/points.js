@@ -117,14 +117,21 @@ class PointsController extends Controller {
   async exchange() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
-    const partnerInfo = ctx.state.user.partnerInfo;
     const { itemId } = ctx.request.body;
+    const partnerId = ctx.state.user.partner_id;
+    if(!partnerId) {
+      ctx.body = {
+        success: false,
+        message: '您还未绑定伴侣',
+      };
+      return;
+    }
 
     try {
       const result = await ctx.service.points.exchange(
         userId,
         itemId,
-        partnerInfo,
+        partnerId,
         ctx.state.user
       );
 

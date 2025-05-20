@@ -65,7 +65,7 @@ class MessageService extends Service {
           {
             model: ctx.model.User,
             as: 'sender',
-            attributes: ['id', 'nickname', 'avatarUrl'],
+            attributes: ['id', 'nickname', 'avatar'],
           },
         ],
       });

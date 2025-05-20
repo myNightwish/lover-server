@@ -16,7 +16,7 @@ class RelationshipService extends Service {
         {
           model: app.model.User,
           as: 'PartnerOpenId',
-          attributes: ['openid', 'nickname', 'avatarUrl', 'id'], // 需要返回的伴侣字段
+          attributes: ['openid', 'nickname', 'avatar', 'id'], // 需要返回的伴侣字段
         },
       ],
     });
@@ -32,7 +32,7 @@ class RelationshipService extends Service {
         {
           model: app.model.User,
           as: 'UserOpenId',
-          attributes: ['openid', 'nickname', 'avatarUrl', 'id'], // 需要返回的绑定者字段
+          attributes: ['openid', 'nickname', 'avatar', 'id'], // 需要返回的绑定者字段
         },
       ],
     });

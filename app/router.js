@@ -9,7 +9,8 @@ module.exports = app => {
   //  需要鉴权的接口
   // 微信小程序登录
   router.post('/api/loginAndAutoSignUp', controller.wxUser.loginAndAutoSignUp);
-  router.post('/api/refresh-token', authCommon, controller.wxUser.refreshToken);
+  router.post('/api/refresh-token', authCommon, controller.user.refreshToken);
+  // 普通 web
   router.post('/api/user/register', controller.user.register);
   router.post('/api/user/login', controller.user.login);
   // 个人信息：
@@ -144,4 +145,7 @@ module.exports = app => {
   router.post('/api/sessions/:sessionId/answers', authCommon, controller.question.submitAnswer);
   router.get('/api/sessions/:sessionId/answers', authCommon, controller.question.getSessionAnswers);
   router.post('/api/sessions/:sessionId/results', authCommon, controller.question.saveSessionResults);
+  
+  // 在路由文件中添加注销路由
+  router.post('/api/user/logout', authCommon, controller.user.logout);
 };

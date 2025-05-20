@@ -11,7 +11,7 @@ class UserService extends Service {
    * @return {Object} 注册结果
    */
   async register(userData) {
-    const { ctx, app } = this;
+    const { ctx } = this;
     
     try {
       // 检查用户名是否已存在
@@ -26,7 +26,7 @@ class UserService extends Service {
       // 生成盐和密码哈希
       const salt = crypto.randomBytes(16).toString('hex');
       const hash = crypto.pbkdf2Sync(userData.password, salt, 1000, 64, 'sha512').toString('hex');
-      console.log('salt:', salt);
+
       // 创建用户
       const user = await ctx.model.User.create({
         username: userData.username,
@@ -162,12 +162,11 @@ class UserService extends Service {
     const payload = {
       id: user.id,
       username: user.username,
-      role: user.role
     };
     
     // 生成访问令牌 (短期有效)
     const accessToken = jwt.sign(payload, app.config.jwt.secret, {
-      expiresIn: app.config.jwt.expiresIn || '2h' // 默认2小时
+      expiresIn: app.config.jwt.expiresIn || '7h' // 默认7小时
     });
     
     // 生成刷新令牌 (长期有效)

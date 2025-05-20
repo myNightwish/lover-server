@@ -75,7 +75,7 @@ module.exports = app => {
     //   as: 'sender'
     // });
   };
-  UserMessage.sync({ force: false, alter: true }) // 使用 alter: true 允许模型更新表结构
+  UserMessage.sync({ force: true, alter: true }) // 使用 alter: true 允许模型更新表结构
   .then(() => {
     console.log('UserMessage 表同步成功');
   })

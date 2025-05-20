@@ -15,9 +15,11 @@ module.exports = async (ctx, next) => {
     openid: decoded.openid,
   };
   // 查询绑定关系，获取 partner_id
-  const relationship = await ctx.service.relationship.getPartnerInfo(
-    decoded.openid
-  );
+  // const relationship = await ctx.service.relationship.getPartnerInfo(
+  //   decoded.openid
+  // );
+  const relationship = await ctx.model.User.findByPk(user.partner_id);
+
 
   if (relationship) {
     ctx.state.user.partner_id = relationship.id;

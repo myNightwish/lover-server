@@ -27,12 +27,19 @@ class PartnerController extends Controller {
         where: { bind_code: bind_partner_code },
         attributes: ['id', 'nickname', 'avatar', 'partner_id']
       });
-      console.log('9999---->',targetUser)
       
       if (!targetUser) {
         ctx.body = {
           success: false,
           message: '未找到该绑定码对应的用户'
+        };
+        return;
+      }
+      // 检查是否自己绑定自己
+      if (targetUser.id === userId) {
+        ctx.body = {
+          success: false,
+          message: '不能与自己绑定'
         };
         return;
       }
@@ -55,15 +62,6 @@ class PartnerController extends Controller {
         ctx.body = {
           success: false,
           message: '您已经绑定了伴侣'
-        };
-        return;
-      }
-      
-      // 检查是否自己绑定自己
-      if (targetUser.id === userId) {
-        ctx.body = {
-          success: false,
-          message: '不能与自己绑定'
         };
         return;
       }
@@ -134,7 +132,7 @@ class PartnerController extends Controller {
   async unbindPartner() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
-    console.log('userId', userId)
+
     if(!userId) {
       ctx.body = {
         success: false,
