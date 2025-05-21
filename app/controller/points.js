@@ -155,7 +155,7 @@ class PointsController extends Controller {
     const { ctx } = this;
     const userId = ctx.state.user.id;
     const { page = 1, pageSize = 20 } = ctx.query;
-    const data = ctx.service.points.getHistory(userId, page, pageSize);
+    const data = await ctx.service.points.getHistory(userId, page, pageSize);
 
     try {
       ctx.body = {

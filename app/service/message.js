@@ -64,7 +64,7 @@ class MessageService extends Service {
         include: [
           {
             model: ctx.model.User,
-            as: 'sender',
+            as: 'user',
             attributes: ['id', 'nickname', 'avatar'],
           },
         ],

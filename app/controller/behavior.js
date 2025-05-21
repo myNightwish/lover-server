@@ -66,7 +66,7 @@ class BehaviorController extends Controller {
     const { ctx } = this;
 
     try {
-      const categories = ctx.service.behavior.getBehaviorCategories();
+      const categories = await ctx.service.behavior.getBehaviorCategories();
       ctx.body = {
         success: true,
         data: categories,
