@@ -68,14 +68,8 @@ module.exports = app => {
       foreignKey: 'user_id',
       as: 'user'
     });
-    
-    // 关联发送者
-    // UserMessage.belongsTo(app.model.User, {
-    //   foreignKey: 'sender_id',
-    //   as: 'sender'
-    // });
   };
-  UserMessage.sync({ force: true, alter: true }) // 使用 alter: true 允许模型更新表结构
+  UserMessage.sync({ force: false, alter: true }) // 使用 alter: true 允许模型更新表结构
   .then(() => {
     console.log('UserMessage 表同步成功');
   })

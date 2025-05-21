@@ -59,8 +59,6 @@ class MessageService extends Service {
       const messages = await ctx.model.UserMessage.findAndCountAll({
         where: { user_id: userId },
         order: [['created_at', 'DESC']],
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
         include: [
           {
             model: ctx.model.User,

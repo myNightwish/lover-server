@@ -82,7 +82,6 @@ module.exports = options => {
         user.partner_id = null;
         user.partnerInfo = null;
       }
-      console.log('sj---->', user.bind_code)
       // 确保用户有绑定码
       if (!user.bind_code) {
         // 如果没有绑定码，可以在这里生成并保存
