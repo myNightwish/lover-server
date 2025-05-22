@@ -116,14 +116,14 @@ module.exports = app => {
 
   // 花园数据
   router.get('/api/growth/garden-data', authCommon, controller.garden.getGardenData);
-  // 积分系统相关路由
-  router.get('/api/points/overview', authCommon, controller.points.getOverview);
+  // 积分相关
+  router.get('/api/points/overview', authCommon, controller.points.getOverview); // 积分明细
   router.post('/api/points/record', authCommon, controller.points.recordBehavior);
   router.get('/api/points/exchange-items', authCommon, controller.points.getExchangeItems);
   router.post('/api/points/exchange-items', authCommon, controller.points.createExchangeItem);
   router.post('/api/points/exchange/complete/:id', authCommon, controller.points.completeExchange);
   router.post('/api/points/exchange', authCommon, controller.points.exchange);
-  router.get('/api/points/history', authCommon, controller.points.getHistory);
+  router.get('/api/points/checkin/status', authCommon, controller.points.getCheckinStatus);
 
   // 消息系统相关路由
   router.get('/api/messages/all', authCommon, controller.message.getMessages);

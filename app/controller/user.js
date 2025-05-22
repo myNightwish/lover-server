@@ -1,7 +1,7 @@
 'use strict';
 
 const Controller = require('egg').Controller;
-
+const { Op } = require('sequelize');
 class UserController extends Controller {
   /**
    * 用户注册
@@ -432,7 +432,7 @@ class UserController extends Controller {
       let partnerInfo = null;
       if (user.partner_id) {
         const partner = await ctx.model.User.findByPk(user.partner_id, {
-          attributes: ['id', 'nickname', 'avatar'],
+          attributes: ['id', 'nickname', 'avatar','bind_code'],
         });
         
         if (partner) {
@@ -440,6 +440,7 @@ class UserController extends Controller {
             id: partner.id,
             nickname: partner.nickname,
             avatar: partner.avatar,
+            bindCode: partner.bind_code,
           };
         }
       }
@@ -465,8 +466,6 @@ class UserController extends Controller {
       };
     }
   }
-
-
 }
 
 module.exports = UserController;

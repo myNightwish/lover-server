@@ -151,13 +151,12 @@ class PointsController extends Controller {
   /**
    * 获取积分历史记录
    */
-  async getHistory() {
+  async getCheckinStatus() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
-    const { page = 1, pageSize = 20 } = ctx.query;
-    const data = await ctx.service.points.getHistory(userId, page, pageSize);
-
+    console.log('8888')
     try {
+      const data = await ctx.service.points.getCheckinStatus(userId);
       ctx.body = {
         success: true,
         data

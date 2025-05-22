@@ -1,7 +1,7 @@
 'use strict';
 
 const Service = require('egg').Service;
-
+const { Op } = require('sequelize');
 class PartnerService extends Service {
   /**
    * 创建绑定关系
@@ -480,7 +480,16 @@ class PartnerService extends Service {
           }
         };
       }
-      
+      const relationship = await ctx.model.PartnerRelationship.findOne({
+        where: {
+          [Op.or]: [
+            { user_id: userId, partner_id: user.partner_id },
+            { user_id: user.partner_id, partner_id: userId }
+          ]
+        },
+        attributes: ['bind_time', 'created_at']
+      });
+      console.log('🍊--', relationship)
       return {
         success: true,
         data: {
@@ -489,7 +498,9 @@ class PartnerService extends Service {
             id: partner.id,
             nickname: partner.nickname,
             avatar: partner.avatar,
-            bindCode: partner.bind_code
+            bindCode: partner.bind_code,
+            bindTime: relationship.bind_time,
+            relationship
           }
         }
       };

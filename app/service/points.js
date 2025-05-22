@@ -129,6 +129,26 @@ class PointsService extends Service {
             },
             { transaction }
           );
+        } else if (data.type === 'signUp') {
+           // 增加 target 积分
+           await targetBalance.increment('balance', {
+            by: data.points,
+            transaction,
+          });
+          // 对 user 记录行为：praiseOther（扣除积分）
+          await ctx.model.PointsRecord.create(
+            {
+              user_id: userId,
+              target_id: 0, // 系统赠送
+              type: 'signUp',
+              points: data.points,
+              description: userDescription,
+              category: 'signUp',
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+            { transaction }
+          );
         }
 
         // 重新加载余额
@@ -424,52 +444,40 @@ class PointsService extends Service {
       throw error;
     }
   }
-
-  async getHistory(userId, page, pageSize) {
+    /**
+   * 获取用户签到状态
+   * @param {number} userId - 用户ID
+   * @return {Object} 签到状态信息
+   */
+  async getCheckinStatus(userId) {
     const { ctx } = this;
-
-    try {
-      const records = await ctx.model.PointsRecord.findAndCountAll({
-        where: {
-          [ctx.model.Sequelize.Op.or]: [
-            { user_id: userId },
-            { target_id: userId },
-          ],
-        },
-        order: [['created_at', 'DESC']],
-        limit: parseInt(pageSize),
-        offset: (page - 1) * pageSize,
-        include: [
-          {
-            model: ctx.model.User,
-            as: 'user',
-            attributes: ['id', 'nickname', 'avatar'],
-          },
-          {
-            model: ctx.model.User,
-            as: 'target',
-            attributes: ['id', 'nickname', 'avatar'],
-          },
-        ],
-      });
-
-      return {
-        records: records.rows.map((record) => ({
-          id: record.id,
-          type: record.type,
-          points: record.points,
-          description: record.description,
-          category: record.category,
-          isIncome: record.target_id === userId,
-          createdAt: record.created_at,
-          user: record.user,
-          target: record.target,
-        })),
-        total: records.count,
-        page: parseInt(page),
-        pageSize: parseInt(pageSize),
-      };
-    } catch (error) {}
+    // 获取今天的开始时间和结束时间
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+  
+    // 查询今天的签到记录
+    const existingCheckin = await ctx.model.PointsRecord.findOne({
+      where: {
+        user_id: userId,
+        type: 'signUp',
+        created_at: {
+          [ctx.model.Sequelize.Op.gte]: today,
+          [ctx.model.Sequelize.Op.lt]: tomorrow
+        }
+      }
+    });
+    console.log('v---', existingCheckin)
+  
+    // 获取用户积分余额
+    const balance = await this.getOrCreateBalance(userId);
+    
+    return {
+      hasCheckedIn: !!existingCheckin,
+      totalPoints: balance.balance || 0
+    };
   }
 }
 
