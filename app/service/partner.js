@@ -499,7 +499,7 @@ class PartnerService extends Service {
             nickname: partner.nickname,
             avatar: partner.avatar,
             bindCode: partner.bind_code,
-            bindTime: relationship.bind_time,
+            bindTime: new Date(relationship.bind_time).getTime(),
             relationship
           }
         }
