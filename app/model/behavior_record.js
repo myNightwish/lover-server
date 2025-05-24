@@ -12,7 +12,7 @@ module.exports = app => {
       type: INTEGER,
       allowNull: false,
       references: {
-        model: 'wx_users',
+        model: 'users',
         key: 'id',
       },
     },
@@ -20,7 +20,7 @@ module.exports = app => {
       type: INTEGER,
       allowNull: false,
       references: {
-        model: 'wx_users',
+        model: 'users',
         key: 'id',
       },
     },
@@ -49,14 +49,14 @@ module.exports = app => {
   });
 
   BehaviorRecord.associate = function() {
-    const { WxUser } = app.model;
+    const { User } = app.model;
 
-    BehaviorRecord.belongsTo(WxUser, {
+    BehaviorRecord.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user',
     });
 
-    BehaviorRecord.belongsTo(WxUser, {
+    BehaviorRecord.belongsTo(User, {
       foreignKey: 'partner_id',
       as: 'partner',
     });

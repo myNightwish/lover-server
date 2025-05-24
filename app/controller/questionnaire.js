@@ -3,7 +3,7 @@ class QuestionnaireController extends Controller {
   // 初始化用户问卷
   async init() {
     const { ctx } = this;
-    const userId = ctx.user.id; // 假设通过中间件获取已登录用户ID
+    const userId = ctx.state.user.id; // 假设通过中间件获取已登录用户ID
     const questionnaires = await ctx.service.questionnaire.initUserQuestionnaires(userId);
 
     ctx.body = {
@@ -15,11 +15,9 @@ class QuestionnaireController extends Controller {
   // 获取用户问卷列表
   async list() {
     const { ctx } = this;
-    const userId = ctx.user.id;
-    // 用来初始化：
-    // const questionnaires = await ctx.service.questionnaire.initUserQuestionnaires(userId);
-
-    const questionnaires = await ctx.service.questionnaire.getUserQuestionnaires(userId);
+    const user = ctx.state.user;
+    const questionnaires =
+      await ctx.service.questionnaire.getUserQuestionnaires(user);
 
     ctx.body = {
       success: true,
@@ -30,15 +28,14 @@ class QuestionnaireController extends Controller {
   // 提交问卷
   async submit() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { questionnaireId, answers, shareId } = ctx.request.body;
 
     try {
-      const result = await ctx.service.questionnaire.submitWithShare(
+      const result = await ctx.service.questionnaire.submitQuestionnaire(
         userId,
-        answers,
-        shareId,
-        questionnaireId
+        questionnaireId,
+        answers
       );
 
       ctx.body = {
@@ -57,11 +54,10 @@ class QuestionnaireController extends Controller {
   // 获取问卷详情
   async detail() {
     const { ctx } = this;
-    const userId = ctx.user.id;
     // 获取查询参数
     const { questionnaireId } = ctx.query;
 
-    const detail = await ctx.service.questionnaire.getQuestionnaireDetail(userId, questionnaireId);
+    const detail = await ctx.service.questionnaire.getQuestionnaireDetail(questionnaireId);
 
     ctx.body = {
       success: true,
@@ -72,7 +68,7 @@ class QuestionnaireController extends Controller {
   // 获取好友列表
   async friends() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const friends = await ctx.service.friends.getFriendList(userId);
@@ -91,7 +87,7 @@ class QuestionnaireController extends Controller {
   }
   async analyze() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { questionnaireId } = ctx.request.body;
     const userQuestionnaire = await ctx.model.UserQuestionnaire.findOne({
       where: {
@@ -113,7 +109,7 @@ class QuestionnaireController extends Controller {
   // 提交问卷
   async addFriends() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { shareId } = ctx.request.body;
 
     if (userId === shareId) {
@@ -147,7 +143,7 @@ class QuestionnaireController extends Controller {
    */
   async getGptAnalysis() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
     const { questionnaireId, analyzeId } = ctx.query;
 
     try {

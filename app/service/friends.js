@@ -11,7 +11,10 @@ class FriendService extends Service {
     const { ctx } = this;
 
     // 验证用户是否存在
-    await this.validateUsers(userId, friendId);
+    const isvalidateUsers = await this.validateUsers(userId, friendId);
+    if (!isvalidateUsers.success) {
+      return isvalidateUsers.msg;
+    }
 
     // 检查是否已经是好友
     const existingFriendship = await ctx.model.UserFriend.findOne({
@@ -22,7 +25,7 @@ class FriendService extends Service {
     });
 
     if (existingFriendship) {
-      return { message: '已经是好友关系' };
+      return { message: '已是好友关系' };
     }
 
     // 创建双向好友关系
@@ -41,7 +44,7 @@ class FriendService extends Service {
       }, { transaction }),
     ]);
 
-    return { message: '好友关系建立成功' };
+    return { message: '伴侣绑定成功' };
   }
 
   /**
@@ -52,16 +55,28 @@ class FriendService extends Service {
   async validateUsers(userId, friendId) {
     const { ctx } = this;
     const [ user, friend ] = await Promise.all([
-      ctx.model.WxUser.findByPk(userId),
-      ctx.model.WxUser.findByPk(friendId),
+      ctx.model.User.findByPk(userId),
+      ctx.model.User.findByPk(friendId),
     ]);
 
-    if (!user || !friend) {
-      throw new Error('用户不存在');
+    if (!user) {
+      return {
+        success: false,
+        msg: '用户不存在'
+      }
+    }
+    if (!friend) {
+      return {
+        success: false,
+        msg: '伴侣记录未找到',
+      };
     }
 
     if (userId === friendId) {
-      throw new Error('不能添加自己为好友');
+       return {
+         success: false,
+         msg: '不能添加自己为好友',
+       };
     }
   }
 
@@ -76,9 +91,9 @@ class FriendService extends Service {
     const friends = await ctx.model.UserFriend.findAll({
       where: { user_id: userId },
       include: [{
-        model: ctx.model.WxUser,
+        model: ctx.model.User,
         as: 'friend', // 必须和关联别名一致
-        attributes: [ 'id', 'nickName', 'avatarUrl' ], // 只获取需要的字段
+        attributes: [ 'id', 'nickname', 'avatar' ], // 只获取需要的字段
       }, {
         model: ctx.model.QuestionnaireScore, // 加入 QuestionnaireScore 关联
         as: 'questionnaireScores', // 关联别名
@@ -98,8 +113,8 @@ class FriendService extends Service {
     // 格式化返回结果
     return friends.map(f => ({
       friendId: f.friend?.id || 0, // 从关联的 friend 对象获取 ID
-      nickName: f.friend?.nickName || '未设置昵称', // 从关联的 friend 对象获取昵称
-      avatarUrl: f.friend?.avatarUrl || 'https://m.duitang.com/blogs/tag/?name=%E5%88%98%E4%BA%A6%E8%8F%B2%E5%B0%8F%E9%BE%99%E5%A5%B3', // 从关联的 friend 对象获取头像
+      nickname: f.friend?.nickname || '未设置昵称', // 从关联的 friend 对象获取昵称
+      avatar: f.friend?.avatar || 'https://m.duitang.com/blogs/tag/?name=%E5%88%98%E4%BA%A6%E8%8F%B2%E5%B0%8F%E9%BE%99%E5%A5%B3', // 从关联的 friend 对象获取头像
       createdAt: f.created_at,
       questionnaireScores: f.questionnaireScores && f.questionnaireScores.map(score => ({
         questionnaireId: score.questionnaire_id, // 获取问卷 ID

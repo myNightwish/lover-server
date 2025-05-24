@@ -15,6 +15,7 @@
     "dotenv": "^16.4.7",
     "egg": "^3.17.5",
     "egg-cors": "^3.0.1",
+    "egg-jwt": "^3.1.7",
     "egg-mysql": "^4.0.0",
     "egg-redis": "^2.6.0",
     "egg-scripts": "2",
@@ -24,8 +25,9 @@
     "ioredis": "^5.3.2",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.5",
-    "openai": "^4.11.0"
+    "mysql2": "^3.14.0",
+    "openai": "^4.11.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "bcrypt": "^5.1.1",
@@ -46,7 +48,12 @@
     "test:local": "egg-bin test",
     "cov": "egg-bin cov",
     "lint": "eslint .",
-    "ci": "npm run lint && npm run cov"
+    "ci": "npm run lint && npm run cov",
+    "db:migrate": "npx sequelize db:migrate",
+    "db:migrate:undo": "npx sequelize db:migrate:undo",
+    "db:seed": "npx sequelize db:seed:all",
+    "db:seed:undo": "npx sequelize db:seed:undo:all",
+    "db:init": "npm run db:migrate && npm run db:seed"
   },
   "repository": {
     "type": "git",

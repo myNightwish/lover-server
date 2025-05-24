@@ -14,8 +14,12 @@ module.exports = appInfo => {
 
   // use for cookie sign key, should change to your own and keep security
   config.keys = appInfo.name + '_1732811219584_6592';
+  // JWT配置
   config.jwt = {
-    secret: '1234', // 替换为实际的密钥
+    secret: 'pipilovewater', // 访问令牌密钥
+    refreshSecret: 'pipijiang', // 刷新令牌密钥
+    expiresIn: '3h', // 访问令牌过期时间
+    refreshExpiresIn: '7d' // 刷新令牌过期时间
   };
   config.rabbitmq = {
     url: process.env.RABBITMQ_URL,
@@ -35,6 +39,11 @@ module.exports = appInfo => {
     apiKey: process.env.OPENAI_API_KEY,
     maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS, 10),
     baseURL: process.env.AI_BASE_URL,
+  };
+   // 静态文件配置
+   config.static = {
+    prefix: '/public/',
+    dir: path.join(appInfo.baseDir, 'app/public'),
   };
   // add your middleware config here
   config.middleware = [];
@@ -56,13 +65,22 @@ module.exports = appInfo => {
   };
 
   config.sequelize = {
-    dialect: 'mysql', // 数据库类型
-    host: 'localhost', // 数据库地址
-    port: 3306, // 数据库端口
-    database: 'relationGrowth', // 数据库名
-    username: 'root', // 用户名
-    password: '', // 密码
-    timezone: '+08:00', // 设置时区
+    dialect: 'sqlite', // 默认使用 sqlite
+    storage:
+      process.env.NODE_ENV === 'production'
+        ? 'database_prod.sqlite'
+        : 'database_dev.sqlite', // 根据环境选择存储文件
+    // old类型：
+    // dialect: 'mysql', // 数据库类型
+    // 对于 MySQL 等数据库，使用环境变量设置数据库连接参数：
+    host: process.env.NODE_ENV === 'production' ? '43.140.193.60' : '127.0.0.1', // 根据环境选择数据库主机
+    port: 3306, // 如果是 MySQL 数据库，使用端口 3306
+    database:
+      process.env.NODE_ENV === 'production'
+        ? 'relationGrowth_prod'
+        : 'relationGrowth_dev', // 根据环境选择数据库名称
+    username: 'root', // 默认使用 root 用户
+    password: '', // 默认密码
     define: {
       freezeTableName: true, // 是否冻结表名
       timestamps: false, // 是否自动添加 `createdAt` 和 `updatedAt`

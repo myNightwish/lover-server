@@ -29,16 +29,23 @@ module.exports = app => {
   });
 
   MemoryPuzzle.associate = function() {
-    const { WxUser } = app.model;
+    const { User } = app.model;
 
-    MemoryPuzzle.belongsTo(WxUser, {
+    MemoryPuzzle.belongsTo(User, {
       foreignKey: 'user_id',
       as: 'user',
     });
 
-    MemoryPuzzle.belongsTo(WxUser, {
+    MemoryPuzzle.belongsTo(User, {
       foreignKey: 'partner_id',
       as: 'partner',
+    });
+    // 添加自关联
+    MemoryPuzzle.hasOne(MemoryPuzzle, {
+      foreignKey: 'user_id',
+      sourceKey: 'partner_id',
+      as: 'partnerPuzzle',
+      constraints: false,
     });
   };
   MemoryPuzzle.sync({ force: false }) // force: false 确保不会删除表

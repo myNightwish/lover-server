@@ -8,7 +8,6 @@ class EmotionService extends Service {
    */
   async recordEmotion(userId, emotionData) {
     const { ctx } = this;
-    console.log('entrer--->', emotionData);
 
     try {
       const record = await ctx.model.EmotionRecord.create({
@@ -16,6 +15,8 @@ class EmotionService extends Service {
         emotion_type: emotionData.type,
         intensity: emotionData.intensity,
         trigger: emotionData.trigger,
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
       // 分析情绪趋势
@@ -62,16 +63,17 @@ class EmotionService extends Service {
     records.forEach(record => {
       // 统计情绪类型分布
       emotionCounts[record.emotion_type] = (emotionCounts[record.emotion_type] || 0) + 1;
-
       // 记录情绪强度变化
       intensityTrend.push({
         date: record.created_at,
         intensity: record.intensity,
+        trigger: record.trigger,
+        emotion_type: record.emotion_type,
       });
     });
 
     return {
-      distribution: emotionCounts,
+      // distribution: emotionCounts,
       trend: intensityTrend,
     };
   }

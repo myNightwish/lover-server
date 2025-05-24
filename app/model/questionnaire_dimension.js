@@ -18,6 +18,11 @@ module.exports = app => {
       as: 'questions',
     });
   };
+  QuestionnaireDimension.sync({ force: false }) // force: false 确保不会删除表
+    .then(() => {})
+    .catch((err) => {
+      console.error('同步 QuestionnaireDimension 表失败:', err);
+    });
 
   return QuestionnaireDimension;
 };

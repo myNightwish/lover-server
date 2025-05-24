@@ -12,19 +12,29 @@ class BehaviorService extends Service {
 
     try {
       // 开启事务
-      const result = await ctx.model.transaction(async transaction => {
+      const result = await ctx.model.transaction(async (transaction) => {
         // 创建行为记录
-        const record = await ctx.model.BehaviorRecord.create({
-          user_id: userId,
-          partner_id: partnerId,
-          type: behaviorData.type,
-          points: behaviorData.points,
-          category: behaviorData.category,
-          description: behaviorData.description,
-        }, { transaction });
+        const record = await ctx.model.BehaviorRecord.create(
+          {
+            user_id: userId,
+            partner_id: partnerId,
+            type: behaviorData.type,
+            points: behaviorData.points,
+            category: behaviorData.category,
+            description: behaviorData.description,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+          { transaction }
+        );
 
         // 更新积分
-        await this.updateBehaviorScore(partnerId, behaviorData.type, behaviorData.points, transaction);
+        await this.updateBehaviorScore(
+          partnerId,
+          behaviorData.type,
+          behaviorData.points,
+          transaction
+        );
 
         return record;
       });
@@ -58,18 +68,24 @@ class BehaviorService extends Service {
     });
 
     if (!score) {
-      score = await ctx.model.BehaviorScore.create({
-        user_id: userId,
-        total_score: 0,
-        positive_count: 0,
-        negative_count: 0,
-      }, { transaction });
+      score = await ctx.model.BehaviorScore.create(
+        {
+          user_id: userId,
+          total_score: 0,
+          positive_count: 0,
+          negative_count: 0,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        { transaction }
+      );
     }
 
     const updates = {
       total_score: score.total_score + points,
       [type === 'positive' ? 'positive_count' : 'negative_count']:
         score[type === 'positive' ? 'positive_count' : 'negative_count'] + 1,
+      updated_at: new Date()
     };
 
     await score.update(updates, { transaction });
@@ -140,23 +156,17 @@ class BehaviorService extends Service {
    * @param records
    */
   analyzeRecentTrend(records) {
-    const dailyPoints = {};
-    records.forEach(record => {
+    const dailyTrendList = records.map(record => {
       const date = this.formatDate(record.created_at);
-      // const date = this.ctx.helper.formatDate(record.created_at);
-
-      if (!dailyPoints[date]) {
-        dailyPoints[date] = 0;
-      }
-      dailyPoints[date] += record.points;
+      return {
+        date: record.created_at,
+        type: record.type,
+        description: record.description,
+        points: record.points,
+        category: record.category,
+      };
     });
-
-    return Object.entries(dailyPoints)
-      .sort(([ dateA ], [ dateB ]) => new Date(dateA) - new Date(dateB))
-      .map(([ date, points ]) => ({
-        date,
-        points,
-      }));
+    return dailyTrendList.sort((a, b) => new Date(a.date) - new Date(b.date));
   }
 
   /**

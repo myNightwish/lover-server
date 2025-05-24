@@ -8,7 +8,22 @@ module.exports = app => {
     dimension_id: INTEGER,
     question_text: TEXT,
     question_type: STRING(20), // 'single_choice', 'multiple_choice', 'text', 'scale'
-    options: TEXT, // JSON string for choices
+    options: {
+      type: TEXT,
+      get() {
+        const rawValue = this.getDataValue('options');
+        try {
+          return rawValue ? JSON.parse(rawValue) : [];
+        } catch (error) {
+          console.error('JSON 解析失败：', error);
+          return []; // 解析失败时返回默认值
+        }
+      },
+      set(value) {
+        this.setDataValue('options', JSON.stringify(value));
+      },
+    }, // JSON string for choices
+
     order: INTEGER,
     created_at: {
       type: DATE,
@@ -37,6 +52,7 @@ module.exports = app => {
     // 与用户答案的一对多关系
     app.model.QuestionTemplate.hasMany(app.model.UserAnswer, {
       foreignKey: 'question_id',
+       as: 'userAnswers', // 确保别名与查询中一致
     });
   };
   QuestionTemplate.sync({ force: false }) // force: false 确保不会删除表

@@ -37,6 +37,7 @@ class QueueService {
   }
 
   async startConsumer(callback) {
+    console.log('enter---startConsumer', callback);
     try {
       const channel = await this.getChannel();
       await channel.prefetch(this.ctx.app.config.openai.maxConcurrentRequests);

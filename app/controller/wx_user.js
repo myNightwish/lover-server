@@ -7,14 +7,16 @@ class WxUserController extends Controller {
     const { ctx } = this;
     const { code } = ctx.request.body;
     try {
-      // 调用 service 层方法处理
       const result = await ctx.service.wxUser.loginAndAutoSignUp(code);
 
       // 返回结果给前端
       ctx.body = {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-        user: result.user,
+        user: {
+          ...result.user,
+          partnerInfo: result.partnerInfo,
+        },
       };
     } catch (error) {
       ctx.status = 400;
@@ -56,7 +58,7 @@ class WxUserController extends Controller {
   }
   async updateWxUser() {
     const { ctx, service } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     const { ...updateData } = ctx.request.body;
     // 更新数据库中的用户信息
@@ -75,13 +77,39 @@ class WxUserController extends Controller {
     }
   }
   async getUserInfo() {
-    const { ctx } = this;
-    const userId = ctx.user.id;
-    // 获取用户信息
-    const userInfo = await this.app.model.WxUser.findOne({ where: { id: userId } });
+    const { ctx, service } = this;
+    const userId = ctx.state.user.id;
+    const openid = ctx.state.user.openid;
+
+    // 获取用户信息，同时携带绑定的伴侣信息
+    const userInfo = await this.app.model.User.findOne({
+      where: { id: userId },
+      attributes: [ 'openid', 'nickname', 'avatar' ], // 只查询需要的字段
+      include: [
+        {
+          model: this.app.model.Relationship,
+          as: 'UserRelationships', // 用户发起的绑定关系
+          attributes: [ 'partnerOpenid' ], // 只获取 partnerOpenid
+          include: [
+            {
+              model: this.app.model.User,
+              as: 'PartnerOpenId', // 被绑定的伴侣
+              attributes: [ 'openid', 'nickname', 'avatar', ], // 伴侣字段
+            },
+          ],
+        },
+      ],
+    });
+    const partnerInfo = await service.relationship.getPartnerInfo(openid);
     ctx.body = {
       success: true,
-      data: userInfo,
+      data: {
+        openid: userInfo?.openid || null,
+        nickname: userInfo?.nickname || null,
+        avatar: userInfo?.avatar || null,
+        bindCode: userInfo?.bind_code || null,
+        partnerInfo: partnerInfo || '', // 如果有绑定关系，返回伴侣信息
+      },
     };
   }
 }

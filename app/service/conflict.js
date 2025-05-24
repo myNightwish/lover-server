@@ -6,18 +6,20 @@ class ConflictService extends Service {
    * @param userId
    * @param conflictData
    */
-  async recordConflict(userId, conflictData) {
+  async recordConflict(userId, partnerId, conflictData) {
     const { ctx } = this;
 
     try {
       const record = await ctx.model.ConflictRecord.create({
         user_id: userId,
-        partner_id: conflictData.partnerId,
+        partner_id: partnerId,
         trigger: conflictData.trigger,
         emotion_state: conflictData.emotionState,
         resolution: conflictData.resolution,
         reflection: conflictData.reflection,
         tags: conflictData.tags,
+        created_at: new Date(),
+        updated_at: new Date(),
       });
       // 生成冲突分析报告
       const analysis = await this.generateConflictAnalysis(record);
@@ -44,7 +46,6 @@ class ConflictService extends Service {
   async generateConflictAnalysis(record) {
     const { ctx } = this;
 
-    console.log('record.partner_id', record.partner_id);
     // 获取历史冲突记录
     const historicalRecords = await ctx.model.ConflictRecord.findAll({
       where: {

@@ -3,7 +3,7 @@ const Controller = require('egg').Controller;
 class GrowthController extends Controller {
   async getArchive() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const archive = await ctx.service.growth.getGrowthArchive(userId);
@@ -22,7 +22,7 @@ class GrowthController extends Controller {
 
   async getMilestones() {
     const { ctx } = this;
-    const userId = ctx.user.id;
+    const userId = ctx.state.user.id;
 
     try {
       const milestones = await ctx.service.growth.getUserMilestones(userId);

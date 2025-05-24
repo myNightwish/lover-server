@@ -12,7 +12,7 @@ module.exports = app => {
       type: INTEGER,
       allowNull: false,
       references: {
-        model: 'wx_users',
+        model: 'users',
         key: 'id',
       },
     },
@@ -35,7 +35,7 @@ module.exports = app => {
   });
 
   EmotionRecord.associate = function() {
-    EmotionRecord.belongsTo(app.model.WxUser, {
+    EmotionRecord.belongsTo(app.model.User, {
       foreignKey: 'user_id',
       as: 'user',
     });

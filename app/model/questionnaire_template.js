@@ -6,7 +6,8 @@ module.exports = app => {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },
     title: STRING(100),
     description: TEXT,
-    status: INTEGER, // 0: 禁用, 1: 启用
+    status: INTEGER, // 0: 禁用, 1: 启用,
+    type_id: STRING,
     created_at: DATE,
     updated_at: DATE,
   });
@@ -21,6 +22,11 @@ module.exports = app => {
     // 与用户问卷的一对多关系
     app.model.QuestionnaireTemplate.hasMany(app.model.UserQuestionnaire, {
       foreignKey: 'template_id',
+    });
+    // 定义属于问卷类型
+    app.model.QuestionnaireTemplate.belongsTo(app.model.QuestionnaireType, {
+      foreignKey: 'type_id',
+      as: 'type', // 别名
     });
   };
   QuestionnaireTemplate.sync({ force: false }) // force: false 确保不会删除表

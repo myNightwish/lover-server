@@ -12,7 +12,7 @@ module.exports = app => {
       type: INTEGER,
       allowNull: false,
       references: {
-        model: 'wx_users',
+        model: 'users',
         key: 'id',
       },
     },
@@ -36,7 +36,7 @@ module.exports = app => {
   });
 
   BehaviorScore.associate = function() {
-    BehaviorScore.belongsTo(app.model.WxUser, {
+    BehaviorScore.belongsTo(app.model.User, {
       foreignKey: 'user_id',
       as: 'user',
     });

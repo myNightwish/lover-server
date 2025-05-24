@@ -3,11 +3,17 @@ const Controller = require('egg').Controller;
 class MemoryPuzzleController extends Controller {
   async createPuzzle() {
     const { ctx } = this;
-    // const userId = ctx.user.id;
-    let { partnerId, description } = ctx.request.body;
-    // partnerId = 2;
-    partnerId = 1;
-    const userId = 2;
+    const { description } = ctx.request.body;
+    const userId = ctx.state.user.id;
+    const partnerId = ctx.state.user.partner_id;
+    // 如果未绑定伴侣，返回错误信息
+    if (!partnerId) {
+      ctx.body = {
+        success: false,
+        message: '未找到绑定关系，无法记录行为',
+      };
+      return;
+    }
     try {
       const puzzle = await ctx.service.memoryPuzzle.createPuzzle(
         userId,
@@ -34,10 +40,17 @@ class MemoryPuzzleController extends Controller {
 
     try {
       const result = await ctx.service.memoryPuzzle.getPuzzleResult(puzzleId);
-      ctx.body = {
-        success: true,
-        data: result,
-      };
+      if (result.partner_description) {
+        ctx.body = {
+          success: true,
+          data: result,
+        };
+      } else {
+        ctx.body = {
+          success: false,
+          data: result,
+        };
+      }
     } catch (error) {
       ctx.status = 500;
       ctx.body = {
