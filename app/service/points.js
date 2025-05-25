@@ -131,11 +131,12 @@ class PointsService extends Service {
           );
         } else if (data.type === 'signIn') {
            // 增加 target 积分
-           await targetBalance.increment('balance', {
+           console.log('data.points---', data.points)
+          await userBalance.increment('balance', {
             by: data.points,
             transaction,
           });
-          // 对 user 记录行为：praiseOther（扣除积分）
+          // 对 user 记录行为：signIn（签到积分）
           await ctx.model.PointsRecord.create(
             {
               user_id: userId,
@@ -156,6 +157,8 @@ class PointsService extends Service {
           userBalance.reload({ transaction }),
           targetBalance.reload({ transaction }),
         ]);
+
+        console.log('newUserBalance, newTargetBalance', newUserBalance, newTargetBalance)
 
         return {
           userBalance: newUserBalance,

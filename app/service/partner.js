@@ -494,14 +494,14 @@ class PartnerService extends Service {
         success: true,
         data: {
           isBound: true,
-          partnerInfo: {
+          partnerInfo: relationship ? {
             id: partner.id,
             nickname: partner.nickname,
             avatar: partner.avatar,
             bindCode: partner.bind_code,
-            bindTime: new Date(relationship.bind_time).getTime(),
+            bindTime: new Date(relationship?.bind_time || 0).getTime(),
             relationship
-          }
+          } : {}
         }
       };
     } catch (error) {

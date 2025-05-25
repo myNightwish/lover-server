@@ -39,6 +39,15 @@ class PointsController extends Controller {
         };
         return;
       }
+      const res = await ctx.service.points.getCheckinStatus(userId);
+      if(!!res.hasCheckedIn) {
+        ctx.body = {
+          success: false,
+          hasCheckedIn: true,
+          message: '今日已完成签到，明日再来哦',
+        };
+        return;
+      }
       // 如果是签到行为，直接给用户加上默认积分
       behaviorData.points = SIGN_UP_IN_POINTS;
       behaviorData.description = '签到获得积分';
