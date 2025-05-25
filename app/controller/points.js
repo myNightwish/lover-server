@@ -1,5 +1,5 @@
 const Controller = require('egg').Controller;
-
+const SIGN_UP_IN_POINTS = 5;
 class PointsController extends Controller {
   /**
    * 获取积分概况
@@ -31,6 +31,19 @@ class PointsController extends Controller {
     const userId = ctx.state.user.id;
     const partnerId = ctx.state.user.partner_id;
     const behaviorData = ctx.request.body;
+    if (behaviorData.type === 'signIn') {
+      if (!partnerId) {
+        ctx.body = {
+          success: false,
+          message: '请先绑定伴侣，可继续使用签到功能',
+        };
+        return;
+      }
+      // 如果是签到行为，直接给用户加上默认积分
+      behaviorData.points = SIGN_UP_IN_POINTS;
+      behaviorData.description = '签到获得积分';
+      behaviorData.category = '签到';
+    }
 
     try {
       const result = await ctx.service.points.recordBehavior(
@@ -154,12 +167,14 @@ class PointsController extends Controller {
   async getCheckinStatus() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
-    console.log('8888')
     try {
-      const data = await ctx.service.points.getCheckinStatus(userId);
+      const res = await ctx.service.points.getCheckinStatus(userId);
       ctx.body = {
         success: true,
-        data
+        data: {
+          ...res,
+          everydayPoints: SIGN_UP_IN_POINTS, // 每天签到获得的积分
+        }
       };
     } catch (error) {
       ctx.status = 500;

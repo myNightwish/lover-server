@@ -40,8 +40,8 @@ class PointsService extends Service {
           }
 
           // 构造表扬描述
-          userDescription = `${user.nickname}表扬${target.nickname}: ${data.description}`;
-          targetDescription = `${user.nickname}表扬${target.nickname}: ${data.description}`;
+          userDescription = `【${user.nickname}】表扬【${target.nickname}】: ${data.description}`;
+          targetDescription = `【${user.nickname}】表扬【${target.nickname}】: ${data.description}`;
 
           // 扣除 user 积分
           await userBalance.decrement('balance', {
@@ -129,7 +129,7 @@ class PointsService extends Service {
             },
             { transaction }
           );
-        } else if (data.type === 'signUp') {
+        } else if (data.type === 'signIn') {
            // 增加 target 积分
            await targetBalance.increment('balance', {
             by: data.points,
@@ -140,10 +140,10 @@ class PointsService extends Service {
             {
               user_id: userId,
               target_id: 0, // 系统赠送
-              type: 'signUp',
-              points: data.points,
+              type: 'signIn',
+              points: data.points, // 签到赠送积分
               description: userDescription,
-              category: 'signUp',
+              category: data.category,
               created_at: new Date(),
               updated_at: new Date(),
             },
@@ -462,15 +462,13 @@ class PointsService extends Service {
     const existingCheckin = await ctx.model.PointsRecord.findOne({
       where: {
         user_id: userId,
-        type: 'signUp',
+        type: 'signIn',
         created_at: {
           [ctx.model.Sequelize.Op.gte]: today,
           [ctx.model.Sequelize.Op.lt]: tomorrow
         }
       }
     });
-    console.log('v---', existingCheckin)
-  
     // 获取用户积分余额
     const balance = await this.getOrCreateBalance(userId);
     
