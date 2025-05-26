@@ -18,7 +18,7 @@ module.exports = appInfo => {
   config.jwt = {
     secret: 'pipilovewater', // 访问令牌密钥
     refreshSecret: 'pipijiang', // 刷新令牌密钥
-    expiresIn: '3h', // 访问令牌过期时间
+    expiresIn: '6h', // 访问令牌过期时间
     refreshExpiresIn: '7d' // 刷新令牌过期时间
   };
   config.rabbitmq = {
