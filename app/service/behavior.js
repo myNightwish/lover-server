@@ -40,11 +40,11 @@ class BehaviorService extends Service {
       });
 
       // 生成行为分析
-      const analysis = await this.getBehaviorAnalysis(partnerId);
+      // const analysis = await this.getBehaviorAnalysis(partnerId);
 
       return {
         record: result,
-        analysis,
+        analysis: [],
       };
     } catch (error) {
       ctx.logger.error('[BehaviorService] Record behavior failed:', error);
@@ -85,7 +85,7 @@ class BehaviorService extends Service {
       total_score: score.total_score + points,
       [type === 'positive' ? 'positive_count' : 'negative_count']:
         score[type === 'positive' ? 'positive_count' : 'negative_count'] + 1,
-      updated_at: new Date()
+        updated_at: new Date()
     };
 
     await score.update(updates, { transaction });

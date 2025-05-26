@@ -49,6 +49,19 @@ class MessageService extends Service {
     }
   }
 
+  async PromisedCreateMsg(data) {
+    return Promise.resolve().then(async () => {
+      try {
+        await this.createMessage(data);
+        ctx.logger.info('消息创建成功',targetId);
+      } catch (msgError) {
+        // 仅记录日志，不影响主流程
+        ctx.logger.error('消息创建失败', msgError);
+      }
+    }).catch(err => {
+        ctx.logger.error('异步创建消息失败', err);
+    });
+  }
   /**
    * 获取用户消息列表
    */
@@ -65,11 +78,23 @@ class MessageService extends Service {
             as: 'user',
             attributes: ['id', 'nickname', 'avatar'],
           },
+          {
+            model: ctx.model.ExchangeRecord,
+            as: 'exchange_record', // 根据你定义的别名（注意大小写）
+            attributes: ['status'],
+          },
         ],
       });
-
+      // 手动提取 status
+      const formattedMessages = messages.rows.map(msg => {
+        const plain = msg.get({ plain: true });
+        return {
+          ...plain,
+          status: plain.exchange_record?.status || null, // 提出来
+        };
+      });
       return {
-        messages: messages.rows,
+        messages: formattedMessages,
         total: messages.count,
       };
     } catch (error) {

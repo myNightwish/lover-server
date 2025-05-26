@@ -121,7 +121,7 @@ module.exports = app => {
   router.post('/api/points/record', authCommon, controller.points.recordBehavior);
   router.get('/api/points/exchange-items', authCommon, controller.points.getExchangeItems);
   router.post('/api/points/exchange-items', authCommon, controller.points.createExchangeItem);
-  router.post('/api/points/exchange/complete/:id', authCommon, controller.points.completeExchange);
+  router.post('/api/points/exchange/complete', authCommon, controller.points.completeExchange);
   router.post('/api/points/exchange', authCommon, controller.points.exchange);
   router.get('/api/points/checkin/status', authCommon, controller.points.getCheckinStatus);
 

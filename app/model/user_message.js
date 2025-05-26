@@ -68,6 +68,11 @@ module.exports = app => {
       foreignKey: 'user_id',
       as: 'user'
     });
+    UserMessage.hasOne(app.model.ExchangeRecord, {
+      as: 'exchange_record',
+      foreignKey: 'id',          // ExchangeRecord 的主键
+      sourceKey: 'related_id',   // UserMessage 中的字段
+    });
   };
   UserMessage.sync({ force: false, alter: true }) // 使用 alter: true 允许模型更新表结构
   .then(() => {
