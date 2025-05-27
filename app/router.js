@@ -49,6 +49,9 @@ module.exports = app => {
   // 情绪记录相关路由
   router.post('/api/emotion/record', authCommon, controller.emotion.recordEmotion);
   router.get('/api/emotion/trend', authCommon, controller.emotion.getEmotionTrend);
+  // 新增路由
+  router.get('/api/emotion/sync', authCommon, controller.emotion.getEmotionSync);
+  router.get('/api/emotion/today', authCommon, controller.emotion.getTodayStatus);
 
   // 记忆拼图相关路由
   router.post(
