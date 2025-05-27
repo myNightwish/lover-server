@@ -493,7 +493,6 @@ class PartnerService extends Service {
         },
         attributes: ['bind_time', 'created_at']
       });
-      console.log('🍊--', relationship)
       return {
         success: true,
         data: {

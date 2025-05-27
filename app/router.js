@@ -66,19 +66,11 @@ module.exports = app => {
     controller.memoryPuzzle.getPuzzleResult
   );
 
-  // 冲突记录相关路由
-  router.post(
-    '/api/conflict/record',
-    authCommon,
-    partnerRequired,
-    controller.conflict.recordConflict
-  );
-  router.get(
-    '/api/conflict/analysis',
-    authCommon,
-    controller.conflict.getConflictAnalysis
-  );
-
+  // 冲突记录
+  router.post('/api/conflict/record', authCommon, partnerRequired, controller.conflict.recordConflict);
+  router.get('/api/conflict/analysis', authCommon, controller.conflict.getConflictAnalysis);
+  router.get('/api/conflict/memories', authCommon, partnerRequired, controller.conflict.getConflictMemories);
+  router.post('/api/conflict/note', authCommon, partnerRequired, controller.conflict.addConflictNote);
   // 共情游戏相关路由
   router.get('/api/empathy/tasks', authCommon, partnerRequired, controller.empathy.getTasks);
   router.post(

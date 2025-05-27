@@ -3,8 +3,8 @@ const Service = require('egg').Service;
 class ConflictService extends Service {
   /**
    * 记录冲突
-   * @param userId
-   * @param conflictData
+   * @param userId 用户ID
+   * @param conflictData 冲突数据
    */
   async recordConflict(userId, partnerId, conflictData) {
     const { ctx } = this;
@@ -18,25 +18,44 @@ class ConflictService extends Service {
         resolution: conflictData.resolution,
         reflection: conflictData.reflection,
         tags: conflictData.tags,
+        growth_points: this.calculateGrowthPoints(conflictData), // 新增成长点数计算
         created_at: new Date(),
         updated_at: new Date(),
       });
       // 生成冲突分析报告
       const analysis = await this.generateConflictAnalysis(record);
 
-      // 获取AI建议
-      // const suggestion = await ctx.service.openai.generateConflictSuggestion(analysis);
-      const suggestion = 'AI建议内容在这里，暂时用占位符代替';
-
       return {
-        record,
-        analysis,
-        suggestion,
+        success: true,
+        data: {
+          record,
+          analysis
+        }
       };
     } catch (error) {
       ctx.logger.error('[ConflictService] Record conflict failed:', error);
-      throw new Error('记录冲突失败');
+      return {
+        success: false,
+        message: '记录冲突失败: ' + error.message
+      };
     }
+  }
+
+
+  /**
+   * 计算成长点数
+   * @param conflictData 冲突数据
+   */
+  calculateGrowthPoints(conflictData) {
+    let points = 0;
+    
+    // 根据填写内容的完整度计算点数
+    if (conflictData.trigger && conflictData.trigger.length > 50) points += 5;
+    if (conflictData.resolution && conflictData.resolution.length > 50) points += 5;
+    if (conflictData.reflection && conflictData.reflection.length > 50) points += 10;
+    if (conflictData.tags && conflictData.tags.length >= 2) points += 5;
+    
+    return points;
   }
 
   /**
@@ -49,10 +68,13 @@ class ConflictService extends Service {
     // 获取历史冲突记录
     const historicalRecords = await ctx.model.ConflictRecord.findAll({
       where: {
-        user_id: record.user_id,
-        partner_id: record.partner_id,
+        [ctx.app.Sequelize.Op.or]: [
+          { user_id: record.user_id, partner_id: record.partner_id },
+          { user_id: record.partner_id, partner_id: record.user_id }
+        ]
       },
       order: [[ 'created_at', 'DESC' ]],
+      limit: 10 // 限制只分析最近的10条记录，提高性能
     });
 
     // 分析冲突模式
@@ -129,6 +151,92 @@ class ConflictService extends Service {
     };
 
     return suggestions[tag] || '建议寻求专业咨询师的帮助';
+  }
+
+  /**
+   * 获取冲突记忆列表
+   * @param userId
+   * @param partnerId
+   */
+  async getConflictMemories(userId, partnerId) {
+    const { ctx } = this;
+
+    try {
+      const memories = await ctx.model.ConflictRecord.findAll({
+        where: {
+          [ctx.app.Sequelize.Op.or]: [
+            { user_id: userId, partner_id: partnerId },
+            { user_id: partnerId, partner_id: userId }
+          ]
+        },
+        order: [[ 'created_at', 'DESC' ]],
+        include: [{
+          model: ctx.model.ConflictNote,
+          as: 'notes',
+          required: false
+        }]
+      });
+
+      return {
+        success: true,
+        data: memories
+      };
+    } catch (error) {
+      ctx.logger.error('[ConflictService] Get conflict memories failed:', error);
+      return {
+        success: false,
+        message: '获取冲突记忆失败: ' + error.message
+      };
+    }
+  }
+
+  /**
+   * 添加冲突笔记
+   * @param userId
+   * @param conflictId
+   * @param note
+   */
+  async addConflictNote(userId, conflictId, note) {
+    const { ctx } = this;
+
+    try {
+      // 检查冲突记录是否存在
+      const conflict = await ctx.model.ConflictRecord.findByPk(conflictId);
+      if (!conflict) {
+        return {
+          success: false,
+          message: '冲突记录不存在'
+        };
+      }
+
+      // 检查用户是否有权限添加笔记
+      if (conflict.user_id !== userId && conflict.partner_id !== userId) {
+        return {
+          success: false,
+          message: '无权限添加笔记'
+        };
+      }
+
+      // 创建笔记
+      const conflictNote = await ctx.model.ConflictNote.create({
+        conflict_id: conflictId,
+        user_id: userId,
+        content: note,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      return {
+        success: true,
+        data: conflictNote
+      };
+    } catch (error) {
+      ctx.logger.error('[ConflictService] Add conflict note failed:', error);
+      return {
+        success: false,
+        message: '添加冲突笔记失败: ' + error.message
+      };
+    }
   }
 }
 
