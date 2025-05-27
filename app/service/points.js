@@ -398,7 +398,7 @@ class PointsService extends Service {
   /**
    * 完成兑换
    */
-  async completeExchange(targetId, exchangeId, isAccept) {
+  async completeExchange(targetId, partnerId, exchangeId, isAccept, content) {
     const { ctx } = this;
 
     try {
@@ -422,6 +422,25 @@ class PointsService extends Service {
 
       // 开启事务
       const result = await ctx.model.transaction(async (transaction) => {
+        console.log('99999----', isAccept)
+        if(!isAccept) {
+           // 更新兑换记录状态
+          await exchange.update(
+            {
+              status: 'completed_rejected',
+            },
+            { transaction }
+          );
+          const msgService = ctx.service.message;
+          msgService.PromisedCreateMsg({
+            userId: partnerId,
+            senderId: targetId,
+            type: 'exchange_request_rejected',
+            title: '拒绝请求',
+            content: `你有一条待被兑换请求:「${content}」,已被对方拒绝`,
+          });
+          return exchange;
+        }
         // 扣除积分
         const userBalance = await this.getOrCreateBalance(exchange.user_id);
         if (userBalance.balance < exchange.points_cost) {
@@ -435,7 +454,7 @@ class PointsService extends Service {
         // 更新兑换记录状态
         await exchange.update(
           {
-            status: `completed_${isAccept ? 'agreed': 'rejected'}`,
+            status: 'completed_agreed',
           },
           { transaction }
         );
@@ -455,6 +474,14 @@ class PointsService extends Service {
           },
           { transaction }
         );
+        const msgService = ctx.service.message;
+        msgService.PromisedCreateMsg({
+          userId: partnerId,
+          senderId: targetId,
+          type: 'exchange_request_agreed',
+          title: '同意请求',
+          content: `你有一条待被兑换请求:「${content}」,已被对方同意，记得监督Ta认真履行哦`,
+        });
 
         return exchange;
       });
