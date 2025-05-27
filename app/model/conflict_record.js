@@ -35,8 +35,9 @@ module.exports = app => {
       foreignKey: 'partner_id',
       as: 'partner'
     });
+    ConflictRecord.hasMany(app.model.ConflictNote, { foreignKey: 'conflict_id', as: 'notes' });
   };
-  ConflictRecord.sync({ force: true, alert: true }) // force: false 确保不会删除表
+  ConflictRecord.sync({ force: false, alert: true }) // force: false 确保不会删除表
   .then(() => {})
   .catch(err => {
     console.error('同步 ConflictRecord 表失败:', err);
