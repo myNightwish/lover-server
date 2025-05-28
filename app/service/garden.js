@@ -8,14 +8,12 @@ class GardenService extends Service {
     const [
       emotionTree,
       empathyGarden,
-      memoryPond,
       behaviorPath,
       recentConflictRecord,
       expProcessData,
     ] = await Promise.all([
       this.getEmotionTreeData(userId),
       this.getEmpathyGardenData(userId),
-      this.getMemoryPondData(userId),
       this.getBehaviorPathData(userId),
       this.getConflictData(userId),
       this.getUserProgress(userId),
@@ -24,7 +22,7 @@ class GardenService extends Service {
     return {
       emotionTree,
       empathyGarden,
-      memoryPond,
+      memoryPond: [],
       behaviorPath,
       weather: await this.calculateWeatherState(userId),
       recentConflictRecord,
@@ -108,32 +106,6 @@ class GardenService extends Service {
   }
 
   /**
-   * 获取记忆数据
-   */
-  async getMemoryPondData(userId) {
-    const { ctx } = this;
-
-    const memories = await ctx.model.MemoryPuzzle.findAll({
-      where: {
-        [ctx.model.Sequelize.Op.or]: [
-          { user_id: userId },
-          { partner_id: userId },
-        ],
-      },
-      order: [['created_at', 'DESC']],
-      limit: 5,
-    });
-
-    return {
-      memories: memories.map((memory, index) => ({
-        id: memory.id,
-        desc: memory.event_description,
-        matchLevel: this.getMatchLevel(memory.match_score),
-      })),
-    };
-  }
-
-  /**
    * 获取行为之路数据
    */
   async getBehaviorPathData(userId) {
@@ -149,7 +121,7 @@ class GardenService extends Service {
     const { ctx } = this;
 
     // 获取最近的互动数据
-    const [emotions, tasks, memories, behaviors] = await Promise.all([
+    const [emotions, tasks, behaviors] = await Promise.all([
       ctx.model.EmotionRecord.count({
         where: {
           user_id: userId,
@@ -171,19 +143,6 @@ class GardenService extends Service {
           },
         },
       }),
-      ctx.model.MemoryPuzzle.count({
-        where: {
-          [ctx.model.Sequelize.Op.or]: [
-            { user_id: userId },
-            { partner_id: userId },
-          ],
-          created_at: {
-            [ctx.model.Sequelize.Op.gte]: new Date(
-              Date.now() - 7 * 24 * 60 * 60 * 1000
-            ),
-          },
-        },
-      }),
       ctx.model.BehaviorRecord.count({
         where: {
           user_id: userId,
@@ -196,7 +155,7 @@ class GardenService extends Service {
       }),
     ]);
 
-    const totalInteractions = emotions + tasks + memories + behaviors;
+    const totalInteractions = emotions + tasks + behaviors;
 
     if (totalInteractions >= 15) return 'SUNNY';
     if (totalInteractions >= 7) return 'CLOUDY';

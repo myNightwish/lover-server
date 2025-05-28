@@ -5,7 +5,7 @@
  */
 const path = require('path');
 const dotenv = require('dotenv');
-
+const fs = require('fs');
 // 先加载非敏感信息
 dotenv.config({ path: '.env' });
 // 如果存在敏感信息配置文件就加载
