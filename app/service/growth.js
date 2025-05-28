@@ -1,50 +1,6 @@
 const Service = require('egg').Service;
 
 class GrowthService extends Service {
-  async getUserMilestones(userId) {
-    const { ctx } = this;
-
-    // 获取用户的所有成长记录
-    const [ emotions, conflicts, puzzles, tasks ] = await Promise.all([
-      ctx.model.EmotionRecord.findAll({
-        where: { user_id: userId },
-        order: [[ 'created_at', 'DESC' ]],
-        limit: 5,
-      }),
-      ctx.model.ConflictRecord.findAll({
-        where: { user_id: userId },
-        order: [[ 'created_at', 'DESC' ]],
-        limit: 5,
-      }),
-      ctx.model.MemoryPuzzle.findAll({
-        where: { user_id: userId },
-        order: [[ 'created_at', 'DESC' ]],
-        limit: 5,
-      }),
-      ctx.model.UserTask.findAll({
-        where: {
-          user_id: userId,
-          completed: true,
-        },
-        order: [[ 'completed_at', 'DESC' ]],
-        limit: 5,
-        include: [{
-          model: ctx.model.EmpathyTask,
-          as: 'task',
-        }],
-      }),
-    ]);
-
-    // 合并所有记录并按时间排序
-    const allEvents = [
-      ...this.formatEmotionMilestones(emotions),
-      ...this.formatConflictMilestones(conflicts),
-      ...this.formatPuzzleMilestones(puzzles),
-      ...this.formatTaskMilestones(tasks),
-    ].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    return allEvents.slice(0, 10); // 返回最近的10个里程碑
-  }
 
   formatEmotionMilestones(emotions) {
     return emotions.map(emotion => ({
@@ -106,9 +62,6 @@ class GrowthService extends Service {
         taskCount,
       });
 
-      // 获取最近的成长事件
-      const recentEvents = await this.getUserMilestones(userId);
-
       // 生成AI建议
       // const suggestion = await ctx.service.openai.generateGrowthSuggestion({
       //   growthIndex,
@@ -127,7 +80,7 @@ class GrowthService extends Service {
           { label: '共情指数', value: this.calculateEmpathyLevel(taskCount) },
         ],
         growthIndex,
-        recentEvents,
+        recentEvents: [],
         suggestion,
       };
     } catch (error) {

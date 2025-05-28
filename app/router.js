@@ -53,19 +53,6 @@ module.exports = app => {
   router.get('/api/emotion/sync', authCommon, controller.emotion.getEmotionSync);
   router.get('/api/emotion/today', authCommon, controller.emotion.getTodayStatus);
 
-  // 记忆拼图相关路由
-  router.post(
-    '/api/memory-puzzle/create',
-    authCommon,
-    partnerRequired,
-    controller.memoryPuzzle.createPuzzle
-  );
-  router.get(
-    '/api/memory-puzzle/:puzzleId',
-    authCommon,
-    controller.memoryPuzzle.getPuzzleResult
-  );
-
   // 冲突记录
   router.post('/api/conflict/record', authCommon, partnerRequired, controller.conflict.recordConflict);
   router.get('/api/conflict/analysis', authCommon, controller.conflict.getConflictAnalysis);
@@ -82,7 +69,6 @@ module.exports = app => {
 
   // 成长档案相关路由
   router.get('/api/growth/archive', authCommon, controller.growth.getArchive);
-  router.get('/api/growth/milestones', authCommon, controller.growth.getMilestones);
 
   router.get(
     '/api/empathy/current-task',

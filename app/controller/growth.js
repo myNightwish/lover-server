@@ -19,25 +19,6 @@ class GrowthController extends Controller {
       };
     }
   }
-
-  async getMilestones() {
-    const { ctx } = this;
-    const userId = ctx.state.user.id;
-
-    try {
-      const milestones = await ctx.service.growth.getUserMilestones(userId);
-      ctx.body = {
-        success: true,
-        data: milestones
-      };
-    } catch (error) {
-      ctx.status = 500;
-      ctx.body = {
-        success: false,
-        message: error.message
-      };
-    }
-  }
 }
 
 module.exports = GrowthController;
