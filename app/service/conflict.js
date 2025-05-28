@@ -169,11 +169,13 @@ class ConflictService extends Service {
             { user_id: partnerId, partner_id: userId }
           ]
         },
-        order: [[ 'created_at', 'DESC' ]],
+        order: [['created_at', 'DESC']], // ConflictRecord 按 created_at 降序排列
         include: [{
           model: ctx.model.ConflictNote,
           as: 'notes',
-          required: false
+          required: false,
+          separate: true, // 如果是 hasMany 关系，推荐加上
+          order: [['created_at', 'DESC']] // ConflictNote 也按 created_at 降序排列
         }]
       });
 
