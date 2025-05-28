@@ -4,7 +4,14 @@
  * @param {Egg.EggAppInfo} appInfo app info
  */
 const path = require('path');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+// 先加载非敏感信息
+dotenv.config({ path: '.env' });
+// 如果存在敏感信息配置文件就加载
+if (fs.existsSync('.env.secret')) {
+  dotenv.config({ path: '.env.secret', override: true });
+}
 module.exports = appInfo => {
   /**
    * built-in config

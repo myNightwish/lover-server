@@ -146,4 +146,10 @@ module.exports = app => {
   
   // 在路由文件中添加注销路由
   router.post('/api/user/logout', authCommon, controller.user.logout);
+  // 时间轴记忆相关路由
+  router.post('/api/timeline/memory', authCommon, partnerRequired, controller.timeline.createMemory);
+  router.get('/api/timeline/memories', authCommon, partnerRequired, controller.timeline.getMemories);
+  router.get('/api/timeline/memory/:id', authCommon, controller.timeline.getMemoryDetail);
+  router.post('/api/timeline/comment', authCommon, controller.timeline.addComment);
+  router.delete('/api/timeline/memory/:id', authCommon, controller.timeline.deleteMemory);
 };
