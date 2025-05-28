@@ -223,12 +223,15 @@ class PointsController extends Controller {
   async completeExchange() {
     const { ctx } = this;
     const userId = ctx.state.user.id;
-    const { id: exchangeId } = ctx.params;
-
+    const partnerId = ctx.state.user.partner_id;
+    const { exchangeId, isAccept, content } = ctx.request.body;
     try {
       const result = await ctx.service.points.completeExchange(
+        userId,
+        partnerId,
         exchangeId,
-        userId
+        isAccept,
+        content
       );
 
       ctx.body = {
@@ -239,7 +242,7 @@ class PointsController extends Controller {
       ctx.status = 400;
       ctx.body = {
         success: false,
-        message: error.message,
+        message: error,
       };
     }
   }

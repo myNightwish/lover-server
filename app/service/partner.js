@@ -226,11 +226,13 @@ class PartnerService extends Service {
       });
       
       // 创建通知消息
-      await ctx.service.message.createMessage({
+      // 事务完成后，异步创建消息（不等待完成）
+      const msgService = ctx.service.message;
+      msgService.PromisedCreateMsg({
         userId: targetUser.id,
         senderId: targetUser.id,
-        title: '新的伴侣绑定请求',
-        content: `有用户请求与你建立伴侣关系`,
+        title: '伴侣绑定请求',
+        content: `有用户【${targetUser.username}】请求与你建立伴侣关系，一起踏入成长之旅\n,请你认真思考好决定是否同意～\n备注：当你在任何时间想终止绑定时，可单方面随时直接解除绑定💗`,
         type: 'partner_request',
       });
       
@@ -304,17 +306,18 @@ class PartnerService extends Service {
           created_at: now
         }
       ], { transaction });
-      
-      // 创建通知消息
-      await ctx.service.message.createMessage({
-        userId: request.requester_id,
-        senderId: request.requester_id,
-        title: '伴侣绑定成功',
-        content: `你的伴侣绑定请求已被接受`,
-        type: 'partner_accepted',
-      }, transaction);
-      
       await transaction.commit();
+
+      // 事务完成后，异步创建消息（不等待完成）
+      const msgService = ctx.service.message;
+        msgService.PromisedCreateMsg({
+        userId: request.requester_id,
+        senderId: userId,
+        title: '伴侣绑定成功',
+          content: `你的伴侣绑定请求已被接受`,
+          type: 'partner_accepted',
+        }
+      );
       
       return {
         success: true,
@@ -364,9 +367,10 @@ class PartnerService extends Service {
       await request.update({ status: 'rejected' });
       
       // 创建通知消息
-      await ctx.service.message.createMessage({
+      const msgService = ctx.service.message;
+      msgService.PromisedCreateMsg({
         userId: request.requester_id,
-        senderId: request.requester_id,
+        senderId: userId,
         title: '伴侣绑定被拒绝',
         content: `你的伴侣绑定请求已被拒绝`,
         type: 'partner_rejected',
@@ -489,7 +493,6 @@ class PartnerService extends Service {
         },
         attributes: ['bind_time', 'created_at']
       });
-      console.log('🍊--', relationship)
       return {
         success: true,
         data: {
@@ -582,31 +585,17 @@ class PartnerService extends Service {
         });
         
         // 保存伴侣ID，用于后续创建消息
-        const savedPartnerId = partnerId;
-        const savedUserId = userId;
-        
         await transaction.commit();
         
         // 事务完成后，异步创建消息（不等待完成）
-        Promise.resolve().then(async () => {
-          try {
-            // 使用新的服务实例来创建消息，避免上下文问题
-            const messageService = ctx.service.message;
-            await messageService.createMessage({
-              userId: savedPartnerId,
-              senderId: savedUserId,
-              title: '伴侣关系解除',
-              content: `你的伴侣已解除与你的绑定关系`,
-              type: 'partner_unbind',
-              isRead: false,
-            });
-            ctx.logger.info('解绑消息创建成功', { partnerId: savedPartnerId });
-          } catch (msgError) {
-            // 仅记录日志，不影响主流程
-            ctx.logger.error('发送解绑消息失败', msgError);
-          }
-        }).catch(err => {
-          ctx.logger.error('异步发送解绑消息失败', err);
+        const msgService = ctx.service.message;
+        msgService.PromisedCreateMsg({
+          userId: partnerId,
+          senderId: userId,
+          title: '伴侣关系解除',
+          content: `你的伴侣已解除与你的绑定关系`,
+          type: 'partner_unbind',
+          isRead: false,
         });
         
         return {

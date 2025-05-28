@@ -2,9 +2,10 @@
  * @param {Egg.Application} app - egg application
  */
 module.exports = app => {
-  const { router, controller } = app;
+  const { router, controller, middleware } = app;
   // const wxAuth = require('./middleware/wxAuth.js'); // 保留原有微信鉴权中间件，用于特定场景
-  const authCommon = require('./middleware/auth')(); // 通用鉴权中间件
+  const authCommon = middleware.auth(); // 通用鉴权中间件
+  const partnerRequired = middleware.partnerRequired();
   //  用户相关
   //  需要鉴权的接口
   // 微信小程序登录
@@ -19,7 +20,7 @@ module.exports = app => {
   router.get('/api/oss/upload-params', authCommon, controller.oss.getUploadParams); // oos存储
   // 伴侣绑定相关功能
   router.post('/api/partners/bind-request', authCommon, controller.partner.sendBindRequest); // 发送绑定请求
-  router.post('/api/partners/unbind', authCommon, controller.partner.unbindPartner); // 解除绑定关系
+  router.post('/api/partners/unbind', authCommon, partnerRequired, controller.partner.unbindPartner); // 解除绑定关系
   router.get('/api/partners/bind-status', authCommon, controller.partner.getBindStatus); // 获取当前绑定状态
   
   router.post('/api/partners/bind-request/:requestId/accept', authCommon, controller.partner.acceptBindRequest); // 接受绑定请求
@@ -48,11 +49,15 @@ module.exports = app => {
   // 情绪记录相关路由
   router.post('/api/emotion/record', authCommon, controller.emotion.recordEmotion);
   router.get('/api/emotion/trend', authCommon, controller.emotion.getEmotionTrend);
+  // 新增路由
+  router.get('/api/emotion/sync', authCommon, controller.emotion.getEmotionSync);
+  router.get('/api/emotion/today', authCommon, controller.emotion.getTodayStatus);
 
   // 记忆拼图相关路由
   router.post(
     '/api/memory-puzzle/create',
     authCommon,
+    partnerRequired,
     controller.memoryPuzzle.createPuzzle
   );
   router.get(
@@ -61,20 +66,13 @@ module.exports = app => {
     controller.memoryPuzzle.getPuzzleResult
   );
 
-  // 冲突记录相关路由
-  router.post(
-    '/api/conflict/record',
-    authCommon,
-    controller.conflict.recordConflict
-  );
-  router.get(
-    '/api/conflict/analysis',
-    authCommon,
-    controller.conflict.getConflictAnalysis
-  );
-
+  // 冲突记录
+  router.post('/api/conflict/record', authCommon, partnerRequired, controller.conflict.recordConflict);
+  router.get('/api/conflict/analysis', authCommon, controller.conflict.getConflictAnalysis);
+  router.get('/api/conflict/memories', authCommon, partnerRequired, controller.conflict.getConflictMemories);
+  router.post('/api/conflict/note', authCommon, partnerRequired, controller.conflict.addConflictNote);
   // 共情游戏相关路由
-  router.get('/api/empathy/tasks', authCommon, controller.empathy.getTasks);
+  router.get('/api/empathy/tasks', authCommon, partnerRequired, controller.empathy.getTasks);
   router.post(
     '/api/empathy/complete-task',
     authCommon,
@@ -121,7 +119,7 @@ module.exports = app => {
   router.post('/api/points/record', authCommon, controller.points.recordBehavior);
   router.get('/api/points/exchange-items', authCommon, controller.points.getExchangeItems);
   router.post('/api/points/exchange-items', authCommon, controller.points.createExchangeItem);
-  router.post('/api/points/exchange/complete/:id', authCommon, controller.points.completeExchange);
+  router.post('/api/points/exchange/complete', authCommon, controller.points.completeExchange);
   router.post('/api/points/exchange', authCommon, controller.points.exchange);
   router.get('/api/points/checkin/status', authCommon, controller.points.getCheckinStatus);
 
@@ -148,4 +146,10 @@ module.exports = app => {
   
   // 在路由文件中添加注销路由
   router.post('/api/user/logout', authCommon, controller.user.logout);
+  // 时间轴记忆相关路由
+  router.post('/api/timeline/memory', authCommon, partnerRequired, controller.timeline.createMemory);
+  router.get('/api/timeline/memories', authCommon, partnerRequired, controller.timeline.getMemories);
+  router.get('/api/timeline/memory/:id', authCommon, controller.timeline.getMemoryDetail);
+  router.post('/api/timeline/comment', authCommon, controller.timeline.addComment);
+  router.delete('/api/timeline/memory/:id', authCommon, controller.timeline.deleteMemory);
 };

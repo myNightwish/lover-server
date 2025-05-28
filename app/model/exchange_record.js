@@ -31,7 +31,7 @@ module.exports = (app) => {
     status: {
       type: STRING(20),
       defaultValue: 'pending',
-      comment: 'pending(待履行)/completed(已完成)/cancelled(已取消)',
+      comment: 'pending(待履行)/completed_rejected(已完成-拒绝)/completed_agreed(已完成-同意)/cancelled(已取消)',
     },
     created_at: DATE,
     updated_at: DATE,
@@ -55,6 +55,10 @@ module.exports = (app) => {
       as: 'item',
     });
   };
-
+  ExchangeRecord.sync({ force: false, alter: true }) // force: false 确保不会删除表
+    .then(() => {})
+    .catch(err => {
+      console.error('同步 ExchangeRecord 表失败:', err);
+    });
   return ExchangeRecord;
 };

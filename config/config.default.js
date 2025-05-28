@@ -4,7 +4,14 @@
  * @param {Egg.EggAppInfo} appInfo app info
  */
 const path = require('path');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+// 先加载非敏感信息
+dotenv.config({ path: '.env' });
+// 如果存在敏感信息配置文件就加载
+if (fs.existsSync('.env.secret')) {
+  dotenv.config({ path: '.env.secret', override: true });
+}
 module.exports = appInfo => {
   /**
    * built-in config
@@ -18,7 +25,7 @@ module.exports = appInfo => {
   config.jwt = {
     secret: 'pipilovewater', // 访问令牌密钥
     refreshSecret: 'pipijiang', // 刷新令牌密钥
-    expiresIn: '3h', // 访问令牌过期时间
+    expiresIn: '6h', // 访问令牌过期时间
     refreshExpiresIn: '7d' // 刷新令牌过期时间
   };
   config.rabbitmq = {

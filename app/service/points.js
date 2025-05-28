@@ -84,12 +84,20 @@ class PointsService extends Service {
             },
             { transaction }
           );
+          // 事务完成后，异步创建消息（不等待完成）
+          const msgService = ctx.service.message;
+          msgService.PromisedCreateMsg({
+            userId: targetId,
+            senderId: userId,
+            type: 'praise_request',
+            title: '表扬通知',
+            content: `hey~【${target.nickname}】：\n因为你的【${data.category}】美好特质，你的正向行为:「${data.description}」得到了【${user.nickname}】的赞扬! \nTa赠送了你 ${data.points} 积分表示感谢💗，我们一起为你的行为鼓掌 🌸🌸🌸`,
+          });
         } else if (data.type === 'criticism') {
           // 批评：扣减对方积分
           if (targetBalance.balance < Math.abs(data.points)) {
             throw new Error('对方积分不足');
           }
-
           // 构造批评描述
           userDescription = `${user.nickname}批评${target.nickname}: ${data.description}`;
           targetDescription = `${user.nickname}批评${target.nickname}: ${data.description}`;
@@ -129,6 +137,15 @@ class PointsService extends Service {
             },
             { transaction }
           );
+          // 事务完成后，异步创建消息（不等待完成）
+          const msgService = ctx.service.message;
+          msgService.PromisedCreateMsg({
+            userId: targetId,
+            senderId: userId,
+            type: 'criticism_request',
+            title: '批评通知',
+            content: `hi~【${target.nickname}】：\n，【${user.nickname}】批评了你的负面行为，原因是：「${data.description}」，这会扣除你${data.points}积分哦😭，\n💔 别灰心，让我们试试看下次如何学着做的更好～🌸`,
+          });
         } else if (data.type === 'signIn') {
            // 增加 target 积分
            console.log('data.points---', data.points)
@@ -203,8 +220,8 @@ class PointsService extends Service {
         updated_at: new Date(),
       });
 
-      // 创建消息通知
-      await ctx.service.message.createMessage({
+      const msgService = ctx.service.message;
+      msgService.PromisedCreateMsg({
         userId: partnerId,
         senderId: userId,
         type: 'exchange_request',
@@ -381,7 +398,7 @@ class PointsService extends Service {
   /**
    * 完成兑换
    */
-  async completeExchange(exchangeId, targetId) {
+  async completeExchange(targetId, partnerId, exchangeId, isAccept, content) {
     const { ctx } = this;
 
     try {
@@ -405,6 +422,25 @@ class PointsService extends Service {
 
       // 开启事务
       const result = await ctx.model.transaction(async (transaction) => {
+        console.log('99999----', isAccept)
+        if(!isAccept) {
+           // 更新兑换记录状态
+          await exchange.update(
+            {
+              status: 'completed_rejected',
+            },
+            { transaction }
+          );
+          const msgService = ctx.service.message;
+          msgService.PromisedCreateMsg({
+            userId: partnerId,
+            senderId: targetId,
+            type: 'exchange_request_rejected',
+            title: '拒绝请求',
+            content: `你有一条待被兑换请求:「${content}」,已被对方拒绝`,
+          });
+          return exchange;
+        }
         // 扣除积分
         const userBalance = await this.getOrCreateBalance(exchange.user_id);
         if (userBalance.balance < exchange.points_cost) {
@@ -418,7 +454,7 @@ class PointsService extends Service {
         // 更新兑换记录状态
         await exchange.update(
           {
-            status: 'completed',
+            status: 'completed_agreed',
           },
           { transaction }
         );
@@ -432,11 +468,20 @@ class PointsService extends Service {
             points: -exchange.points_cost,
             description: `兑换「${exchange.item.title}」`,
             category: 'exchange',
+            is_read: true,
             created_at: new Date(),
             updated_at: new Date(),
           },
           { transaction }
         );
+        const msgService = ctx.service.message;
+        msgService.PromisedCreateMsg({
+          userId: partnerId,
+          senderId: targetId,
+          type: 'exchange_request_agreed',
+          title: '同意请求',
+          content: `你有一条待被兑换请求:「${content}」,已被对方同意，记得监督Ta认真履行哦`,
+        });
 
         return exchange;
       });
