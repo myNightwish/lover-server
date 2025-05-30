@@ -138,4 +138,5 @@ module.exports = app => {
   router.get('/api/timeline/memory/:id', authCommon, controller.timeline.getMemoryDetail);
   router.post('/api/timeline/comment', authCommon, controller.timeline.addComment);
   router.delete('/api/timeline/memory/:id', authCommon, controller.timeline.deleteMemory);
+  router.put('/api/timeline/memory/:id', authCommon, controller.timeline.updateMemory);
 };

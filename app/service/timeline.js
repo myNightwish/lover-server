@@ -71,7 +71,7 @@ class TimelineService extends Service {
             { user_id: partnerId, partner_id: userId }
           ]
         },
-        order: [['date', 'DESC']], // 按日期降序排列
+        order: [['created_at', 'DESC']], // 按日期降序排列
         include: [{
           model: ctx.model.TimelineComment,
           as: 'comments',
@@ -252,6 +252,72 @@ class TimelineService extends Service {
       return {
         success: false,
         message: '删除记忆失败: ' + error.message
+      };
+    }
+  }
+
+  /**
+   * 更新记忆
+   * @param userId 用户ID
+   * @param memoryId 记忆ID
+   * @param memoryData 记忆数据
+   */
+  async updateMemory(userId, memoryId, memoryData) {
+    const { ctx } = this;
+
+    try {
+      // 检查记忆是否存在
+      const memory = await ctx.model.TimelineMemory.findByPk(memoryId);
+      if (!memory) {
+        return {
+          success: false,
+          message: '记忆不存在'
+        };
+      }
+
+      // 检查权限
+      if (memory.user_id !== userId) {
+        return {
+          success: false,
+          message: '只有创建者可以编辑记忆'
+        };
+      }
+
+      // 处理照片上传
+      let photos = [];
+      if (memoryData.photos && memoryData.photos.length > 0) {
+        photos = await Promise.all(memoryData.photos.map(async photo => {
+          // 如果是临时文件路径，则上传到OSS
+          if (photo.startsWith('http')) {
+            return photo; // 已经是URL，直接返回
+          } else {
+            // 上传到OSS
+            return await ctx.service.oss.uploadFile(photo);
+          }
+        }));
+      }
+
+      // 更新记忆记录
+      await memory.update({
+        title: memoryData.title,
+        description: memoryData.description || '',
+        date: memoryData.date,
+        location: memoryData.location || '',
+        category: memoryData.category || '',
+        photos: photos,
+        is_special: memoryData.isSpecial || false,
+        updated_at: new Date(),
+      });
+
+      return {
+        success: true,
+        data: memory
+      };
+    } catch (error) {
+      ctx.logger.error('[TimelineService] Update memory failed:', error);
+      return {
+        success: false,
+        message: '更新记忆失败: ' + error.message
       };
     }
   }

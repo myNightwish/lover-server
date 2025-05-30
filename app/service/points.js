@@ -480,7 +480,7 @@ class PointsService extends Service {
           senderId: targetId,
           type: 'exchange_request_agreed',
           title: '同意请求',
-          content: `你有一条待被兑换请求:「${content}」,已被对方同意，记得监督Ta认真履行哦`,
+          content: `你有一条待被兑换请求:\n「${content}」\n,已被对方同意，记得监督Ta认真履行哦`,
         });
 
         return exchange;
