@@ -111,6 +111,24 @@ class TimelineController extends Controller {
       };
     }
   }
+
+  async updateMemory() {
+    const { ctx } = this;
+    const userId = ctx.state.user.id;
+    const memoryId = ctx.params.id;
+    const memoryData = ctx.request.body;
+
+    try {
+      const result = await ctx.service.timeline.updateMemory(userId, memoryId, memoryData);
+      ctx.body = result;
+    } catch (error) {
+      ctx.status = 500;
+      ctx.body = {
+        success: false,
+        message: error.message
+      };
+    }
+  }
 }
 
 module.exports = TimelineController;
